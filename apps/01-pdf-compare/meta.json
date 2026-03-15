@@ -1,0 +1,9 @@
+{
+  "id": "01-pdf-compare",
+  "name": "PDF比較ツール",
+  "category": "document",
+  "description": "2つのPDFをアップロードし、ページ単位で差分を視覚的に表示。AIで変更点を要約する。",
+  "usesAI": true,
+  "libraries": ["pdf.js", "Anthropic API"],
+  "author": "AI駆動開発デモ"
+}

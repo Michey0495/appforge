@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>パスワード生成・強度チェック</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus { border-color: #1e3461; }
+
+  .section { margin-bottom: 32px; }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: #2e4f87; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  /* 強度メーター */
+  .strength-meter {
+    margin-top: 12px;
+  }
+  .strength-bar-track {
+    width: 100%;
+    height: 4px;
+    background: #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background 0.3s;
+    border-radius: 2px;
+  }
+
+  /* 強度レベルごとの色（ネイビー系グラデーション） */
+  .strength-0 { background: #c4b5a0; width: 10%; }
+  .strength-1 { background: #8b9ab5; width: 30%; }
+  .strength-2 { background: #5a7aaa; width: 50%; }
+  .strength-3 { background: #3a5f8a; width: 75%; }
+  .strength-4 { background: #1e3461; width: 100%; }
+
+  .strength-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .strength-label {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .strength-value {
+    font-size: 12px;
+    color: #1a1a2e;
+    font-weight: 500;
+  }
+
+  .warning-msg {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fffbeb;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    font-size: 12px;
+    color: #92400e;
+    display: none;
+  }
+  .warning-msg.show { display: block; }
+
+  .suggestions {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #6b7280;
+  }
+
+  /* 生成セクション */
+  .gen-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    outline: none;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    background: #1e3461;
+    cursor: pointer;
+  }
+  .slider-value {
+    min-width: 28px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #1a1a2e;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+  .checkbox-group input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    accent-color: #1e3461;
+  }
+
+  /* 生成結果 */
+  .generated-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 16px;
+  }
+  .generated-row input {
+    flex: 1;
+  }
+
+  .entropy-display {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    margin: 32px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  .password-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .password-input-row input { flex: 1; }
+  .toggle-vis {
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 11px;
+    color: #6b7280;
+    font-family: inherit;
+  }
+  .toggle-vis:hover { background: #f3f4f6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="header-title">パスワード生成・強度チェック</span>
+    <span class="header-subtitle">Password Strength Analyzer</span>
+  </div>
+
+  <!-- 強度チェックセクション -->
+  <div class="section">
+    <label>パスワード強度チェック</label>
+    <div class="password-input-row">
+      <input type="password" id="passwordCheck" placeholder="パスワードを入力して強度を確認...">
+      <button class="toggle-vis" id="toggleVis">表示</button>
+    </div>
+
+    <div class="strength-meter" id="strengthMeter">
+      <div class="strength-bar-track">
+        <div class="strength-bar-fill" id="strengthBar"></div>
+      </div>
+      <div class="strength-info">
+        <div>
+          <span class="strength-label">強度</span>
+          <div class="strength-value" id="strengthText">---</div>
+        </div>
+        <div>
+          <span class="strength-label">推定クラック時間</span>
+          <div class="strength-value" id="crackTime">---</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warning-msg" id="warningMsg"></div>
+    <div class="suggestions" id="suggestions"></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- パスワード生成セクション -->
+  <div class="section">
+    <label>パスワード生成</label>
+    <div class="gen-controls">
+      <div>
+        <label>文字数</label>
+        <div class="slider-row">
+          <input type="range" id="lengthSlider" min="8" max="64" value="16">
+          <span class="slider-value" id="lengthValue">16</span>
+        </div>
+      </div>
+      <div class="checkbox-group">
+        <label><input type="checkbox" id="optUpper" checked> 大文字 (A-Z)</label>
+        <label><input type="checkbox" id="optLower" checked> 小文字 (a-z)</label>
+        <label><input type="checkbox" id="optDigits" checked> 数字 (0-9)</label>
+        <label><input type="checkbox" id="optSymbols" checked> 記号 (!@#$...)</label>
+      </div>
+    </div>
+
+    <div class="generated-row">
+      <input type="text" id="generatedPassword" readonly placeholder="生成ボタンを押してください">
+      <button class="btn" id="btnGenerate">生成</button>
+      <button class="btn btn-outline" id="btnCopy">コピー</button>
+    </div>
+
+    <div class="entropy-display" id="entropyDisplay"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+  const STRENGTH_LABELS = ['脆弱', 'やや弱い', '普通', '強い', '堅牢'];
+
+  const passwordInput = document.getElementById('passwordCheck');
+  const strengthBar = document.getElementById('strengthBar');
+  const strengthText = document.getElementById('strengthText');
+  const crackTimeEl = document.getElementById('crackTime');
+  const warningEl = document.getElementById('warningMsg');
+  const suggestionsEl = document.getElementById('suggestions');
+
+  // 表示/非表示トグル
+  document.getElementById('toggleVis').addEventListener('click', () => {
+    const input = passwordInput;
+    const btn = document.getElementById('toggleVis');
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '非表示';
+    } else {
+      input.type = 'password';
+      btn.textContent = '表示';
+    }
+  });
+
+  // リアルタイム強度チェック
+  passwordInput.addEventListener('input', () => {
+    const password = passwordInput.value;
+
+    if (!password) {
+      strengthBar.className = 'strength-bar-fill';
+      strengthText.textContent = '---';
+      crackTimeEl.textContent = '---';
+      warningEl.classList.remove('show');
+      suggestionsEl.textContent = '';
+      return;
+    }
+
+    const result = zxcvbn(password);
+    const score = result.score;
+
+    // 強度バー更新
+    strengthBar.className = `strength-bar-fill strength-${score}`;
+    strengthText.textContent = STRENGTH_LABELS[score];
+    crackTimeEl.textContent = result.crack_times_display.offline_slow_hashing_1e4_per_second;
+
+    // 警告表示
+    if (result.feedback.warning) {
+      warningEl.textContent = result.feedback.warning;
+      warningEl.classList.add('show');
+    } else {
+      warningEl.classList.remove('show');
+    }
+
+    // 改善提案
+    if (result.feedback.suggestions.length > 0) {
+      suggestionsEl.textContent = result.feedback.suggestions.join(' ');
+    } else {
+      suggestionsEl.textContent = '';
+    }
+  });
+
+  // スライダー値表示
+  const lengthSlider = document.getElementById('lengthSlider');
+  const lengthValue = document.getElementById('lengthValue');
+  lengthSlider.addEventListener('input', () => {
+    lengthValue.textContent = lengthSlider.value;
+  });
+
+  // パスワード生成
+  document.getElementById('btnGenerate').addEventListener('click', generatePassword);
+
+  function generatePassword() {
+    const length = parseInt(lengthSlider.value);
+    const useUpper = document.getElementById('optUpper').checked;
+    const useLower = document.getElementById('optLower').checked;
+    const useDigits = document.getElementById('optDigits').checked;
+    const useSymbols = document.getElementById('optSymbols').checked;
+
+    let charset = '';
+    if (useUpper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    if (useLower) charset += 'abcdefghijklmnopqrstuvwxyz';
+    if (useDigits) charset += '0123456789';
+    if (useSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    if (charset.length === 0) {
+      document.getElementById('generatedPassword').value = '';
+      document.getElementById('entropyDisplay').textContent = 'オプションを1つ以上選択してください';
+      return;
+    }
+
+    // crypto.getRandomValues で安全な乱数を生成
+    const array = new Uint32Array(length);
+    crypto.getRandomValues(array);
+    const password = Array.from(array)
+      .map(n => charset[n % charset.length])
+      .join('');
+
+    document.getElementById('generatedPassword').value = password;
+
+    // エントロピー計算
+    const entropy = Math.log2(Math.pow(charset.length, length));
+    document.getElementById('entropyDisplay').textContent =
+      `エントロピー: ${entropy.toFixed(1)} bits / 文字種: ${charset.length} / 文字数: ${length}`;
+
+    // 生成したパスワードの強度も自動チェック
+    passwordInput.value = password;
+    passwordInput.type = 'text';
+    document.getElementById('toggleVis').textContent = '非表示';
+    passwordInput.dispatchEvent(new Event('input'));
+  }
+
+  // コピー
+  document.getElementById('btnCopy').addEventListener('click', () => {
+    const password = document.getElementById('generatedPassword').value;
+    if (!password) return;
+
+    navigator.clipboard.writeText(password).then(() => {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    });
+  });
+
+  // 初期生成
+  generatePassword();
+</script>
+</body>
+</html>

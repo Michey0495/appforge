@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カラーパレット生成</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"],
+  input[type="color"] {
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus { border-color: #1e3461; }
+
+  input[type="color"] {
+    width: 48px;
+    height: 36px;
+    padding: 2px;
+    cursor: pointer;
+  }
+
+  .section { margin-bottom: 32px; }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: #2e4f87; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  /* ベースカラー選択 */
+  .base-color-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .base-color-row input[type="text"] {
+    width: 120px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* パレットグリッド */
+  .palette-section {
+    margin-bottom: 24px;
+  }
+  .palette-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a1a2e;
+    margin-bottom: 10px;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .color-card {
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+  }
+  .color-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  }
+  .color-swatch {
+    width: 100%;
+    height: 64px;
+  }
+  .color-info {
+    padding: 8px 10px;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  .color-hex {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-weight: 500;
+    color: #1a1a2e;
+  }
+  .color-rgb,
+  .color-hsl {
+    color: #9ca3af;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 10px;
+  }
+
+  /* WCAGチェッカー */
+  .contrast-section {
+    padding: 20px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+  }
+  .contrast-inputs {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .contrast-inputs .field { display: flex; flex-direction: column; }
+  .contrast-inputs input[type="text"] {
+    width: 100px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .contrast-preview {
+    padding: 16px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .contrast-results {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .contrast-item {
+    text-align: center;
+    padding: 8px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+  }
+  .contrast-ratio {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .contrast-label {
+    font-size: 10px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 2px;
+  }
+  .pass { color: #166534; }
+  .fail { color: #b91c1c; }
+
+  /* エクスポート */
+  .export-area {
+    width: 100%;
+    min-height: 100px;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    background: #fafafa;
+    color: #1a1a2e;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  .export-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    margin: 32px 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="header-title">カラーパレット生成</span>
+    <span class="header-subtitle">Color Palette Generator</span>
+  </div>
+
+  <!-- ベースカラー選択 -->
+  <div class="section">
+    <label>ベースカラー</label>
+    <div class="base-color-row">
+      <input type="color" id="colorPicker" value="#1e3461">
+      <input type="text" id="colorHex" value="#1e3461" placeholder="#000000">
+      <button class="btn" id="btnGenerate">パレット生成</button>
+    </div>
+  </div>
+
+  <!-- パレット表示エリア -->
+  <div id="palettes"></div>
+
+  <hr class="divider">
+
+  <!-- WCAGコントラストチェッカー -->
+  <div class="section">
+    <label>WCAGコントラストチェック</label>
+    <div class="contrast-section">
+      <div class="contrast-inputs">
+        <div class="field">
+          <label>テキスト色</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="color" id="contrastFg" value="#1a1a2e" style="width:36px; height:30px;">
+            <input type="text" id="contrastFgHex" value="#1a1a2e">
+          </div>
+        </div>
+        <div class="field">
+          <label>背景色</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="color" id="contrastBg" value="#ffffff" style="width:36px; height:30px;">
+            <input type="text" id="contrastBgHex" value="#ffffff">
+          </div>
+        </div>
+        <button class="btn" id="btnCheckContrast">チェック</button>
+      </div>
+
+      <div class="contrast-preview" id="contrastPreview" style="background:#ffffff; color:#1a1a2e;">
+        サンプルテキスト Sample Text 123
+      </div>
+
+      <div class="contrast-results" id="contrastResults">
+        <div class="contrast-item">
+          <div class="contrast-ratio" id="contrastRatioVal">---</div>
+          <div class="contrast-label">コントラスト比</div>
+        </div>
+        <div class="contrast-item">
+          <div id="wcagAA" class="contrast-ratio">---</div>
+          <div class="contrast-label">AA (4.5:1)</div>
+        </div>
+        <div class="contrast-item">
+          <div id="wcagAAA" class="contrast-ratio">---</div>
+          <div class="contrast-label">AAA (7:1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- CSSエクスポート -->
+  <div class="section">
+    <div class="export-header">
+      <label style="margin-bottom:0;">CSS Custom Properties</label>
+      <button class="btn btn-outline" id="btnCopyExport" style="font-size:11px; padding:4px 10px;">コピー</button>
+    </div>
+    <div class="export-area" id="exportArea">パレットを生成してください</div>
+  </div>
+</div>
+
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+  // 色変換ユーティリティ
+
+  // HEX -> RGB
+  function hexToRgb(hex) {
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const n = parseInt(hex, 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+
+  // RGB -> HEX
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(v => {
+      const c = Math.max(0, Math.min(255, Math.round(v)));
+      return c.toString(16).padStart(2, '0');
+    }).join('');
+  }
+
+  // RGB -> HSL
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        case b: h = ((r - g) / d + 4) / 6; break;
+      }
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+
+  // HSL -> RGB
+  function hslToRgb(h, s, l) {
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+
+    if (s === 0) {
+      r = g = b = l;
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1/3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1/3);
+    }
+    return {
+      r: Math.round(r * 255),
+      g: Math.round(g * 255),
+      b: Math.round(b * 255)
+    };
+  }
+
+  // 色相を正規化
+  function normalizeHue(h) {
+    return ((h % 360) + 360) % 360;
+  }
+
+  // 配色パターン生成
+  function generatePalettes(hex) {
+    const rgb = hexToRgb(hex);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+    const palettes = {
+      complementary: [
+        hsl,
+        { h: normalizeHue(hsl.h + 180), s: hsl.s, l: hsl.l }
+      ],
+      analogous: [
+        { h: normalizeHue(hsl.h - 30), s: hsl.s, l: hsl.l },
+        hsl,
+        { h: normalizeHue(hsl.h + 30), s: hsl.s, l: hsl.l }
+      ],
+      triadic: [
+        hsl,
+        { h: normalizeHue(hsl.h + 120), s: hsl.s, l: hsl.l },
+        { h: normalizeHue(hsl.h + 240), s: hsl.s, l: hsl.l }
+      ],
+      splitComplementary: [
+        hsl,
+        { h: normalizeHue(hsl.h + 150), s: hsl.s, l: hsl.l },
+        { h: normalizeHue(hsl.h + 210), s: hsl.s, l: hsl.l }
+      ]
+    };
+
+    // 各パレットに明度バリエーションを追加
+    const expanded = {};
+    Object.entries(palettes).forEach(([name, colors]) => {
+      expanded[name] = [];
+      colors.forEach(c => {
+        // 元の色 + 明るいバリエーション + 暗いバリエーション
+        expanded[name].push(
+          { h: c.h, s: c.s, l: Math.min(95, c.l + 30) },
+          { h: c.h, s: c.s, l: Math.min(80, c.l + 15) },
+          c,
+          { h: c.h, s: c.s, l: Math.max(10, c.l - 15) }
+        );
+      });
+    });
+
+    return expanded;
+  }
+
+  // カラーカードHTML生成
+  function createColorCard(hslObj) {
+    const rgb = hslToRgb(hslObj.h, hslObj.s, hslObj.l);
+    const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+    const card = document.createElement('div');
+    card.className = 'color-card';
+    card.title = 'クリックでコピー';
+    card.innerHTML = `
+      <div class="color-swatch" style="background: ${hex};"></div>
+      <div class="color-info">
+        <div class="color-hex">${hex.toUpperCase()}</div>
+        <div class="color-rgb">rgb(${rgb.r}, ${rgb.g}, ${rgb.b})</div>
+        <div class="color-hsl">hsl(${hslObj.h}, ${hslObj.s}%, ${hslObj.l}%)</div>
+      </div>
+    `;
+    card.addEventListener('click', () => {
+      navigator.clipboard.writeText(hex.toUpperCase()).then(() => showToast(`${hex.toUpperCase()} をコピーしました`));
+    });
+    return card;
+  }
+
+  // パレット名の日本語マッピング
+  const PALETTE_NAMES = {
+    complementary: '補色',
+    analogous: '類似色',
+    triadic: 'トライアド',
+    splitComplementary: 'スプリットコンプリメンタリー'
+  };
+
+  // パレット生成
+  function renderPalettes() {
+    const hex = document.getElementById('colorHex').value.trim();
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+
+    const palettes = generatePalettes(hex);
+    const container = document.getElementById('palettes');
+    container.innerHTML = '';
+
+    Object.entries(palettes).forEach(([name, colors]) => {
+      const section = document.createElement('div');
+      section.className = 'palette-section';
+
+      const title = document.createElement('div');
+      title.className = 'palette-title';
+      title.textContent = PALETTE_NAMES[name] || name;
+      section.appendChild(title);
+
+      const grid = document.createElement('div');
+      grid.className = 'palette-grid';
+      colors.forEach(c => grid.appendChild(createColorCard(c)));
+      section.appendChild(grid);
+
+      container.appendChild(section);
+    });
+
+    // CSSエクスポート更新
+    updateExport(palettes);
+  }
+
+  // CSSエクスポート生成
+  function updateExport(palettes) {
+    let css = ':root {\n';
+    Object.entries(palettes).forEach(([name, colors]) => {
+      css += `  /* ${PALETTE_NAMES[name]} */\n`;
+      colors.forEach((c, i) => {
+        const rgb = hslToRgb(c.h, c.s, c.l);
+        const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+        css += `  --${name}-${i + 1}: ${hex};\n`;
+      });
+      css += '\n';
+    });
+    css += '}';
+    document.getElementById('exportArea').textContent = css;
+  }
+
+  // カラーピッカーとテキスト入力の同期
+  document.getElementById('colorPicker').addEventListener('input', (e) => {
+    document.getElementById('colorHex').value = e.target.value;
+  });
+  document.getElementById('colorHex').addEventListener('input', (e) => {
+    const val = e.target.value;
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      document.getElementById('colorPicker').value = val;
+    }
+  });
+
+  // パレット生成ボタン
+  document.getElementById('btnGenerate').addEventListener('click', renderPalettes);
+
+  // WCAGコントラストチェック
+
+  // 相対輝度計算
+  function relativeLuminance(r, g, b) {
+    const [rs, gs, bs] = [r, g, b].map(c => {
+      c = c / 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  }
+
+  // コントラスト比計算
+  function contrastRatio(hex1, hex2) {
+    const rgb1 = hexToRgb(hex1);
+    const rgb2 = hexToRgb(hex2);
+    const l1 = relativeLuminance(rgb1.r, rgb1.g, rgb1.b);
+    const l2 = relativeLuminance(rgb2.r, rgb2.g, rgb2.b);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  // コントラストチェッカーの入力同期
+  document.getElementById('contrastFg').addEventListener('input', (e) => {
+    document.getElementById('contrastFgHex').value = e.target.value;
+    updateContrastPreview();
+  });
+  document.getElementById('contrastFgHex').addEventListener('input', (e) => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+      document.getElementById('contrastFg').value = e.target.value;
+      updateContrastPreview();
+    }
+  });
+  document.getElementById('contrastBg').addEventListener('input', (e) => {
+    document.getElementById('contrastBgHex').value = e.target.value;
+    updateContrastPreview();
+  });
+  document.getElementById('contrastBgHex').addEventListener('input', (e) => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+      document.getElementById('contrastBg').value = e.target.value;
+      updateContrastPreview();
+    }
+  });
+
+  function updateContrastPreview() {
+    const fg = document.getElementById('contrastFgHex').value;
+    const bg = document.getElementById('contrastBgHex').value;
+    const previewEl = document.getElementById('contrastPreview');
+    if (/^#[0-9a-fA-F]{6}$/.test(fg) && /^#[0-9a-fA-F]{6}$/.test(bg)) {
+      previewEl.style.color = fg;
+      previewEl.style.background = bg;
+    }
+  }
+
+  // コントラストチェック実行
+  document.getElementById('btnCheckContrast').addEventListener('click', () => {
+    const fg = document.getElementById('contrastFgHex').value.trim();
+    const bg = document.getElementById('contrastBgHex').value.trim();
+
+    if (!/^#[0-9a-fA-F]{6}$/.test(fg) || !/^#[0-9a-fA-F]{6}$/.test(bg)) return;
+
+    const ratio = contrastRatio(fg, bg);
+    const ratioStr = ratio.toFixed(2);
+
+    document.getElementById('contrastRatioVal').textContent = `${ratioStr}:1`;
+
+    const aaEl = document.getElementById('wcagAA');
+    const aaaEl = document.getElementById('wcagAAA');
+
+    if (ratio >= 4.5) {
+      aaEl.textContent = 'PASS';
+      aaEl.className = 'contrast-ratio pass';
+    } else {
+      aaEl.textContent = 'FAIL';
+      aaEl.className = 'contrast-ratio fail';
+    }
+
+    if (ratio >= 7) {
+      aaaEl.textContent = 'PASS';
+      aaaEl.className = 'contrast-ratio pass';
+    } else {
+      aaaEl.textContent = 'FAIL';
+      aaaEl.className = 'contrast-ratio fail';
+    }
+  });
+
+  // CSSエクスポートコピー
+  document.getElementById('btnCopyExport').addEventListener('click', () => {
+    const text = document.getElementById('exportArea').textContent;
+    navigator.clipboard.writeText(text).then(() => showToast('CSSをコピーしました'));
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  }
+
+  // 初期パレット生成
+  renderPalettes();
+</script>
+</body>
+</html>

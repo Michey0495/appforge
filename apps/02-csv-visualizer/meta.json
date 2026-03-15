@@ -1,0 +1,9 @@
+{
+  "id": "02-csv-visualizer",
+  "name": "CSV可視化ダッシュボード",
+  "category": "data",
+  "description": "CSVファイルをアップロードすると自動でグラフを生成。棒グラフ、折れ線、円グラフに対応。基本統計量も表示する。",
+  "usesAI": false,
+  "libraries": ["PapaParse", "Chart.js"],
+  "author": "AI駆動開発デモ"
+}

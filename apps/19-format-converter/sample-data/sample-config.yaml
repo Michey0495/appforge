@@ -1,0 +1,51 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+  basePath: /api/v1
+  cors:
+    allowedOrigins:
+      - https://app.example.co.jp
+      - https://admin.example.co.jp
+    allowedMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+
+database:
+  primary:
+    host: db-primary.internal
+    port: 5432
+    name: app_production
+    user: app_user
+    maxConnections: 20
+    idleTimeout: 30000
+  replica:
+    host: db-replica.internal
+    port: 5432
+    name: app_production
+    user: app_readonly
+    maxConnections: 10
+
+logging:
+  level: info
+  format: json
+  output: stdout
+  rotation:
+    maxSize: 100MB
+    maxAge: 30
+    compress: true
+
+cache:
+  provider: redis
+  host: redis.internal
+  port: 6379
+  ttl: 3600
+  prefix: app
+
+featureFlags:
+  enableNewDashboard: true
+  enableBetaSearch: false
+  enableExportPdf: true
+  maintenanceMode: false
+  maxUploadSizeMb: 50

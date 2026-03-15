@@ -1,0 +1,115 @@
+{
+  "description": "WCAG 2.1 コントラスト比テスト用の色ペア。AA基準は通常テキスト4.5:1以上、大テキスト3:1以上。AAA基準は通常テキスト7:1以上、大テキスト4.5:1以上。",
+  "test_pairs": [
+    {
+      "id": 1,
+      "name": "黒テキスト on 白背景",
+      "foreground": "#000000",
+      "background": "#FFFFFF",
+      "contrast_ratio": 21.0,
+      "wcag_aa_normal": "pass",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "pass",
+      "wcag_aaa_large": "pass"
+    },
+    {
+      "id": 2,
+      "name": "ダークグレー on ライトグレー背景",
+      "foreground": "#374151",
+      "background": "#F9FAFB",
+      "contrast_ratio": 10.3,
+      "wcag_aa_normal": "pass",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "pass",
+      "wcag_aaa_large": "pass"
+    },
+    {
+      "id": 3,
+      "name": "ネイビーテキスト on 白背景",
+      "foreground": "#1e3461",
+      "background": "#FFFFFF",
+      "contrast_ratio": 12.1,
+      "wcag_aa_normal": "pass",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "pass",
+      "wcag_aaa_large": "pass"
+    },
+    {
+      "id": 4,
+      "name": "白テキスト on ネイビー背景",
+      "foreground": "#FFFFFF",
+      "background": "#1e3461",
+      "contrast_ratio": 12.1,
+      "wcag_aa_normal": "pass",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "pass",
+      "wcag_aaa_large": "pass"
+    },
+    {
+      "id": 5,
+      "name": "ミディアムグレー on 白背景（不合格例）",
+      "foreground": "#9CA3AF",
+      "background": "#FFFFFF",
+      "contrast_ratio": 2.9,
+      "wcag_aa_normal": "fail",
+      "wcag_aa_large": "fail",
+      "wcag_aaa_normal": "fail",
+      "wcag_aaa_large": "fail"
+    },
+    {
+      "id": 6,
+      "name": "薄い青テキスト on 白背景（不合格例）",
+      "foreground": "#93C5FD",
+      "background": "#FFFFFF",
+      "contrast_ratio": 1.8,
+      "wcag_aa_normal": "fail",
+      "wcag_aa_large": "fail",
+      "wcag_aaa_normal": "fail",
+      "wcag_aaa_large": "fail"
+    },
+    {
+      "id": 7,
+      "name": "赤テキスト on 白背景（AA通過、AAA不合格）",
+      "foreground": "#c23a2e",
+      "background": "#FFFFFF",
+      "contrast_ratio": 5.2,
+      "wcag_aa_normal": "pass",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "fail",
+      "wcag_aaa_large": "pass"
+    },
+    {
+      "id": 8,
+      "name": "グレーテキスト on クリーム背景（境界ケース）",
+      "foreground": "#6B7280",
+      "background": "#FFF8F0",
+      "contrast_ratio": 4.6,
+      "wcag_aa_normal": "pass",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "fail",
+      "wcag_aaa_large": "pass"
+    },
+    {
+      "id": 9,
+      "name": "オレンジテキスト on 黒背景（大テキストのみ通過）",
+      "foreground": "#e07b3c",
+      "background": "#1F2937",
+      "contrast_ratio": 4.2,
+      "wcag_aa_normal": "fail",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "fail",
+      "wcag_aaa_large": "fail"
+    },
+    {
+      "id": 10,
+      "name": "緑テキスト on ダークグリーン背景（不合格例）",
+      "foreground": "#34D399",
+      "background": "#065F46",
+      "contrast_ratio": 3.8,
+      "wcag_aa_normal": "fail",
+      "wcag_aa_large": "pass",
+      "wcag_aaa_normal": "fail",
+      "wcag_aaa_large": "fail"
+    }
+  ]
+}

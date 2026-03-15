@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>面接質問ジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"], input[type="password"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
+    border-color: #1e3461;
+  }
+  textarea {
+    min-height: 200px;
+    resize: vertical;
+    line-height: 1.7;
+  }
+
+  select {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.15s;
+  }
+  select:focus { border-color: #1e3461; }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  .btn-lg {
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .section { margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 20px; }
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .form-row > * { flex: 1; }
+
+  .api-row {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+  }
+  .api-row .form-group { flex: 1; margin-bottom: 0; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #1e3461;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 出力エリア */
+  .output { display: none; }
+  .output.visible { display: block; }
+
+  .category-section {
+    margin-bottom: 32px;
+  }
+  .category-title {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 0;
+    border-bottom: 2px solid #1e3461;
+    margin-bottom: 16px;
+    color: #1e3461;
+  }
+
+  .question-card {
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .question-number {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+  .question-text {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+  .question-hint-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+  .question-hint {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.7;
+    padding-left: 12px;
+    border-left: 2px solid #f3f4f6;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #6b7280;
+    font-size: 13px;
+    display: none;
+  }
+
+  /* 印刷用スタイル */
+  @media print {
+    body { font-size: 11px; }
+    .container { max-width: 100%; padding: 20px; }
+    .header { margin-bottom: 16px; padding-bottom: 8px; }
+    .header-subtitle { display: none; }
+    .section:not(.output-section) { display: none; }
+    .output-actions { display: none !important; }
+    .question-card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      padding: 10px;
+      margin-bottom: 8px;
+      border: 1px solid #d1d5db;
+    }
+    .category-section { break-inside: avoid; page-break-inside: avoid; }
+    .category-title {
+      font-size: 12px;
+      border-bottom-width: 1px;
+      margin-bottom: 8px;
+    }
+    .question-text { font-size: 12px; margin-bottom: 6px; }
+    .question-hint { font-size: 10px; }
+
+    .print-header {
+      display: block !important;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .print-meta {
+      display: block !important;
+      text-align: center;
+      font-size: 10px;
+      color: #6b7280;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #d1d5db;
+    }
+  }
+
+  .print-header, .print-meta { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">面接質問ジェネレーター</div>
+      <div class="header-subtitle">求人票から面接質問と評価ポイントを自動生成</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="api-row">
+      <div class="form-group">
+        <label>Anthropic API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-..." />
+      </div>
+      <button class="btn btn-outline" style="font-size:11px; padding:5px 10px;" onclick="saveApiKey()">保存</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="form-group">
+      <label>求人票 (JD) を貼り付け</label>
+      <textarea id="jdInput" placeholder="求人票の内容をここに貼り付けてください。&#10;&#10;職種、必須スキル、歓迎スキル、業務内容などが含まれているほど精度の高い質問が生成されます。"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>職種レベル</label>
+        <select id="levelSelect">
+          <option value="ジュニア">ジュニア</option>
+          <option value="ミドル" selected>ミドル</option>
+          <option value="シニア">シニア</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex; align-items:end;">
+        <button class="btn btn-lg" id="generateBtn" onclick="generate()">質問を生成</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-state" id="loadingState">
+    <span class="spinner"></span>質問を生成しています...
+  </div>
+
+  <div class="section output-section">
+    <div class="print-header" id="printHeader">面接評価シート</div>
+    <div class="print-meta" id="printMeta"></div>
+
+    <div class="output" id="output">
+      <div id="outputContent"></div>
+      <div class="output-actions">
+        <button class="btn" onclick="printSheet()">評価シートを印刷</button>
+        <button class="btn btn-outline" onclick="copyMarkdown()">Markdownでコピー</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let generatedQuestions = null;
+
+// API Key
+function loadApiKey() {
+  const saved = localStorage.getItem('interview_gen_api_key');
+  if (saved) document.getElementById('apiKey').value = saved;
+}
+function saveApiKey() {
+  localStorage.setItem('interview_gen_api_key', document.getElementById('apiKey').value.trim());
+}
+loadApiKey();
+
+async function generate() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const jd = document.getElementById('jdInput').value.trim();
+  const level = document.getElementById('levelSelect').value;
+
+  if (!apiKey) { alert('APIキーを入力してください'); return; }
+  if (!jd) { alert('求人票を入力してください'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  const loading = document.getElementById('loadingState');
+  const output = document.getElementById('output');
+
+  btn.disabled = true;
+  loading.style.display = '';
+  output.classList.remove('visible');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        system: `あなたは採用面接の専門コンサルタントです。提供された求人票と職種レベルに基づき、面接質問と評価ポイントを生成してください。
+
+出力はJSON形式で、以下の構造に厳密に従ってください。他のテキストは一切含めないでください。
+
+{
+  "technical": [
+    {"question": "質問文", "hint": "期待する回答のポイント・評価基準"}
+  ],
+  "behavioral": [
+    {"question": "質問文", "hint": "STAR形式での回答例や着眼点"}
+  ],
+  "culture": [
+    {"question": "質問文", "hint": "評価のポイント"}
+  ]
+}
+
+technicalは5問、behavioralは5問、cultureは3問を生成してください。
+質問は具体的に。抽象的な質問（「ご自身の強みは？」など）は避け、求人票の内容に即した質問を作成してください。
+hintは面接官が回答を評価する際の着眼点を具体的に記述してください。`,
+        messages: [{
+          role: 'user',
+          content: `以下の求人票に基づき、${level}レベル向けの面接質問を生成してください。\n\n---\n${jd}`
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSONの抽出に失敗');
+
+    generatedQuestions = JSON.parse(jsonMatch[0]);
+    renderQuestions(generatedQuestions, level);
+
+  } catch (err) {
+    console.error('生成エラー:', err);
+    alert(`生成に失敗しました: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    loading.style.display = 'none';
+  }
+}
+
+function renderQuestions(data, level) {
+  const output = document.getElementById('output');
+  const content = document.getElementById('outputContent');
+
+  // 印刷メタ情報
+  document.getElementById('printMeta').textContent = `職種レベル: ${level} / 生成日: ${new Date().toLocaleDateString('ja-JP')}`;
+
+  const categories = [
+    { key: 'technical', title: '技術質問', items: data.technical || [] },
+    { key: 'behavioral', title: '行動質問 (STAR)', items: data.behavioral || [] },
+    { key: 'culture', title: 'カルチャーフィット質問', items: data.culture || [] }
+  ];
+
+  let html = '';
+  categories.forEach(({ title, items }) => {
+    html += `<div class="category-section">`;
+    html += `<div class="category-title">${title}</div>`;
+    items.forEach((item, i) => {
+      html += `
+        <div class="question-card">
+          <div class="question-number">Q${i + 1}</div>
+          <div class="question-text">${escapeHtml(item.question)}</div>
+          <div class="question-hint-label">評価ポイント</div>
+          <div class="question-hint">${escapeHtml(item.hint)}</div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  });
+
+  content.innerHTML = html;
+  output.classList.add('visible');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function printSheet() {
+  window.print();
+}
+
+function copyMarkdown() {
+  if (!generatedQuestions) return;
+
+  const categories = [
+    { title: '技術質問', items: generatedQuestions.technical || [] },
+    { title: '行動質問 (STAR)', items: generatedQuestions.behavioral || [] },
+    { title: 'カルチャーフィット質問', items: generatedQuestions.culture || [] }
+  ];
+
+  let md = '# 面接質問シート\n\n';
+  categories.forEach(({ title, items }) => {
+    md += `## ${title}\n\n`;
+    items.forEach((item, i) => {
+      md += `### Q${i + 1}. ${item.question}\n\n`;
+      md += `> 評価ポイント: ${item.hint}\n\n`;
+    });
+  });
+
+  navigator.clipboard.writeText(md).then(() => {
+    const btn = document.querySelector('.output-actions .btn-outline');
+    const original = btn.textContent;
+    btn.textContent = 'コピー済み';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  });
+}
+</script>
+</body>
+</html>

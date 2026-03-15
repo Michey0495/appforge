@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "ページ速度チェッカー",
+  "version": "1.0.0",
+  "description": "アクティブタブのパフォーマンス指標を計測・表示するChrome拡張",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ページ速度チェッカー"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "icons": {}
+}

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>名刺OCR → CSV変換</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus {
+    border-color: #1e3461;
+  }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  .section { margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 20px; }
+
+  /* ドロップゾーン */
+  .dropzone {
+    border: 2px dashed #e5e7eb;
+    border-radius: 2px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: #1e3461;
+    background: #f8f9fb;
+  }
+  .dropzone-text {
+    font-size: 13px;
+    color: #9ca3af;
+  }
+  .dropzone-text span {
+    color: #1e3461;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* カードプレビュー */
+  .card-queue {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .card-item {
+    width: 120px;
+    position: relative;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .card-item img {
+    width: 100%;
+    height: 72px;
+    object-fit: cover;
+    display: block;
+  }
+  .card-item-status {
+    font-size: 10px;
+    padding: 4px 6px;
+    color: #9ca3af;
+    text-align: center;
+  }
+  .card-item-status.processing { color: #1e3461; }
+  .card-item-status.done { color: #059669; }
+  .card-item-status.error { color: #dc2626; }
+
+  /* スピナー */
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #1e3461;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* テーブル */
+  .table-wrap {
+    overflow-x: auto;
+    margin-top: 24px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th {
+    background: #f8f9fb;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+  td input {
+    width: 100%;
+    border: 1px solid transparent;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 2px;
+    background: transparent;
+    outline: none;
+  }
+  td input:hover { border-color: #e5e7eb; }
+  td input:focus { border-color: #1e3461; background: #ffffff; }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  .api-row {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+  }
+  .api-row .form-group { flex: 1; margin-bottom: 0; }
+
+  .delete-row {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+  }
+  .delete-row:hover { color: #dc2626; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">名刺OCR → CSV変換</div>
+      <div class="header-subtitle">名刺画像から連絡先情報を抽出し、CSV/vCardとして出力</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="api-row">
+      <div class="form-group">
+        <label>Anthropic API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-..." />
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="saveApiKey()">保存</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>名刺画像をドロップまたは選択</label>
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-text">ここに画像をドラッグ&ドロップ、または<span>クリックして選択</span></div>
+      <input type="file" id="fileInput" accept="image/*" multiple />
+    </div>
+    <div class="card-queue" id="cardQueue"></div>
+  </div>
+
+  <div class="section">
+    <div class="table-wrap" id="tableWrap">
+      <div class="empty-state" id="emptyState">名刺画像をアップロードすると、ここに抽出結果が表示されます</div>
+      <table id="resultTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>氏名</th>
+            <th>会社名</th>
+            <th>部署</th>
+            <th>役職</th>
+            <th>メール</th>
+            <th>電話</th>
+            <th>住所</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+    <div class="actions" id="exportActions" style="display:none;">
+      <button class="btn" onclick="downloadCSV()">CSVダウンロード</button>
+      <button class="btn btn-outline" onclick="downloadVCard()">vCardダウンロード</button>
+      <button class="btn btn-outline" onclick="clearAll()">全件クリア</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FIELDS = ['name', 'company', 'department', 'title', 'email', 'phone', 'address'];
+const HEADERS = ['氏名', '会社名', '部署', '役職', 'メール', '電話', '住所'];
+
+let cardData = [];
+
+// API Key の保存・読み込み
+function loadApiKey() {
+  const saved = localStorage.getItem('namecard_ocr_api_key');
+  if (saved) document.getElementById('apiKey').value = saved;
+}
+function saveApiKey() {
+  localStorage.setItem('namecard_ocr_api_key', document.getElementById('apiKey').value.trim());
+}
+loadApiKey();
+
+// ドロップゾーン
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropzone.classList.add('dragover');
+});
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) {
+    alert('APIキーを入力してください');
+    return;
+  }
+
+  Array.from(files).forEach((file) => {
+    if (!file.type.startsWith('image/')) return;
+    const idx = addCardPreview(file);
+    processCard(file, apiKey, idx);
+  });
+}
+
+function addCardPreview(file) {
+  const queue = document.getElementById('cardQueue');
+  const idx = queue.children.length;
+  const item = document.createElement('div');
+  item.className = 'card-item';
+  item.id = `card-${idx}`;
+
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(file);
+  item.appendChild(img);
+
+  const status = document.createElement('div');
+  status.className = 'card-item-status processing';
+  status.innerHTML = '<span class="spinner"></span>処理中';
+  item.appendChild(status);
+
+  queue.appendChild(item);
+  return idx;
+}
+
+function updateCardStatus(idx, state, text) {
+  const item = document.getElementById(`card-${idx}`);
+  if (!item) return;
+  const status = item.querySelector('.card-item-status');
+  status.className = `card-item-status ${state}`;
+  status.textContent = text;
+}
+
+async function processCard(file, apiKey, idx) {
+  try {
+    const base64 = await fileToBase64(file);
+    const mediaType = file.type || 'image/jpeg';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `この名刺画像から以下の情報をJSON形式で抽出してください。読み取れない項目は空文字にしてください。
+出力形式（JSONのみ、他のテキスト不要）:
+{"name":"氏名","company":"会社名","department":"部署","title":"役職","email":"メールアドレス","phone":"電話番号","address":"住所"}`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.content[0].text;
+
+    // JSONを抽出（コードブロックで囲まれている場合にも対応）
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSONの抽出に失敗しました');
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    addRow(parsed);
+    updateCardStatus(idx, 'done', '完了');
+
+  } catch (err) {
+    console.error('OCR処理エラー:', err);
+    updateCardStatus(idx, 'error', 'エラー');
+    alert(`名刺 ${idx + 1} の処理に失敗しました: ${err.message}`);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      // data:image/...;base64, のプレフィックスを除去
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function addRow(data) {
+  const table = document.getElementById('resultTable');
+  const tbody = document.getElementById('resultBody');
+  const emptyState = document.getElementById('emptyState');
+  const exportActions = document.getElementById('exportActions');
+
+  table.style.display = '';
+  emptyState.style.display = 'none';
+  exportActions.style.display = '';
+
+  const rowIdx = cardData.length;
+  cardData = [...cardData, { ...data }];
+
+  const tr = document.createElement('tr');
+  tr.id = `row-${rowIdx}`;
+
+  FIELDS.forEach((field) => {
+    const td = document.createElement('td');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = data[field] || '';
+    input.dataset.field = field;
+    input.dataset.row = rowIdx;
+    input.addEventListener('change', (e) => {
+      cardData = cardData.map((item, i) =>
+        i === parseInt(e.target.dataset.row)
+          ? { ...item, [e.target.dataset.field]: e.target.value }
+          : item
+      );
+    });
+    td.appendChild(input);
+    tr.appendChild(td);
+  });
+
+  // 削除ボタン
+  const tdDel = document.createElement('td');
+  const delBtn = document.createElement('button');
+  delBtn.className = 'delete-row';
+  delBtn.textContent = 'x';
+  delBtn.onclick = () => removeRow(rowIdx);
+  tdDel.appendChild(delBtn);
+  tr.appendChild(tdDel);
+
+  tbody.appendChild(tr);
+}
+
+function removeRow(idx) {
+  const tr = document.getElementById(`row-${idx}`);
+  if (tr) tr.remove();
+  cardData = cardData.map((item, i) => i === idx ? null : item).filter(Boolean);
+
+  if (cardData.length === 0) {
+    document.getElementById('resultTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('exportActions').style.display = 'none';
+  }
+}
+
+function downloadCSV() {
+  if (cardData.length === 0) return;
+
+  const bom = '\uFEFF';
+  const header = HEADERS.join(',');
+  const rows = cardData.map((d) =>
+    FIELDS.map((f) => `"${(d[f] || '').replace(/"/g, '""')}"`).join(',')
+  );
+  const csv = bom + header + '\n' + rows.join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, `名刺データ_${formatDate()}.csv`);
+}
+
+function downloadVCard() {
+  if (cardData.length === 0) return;
+
+  const vcards = cardData.map((d) => {
+    const lines = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `FN:${d.name || ''}`,
+      `ORG:${d.company || ''}${d.department ? ';' + d.department : ''}`,
+      `TITLE:${d.title || ''}`,
+      `EMAIL:${d.email || ''}`,
+      `TEL:${d.phone || ''}`,
+      `ADR:;;${d.address || ''};;;;`,
+      'END:VCARD'
+    ];
+    return lines.join('\r\n');
+  });
+
+  const blob = new Blob([vcards.join('\r\n')], { type: 'text/vcard;charset=utf-8;' });
+  downloadBlob(blob, `名刺データ_${formatDate()}.vcf`);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatDate() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function clearAll() {
+  if (!confirm('全件クリアしますか？')) return;
+  cardData = [];
+  document.getElementById('resultBody').innerHTML = '';
+  document.getElementById('resultTable').style.display = 'none';
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('exportActions').style.display = 'none';
+  document.getElementById('cardQueue').innerHTML = '';
+}
+</script>
+</body>
+</html>

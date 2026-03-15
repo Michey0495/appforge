@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cron式ビルダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff; color: #1a1a2e;
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px; letter-spacing: -0.01em; line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; }
+  .header .subtitle { font-size: 11px; color: #9ca3af; }
+  label {
+    display: block; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"] {
+    border: 1px solid #e5e7eb; padding: 8px 12px; font-size: 13px;
+    border-radius: 2px; width: 100%; font-family: inherit;
+    color: #1a1a2e; background: #ffffff; outline: none;
+  }
+  input:focus { border-color: #1e3461; }
+  .btn {
+    background: #1e3461; color: #ffffff; padding: 8px 16px; font-size: 12px;
+    border-radius: 2px; border: none; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn-secondary {
+    background: #ffffff; border: 1px solid #e5e7eb; color: #6b7280;
+  }
+  .btn-secondary:hover { background: #f9fafb; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-active { background: #1e3461; color: #ffffff; border-color: #1e3461; }
+  .section { margin-bottom: 28px; }
+  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+
+  /* Cron式表示 */
+  .cron-display {
+    background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 2px;
+    padding: 24px; text-align: center; margin-bottom: 8px;
+  }
+  .cron-expression {
+    font-family: 'JetBrains Mono', monospace; font-size: 32px;
+    font-weight: 600; color: #1e3461; letter-spacing: 0.08em;
+    user-select: all;
+  }
+  .cron-description {
+    font-size: 13px; color: #6b7280; margin-top: 12px; line-height: 1.5;
+  }
+  .cron-actions {
+    display: flex; justify-content: center; gap: 8px; margin-top: 12px;
+  }
+
+  /* 手動入力 */
+  .manual-input {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 24px;
+  }
+  .manual-input input {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    max-width: 300px; text-align: center; letter-spacing: 0.05em;
+  }
+
+  /* プリセット */
+  .presets {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;
+  }
+
+  /* フィールド */
+  .fields-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  }
+  .field-card {
+    border: 1px solid #f3f4f6; border-radius: 2px; padding: 12px;
+  }
+  .field-title {
+    font-size: 12px; font-weight: 600; margin-bottom: 8px;
+    padding-bottom: 6px; border-bottom: 1px solid #f3f4f6;
+  }
+  .field-current {
+    font-family: 'JetBrains Mono', monospace; font-size: 14px;
+    font-weight: 600; color: #1e3461; float: right;
+  }
+
+  .radio-group { margin-bottom: 8px; }
+  .radio-item {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 4px; font-size: 12px; cursor: pointer;
+  }
+  .radio-item input[type="radio"] {
+    accent-color: #1e3461; cursor: pointer;
+    width: 14px; height: 14px;
+  }
+  .interval-input {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px;
+  }
+  .interval-input input[type="number"] {
+    width: 50px; padding: 3px 6px; font-size: 11px; text-align: center;
+  }
+
+  /* チェックボックスグリッド */
+  .checkbox-grid {
+    display: grid; gap: 2px; margin-top: 6px;
+    max-height: 160px; overflow-y: auto;
+  }
+  .checkbox-grid.cols-6 { grid-template-columns: repeat(6, 1fr); }
+  .checkbox-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .checkbox-grid label {
+    display: flex; align-items: center; gap: 3px;
+    font-size: 10px; padding: 2px 3px; cursor: pointer;
+    margin-bottom: 0; text-transform: none; letter-spacing: normal;
+    color: #1a1a2e;
+  }
+  .checkbox-grid input[type="checkbox"] {
+    width: 13px; height: 13px; accent-color: #1e3461; cursor: pointer;
+  }
+
+  /* 次回実行 */
+  .next-runs {
+    border: 1px solid #f3f4f6; border-radius: 2px;
+  }
+  .next-run-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 12px; border-bottom: 1px solid #f3f4f6; font-size: 12px;
+  }
+  .next-run-item:last-child { border-bottom: none; }
+  .next-run-item:hover { background: #fafafa; }
+  .next-run-num { color: #9ca3af; font-size: 11px; width: 24px; }
+  .next-run-date { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .next-run-relative { color: #9ca3af; font-size: 11px; }
+
+  .copied-toast {
+    position: fixed; top: 20px; right: 20px; background: #1e3461;
+    color: #fff; padding: 8px 16px; border-radius: 2px; font-size: 12px;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 100;
+  }
+  .copied-toast.show { opacity: 1; }
+
+  @media (max-width: 768px) {
+    .fields-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Cron式ビルダー</h1>
+    <span class="subtitle">Visual Cron Expression Builder</span>
+  </div>
+
+  <!-- Cron式表示 -->
+  <div class="section">
+    <div class="cron-display">
+      <div class="cron-expression" id="cronExpression">* * * * *</div>
+      <div class="cron-description" id="cronDescription">毎分実行</div>
+      <div class="cron-actions">
+        <button class="btn btn-sm" onclick="copyExpression()">コピー</button>
+      </div>
+    </div>
+    <div class="manual-input">
+      <label style="margin-bottom:0; white-space:nowrap;">手動入力</label>
+      <input type="text" id="manualInput" placeholder="* * * * *" value="* * * * *" oninput="parseManualInput()">
+      <button class="btn btn-sm btn-secondary" onclick="applyManualInput()">適用</button>
+    </div>
+  </div>
+
+  <!-- プリセット -->
+  <div class="section">
+    <h2>プリセット</h2>
+    <div class="presets">
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('* * * * *')">毎分</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 * * * *')">毎時</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 9 * * *')">毎日9時</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 9 * * 1')">毎週月曜9時</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 0 1 * *')">毎月1日0時</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 9 * * 1-5')">平日のみ9時</button>
+    </div>
+  </div>
+
+  <!-- フィールド -->
+  <div class="section">
+    <h2>フィールド設定</h2>
+    <div class="fields-grid">
+      <!-- 分 -->
+      <div class="field-card">
+        <div class="field-title">分 <span class="field-current" id="fieldVal_min">*</span></div>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="min_mode" value="all" checked onchange="updateField('min')"> 全て (*)
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="min_mode" value="specific" onchange="updateField('min')"> 指定
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="min_mode" value="interval" onchange="updateField('min')">
+            <span class="interval-input">間隔 */<input type="number" id="min_interval" value="5" min="1" max="59" onchange="updateField('min')" oninput="updateField('min')"></span>
+          </label>
+        </div>
+        <div class="checkbox-grid cols-6" id="min_checks" style="display:none;"></div>
+      </div>
+      <!-- 時 -->
+      <div class="field-card">
+        <div class="field-title">時 <span class="field-current" id="fieldVal_hour">*</span></div>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="hour_mode" value="all" checked onchange="updateField('hour')"> 全て (*)
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="hour_mode" value="specific" onchange="updateField('hour')"> 指定
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="hour_mode" value="interval" onchange="updateField('hour')">
+            <span class="interval-input">間隔 */<input type="number" id="hour_interval" value="2" min="1" max="23" onchange="updateField('hour')" oninput="updateField('hour')"></span>
+          </label>
+        </div>
+        <div class="checkbox-grid cols-6" id="hour_checks" style="display:none;"></div>
+      </div>
+      <!-- 日 -->
+      <div class="field-card">
+        <div class="field-title">日 <span class="field-current" id="fieldVal_dom">*</span></div>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="dom_mode" value="all" checked onchange="updateField('dom')"> 全て (*)
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="dom_mode" value="specific" onchange="updateField('dom')"> 指定
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="dom_mode" value="interval" onchange="updateField('dom')">
+            <span class="interval-input">間隔 */<input type="number" id="dom_interval" value="2" min="1" max="31" onchange="updateField('dom')" oninput="updateField('dom')"></span>
+          </label>
+        </div>
+        <div class="checkbox-grid cols-4" id="dom_checks" style="display:none;"></div>
+      </div>
+      <!-- 月 -->
+      <div class="field-card">
+        <div class="field-title">月 <span class="field-current" id="fieldVal_month">*</span></div>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="month_mode" value="all" checked onchange="updateField('month')"> 全て (*)
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="month_mode" value="specific" onchange="updateField('month')"> 指定
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="month_mode" value="interval" onchange="updateField('month')">
+            <span class="interval-input">間隔 */<input type="number" id="month_interval" value="2" min="1" max="12" onchange="updateField('month')" oninput="updateField('month')"></span>
+          </label>
+        </div>
+        <div class="checkbox-grid cols-4" id="month_checks" style="display:none;"></div>
+      </div>
+      <!-- 曜日 -->
+      <div class="field-card">
+        <div class="field-title">曜日 <span class="field-current" id="fieldVal_dow">*</span></div>
+        <div class="radio-group">
+          <label class="radio-item">
+            <input type="radio" name="dow_mode" value="all" checked onchange="updateField('dow')"> 全て (*)
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="dow_mode" value="specific" onchange="updateField('dow')"> 指定
+          </label>
+          <label class="radio-item">
+            <input type="radio" name="dow_mode" value="interval" onchange="updateField('dow')">
+            <span class="interval-input">間隔 */<input type="number" id="dow_interval" value="2" min="1" max="6" onchange="updateField('dow')" oninput="updateField('dow')"></span>
+          </label>
+        </div>
+        <div class="checkbox-grid cols-4" id="dow_checks" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 次回実行日時 -->
+  <div class="section">
+    <h2>次回実行日時</h2>
+    <div class="next-runs" id="nextRuns"></div>
+  </div>
+</div>
+
+<div class="copied-toast" id="copiedToast">コピーしました</div>
+
+<script>
+  // フィールド定義
+  const FIELDS = {
+    min:   { min: 0, max: 59, labels: null },
+    hour:  { min: 0, max: 23, labels: null },
+    dom:   { min: 1, max: 31, labels: null },
+    month: { min: 1, max: 12, labels: ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'] },
+    dow:   { min: 0, max: 6, labels: ['日','月','火','水','木','金','土'] },
+  };
+
+  const FIELD_ORDER = ['min', 'hour', 'dom', 'month', 'dow'];
+  const DOW_NAMES = ['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+  const MONTH_NAMES = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+
+  // チェックボックス群を初期化
+  const initCheckboxes = () => {
+    FIELD_ORDER.forEach(field => {
+      const def = FIELDS[field];
+      const container = document.getElementById(`${field}_checks`);
+      let html = '';
+      for (let i = def.min; i <= def.max; i++) {
+        const lbl = def.labels ? def.labels[i - def.min] : String(i);
+        html += `<label><input type="checkbox" data-field="${field}" value="${i}" onchange="updateField('${field}')"> ${lbl}</label>`;
+      }
+      container.innerHTML = html;
+    });
+  };
+
+  // フィールド値を取得
+  const getFieldValue = (field) => {
+    const mode = document.querySelector(`input[name="${field}_mode"]:checked`).value;
+    if (mode === 'all') return '*';
+    if (mode === 'interval') {
+      const n = parseInt(document.getElementById(`${field}_interval`).value) || 1;
+      return `*/${n}`;
+    }
+    // specific
+    const checks = document.querySelectorAll(`#${field}_checks input:checked`);
+    if (checks.length === 0) return '*';
+    const vals = Array.from(checks).map(c => parseInt(c.value)).sort((a, b) => a - b);
+    return compressValues(vals);
+  };
+
+  // 連続値をレンジ表記に圧縮 (1,2,3,4 -> 1-4)
+  const compressValues = (vals) => {
+    if (vals.length === 0) return '*';
+    const ranges = [];
+    let start = vals[0];
+    let end = vals[0];
+    for (let i = 1; i < vals.length; i++) {
+      if (vals[i] === end + 1) {
+        end = vals[i];
+      } else {
+        ranges.push(start === end ? `${start}` : `${start}-${end}`);
+        start = vals[i];
+        end = vals[i];
+      }
+    }
+    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+    return ranges.join(',');
+  };
+
+  // フィールド更新時
+  const updateField = (field) => {
+    const mode = document.querySelector(`input[name="${field}_mode"]:checked`).value;
+    const checksEl = document.getElementById(`${field}_checks`);
+    checksEl.style.display = mode === 'specific' ? 'grid' : 'none';
+
+    const val = getFieldValue(field);
+    document.getElementById(`fieldVal_${field}`).textContent = val;
+
+    updateCronExpression();
+  };
+
+  // Cron式全体を更新
+  const updateCronExpression = () => {
+    const parts = FIELD_ORDER.map(f => getFieldValue(f));
+    const expr = parts.join(' ');
+    document.getElementById('cronExpression').textContent = expr;
+    document.getElementById('manualInput').value = expr;
+    document.getElementById('cronDescription').textContent = describeCron(parts);
+    computeNextRuns(parts);
+  };
+
+  // 日本語説明生成
+  const describeCron = (parts) => {
+    const [min, hour, dom, month, dow] = parts;
+    const segments = [];
+
+    // 月
+    if (month !== '*') {
+      if (month.startsWith('*/')) {
+        segments.push(`${month.slice(2)}ヶ月ごと`);
+      } else {
+        const months = expandField(month, 1, 12);
+        segments.push(months.map(m => MONTH_NAMES[m - 1]).join(', '));
+      }
+    }
+
+    // 曜日
+    if (dow !== '*') {
+      if (dow === '1-5') {
+        segments.push('平日');
+      } else if (dow === '0,6') {
+        segments.push('土日');
+      } else if (dow.startsWith('*/')) {
+        segments.push(`${dow.slice(2)}曜日おき`);
+      } else {
+        const days = expandField(dow, 0, 6);
+        segments.push(days.map(d => DOW_NAMES[d]).join(', '));
+      }
+    }
+
+    // 日
+    if (dom !== '*') {
+      if (dom.startsWith('*/')) {
+        segments.push(`${dom.slice(2)}日ごと`);
+      } else {
+        const days = expandField(dom, 1, 31);
+        segments.push(days.map(d => `${d}日`).join(', '));
+      }
+    } else if (dow === '*' && month === '*') {
+      segments.push('毎日');
+    }
+
+    // 時
+    if (hour !== '*') {
+      if (hour.startsWith('*/')) {
+        segments.push(`${hour.slice(2)}時間ごと`);
+      } else {
+        const hours = expandField(hour, 0, 23);
+        segments.push(hours.map(h => `${h}時`).join(', '));
+      }
+    } else {
+      segments.push('毎時');
+    }
+
+    // 分
+    if (min !== '*') {
+      if (min.startsWith('*/')) {
+        segments.push(`${min.slice(2)}分ごと`);
+      } else {
+        const mins = expandField(min, 0, 59);
+        segments.push(mins.map(m => `${m}分`).join(', '));
+      }
+    } else {
+      segments.push('毎分');
+    }
+
+    // 全ワイルドカードの場合
+    if (parts.every(p => p === '*')) return '毎分実行';
+
+    return segments.join(' ') + ' に実行';
+  };
+
+  // Cronフィールドを展開して数値配列にする
+  const expandField = (expr, min, max) => {
+    if (expr === '*') {
+      const arr = [];
+      for (let i = min; i <= max; i++) arr.push(i);
+      return arr;
+    }
+    const result = new Set();
+    const parts = expr.split(',');
+    parts.forEach(part => {
+      part = part.trim();
+      // */n パターン
+      const stepMatch = part.match(/^\*\/(\d+)$/);
+      if (stepMatch) {
+        const step = parseInt(stepMatch[1]);
+        for (let i = min; i <= max; i += step) result.add(i);
+        return;
+      }
+      // n-m パターン
+      const rangeMatch = part.match(/^(\d+)-(\d+)$/);
+      if (rangeMatch) {
+        const start = parseInt(rangeMatch[1]);
+        const end = parseInt(rangeMatch[2]);
+        for (let i = start; i <= end; i++) result.add(i);
+        return;
+      }
+      // n-m/step パターン
+      const rangeStepMatch = part.match(/^(\d+)-(\d+)\/(\d+)$/);
+      if (rangeStepMatch) {
+        const start = parseInt(rangeStepMatch[1]);
+        const end = parseInt(rangeStepMatch[2]);
+        const step = parseInt(rangeStepMatch[3]);
+        for (let i = start; i <= end; i += step) result.add(i);
+        return;
+      }
+      // 単一値
+      const n = parseInt(part);
+      if (!isNaN(n) && n >= min && n <= max) result.add(n);
+    });
+    return Array.from(result).sort((a, b) => a - b);
+  };
+
+  // 次回実行日時の計算
+  const computeNextRuns = (parts) => {
+    const [minExpr, hourExpr, domExpr, monthExpr, dowExpr] = parts;
+
+    const mins = expandField(minExpr, 0, 59);
+    const hours = expandField(hourExpr, 0, 23);
+    const doms = expandField(domExpr, 1, 31);
+    const months = expandField(monthExpr, 1, 12);
+    const dows = expandField(dowExpr, 0, 6);
+
+    const runs = [];
+    const now = new Date();
+    // 次の分から開始
+    let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1, 0, 0);
+
+    // 最大10回分を、最大2年先まで探索
+    const limit = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
+    let safety = 0;
+    const maxIterations = 525960; // 約1年分の分
+
+    while (runs.length < 10 && cursor < limit && safety < maxIterations) {
+      safety++;
+      const m = cursor.getMonth() + 1;    // 1-12
+      const d = cursor.getDate();          // 1-31
+      const w = cursor.getDay();           // 0-6
+      const h = cursor.getHours();         // 0-23
+      const mi = cursor.getMinutes();      // 0-59
+
+      if (months.includes(m) && matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr) && hours.includes(h) && mins.includes(mi)) {
+        runs.push(new Date(cursor));
+        cursor = new Date(cursor.getTime() + 60000);
+        continue;
+      }
+
+      // 高速スキップ
+      if (!months.includes(m)) {
+        // 次の対象月まで飛ばす
+        cursor = advanceToNextMonth(cursor, months);
+        continue;
+      }
+      if (!hours.includes(h) || !matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr)) {
+        // 日が合わなければ翌日0:00に
+        if (!matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr)) {
+          cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1, 0, 0, 0);
+          continue;
+        }
+        // 時が合わなければ次の時の0分に
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), h + 1, 0, 0);
+        continue;
+      }
+      cursor = new Date(cursor.getTime() + 60000);
+    }
+
+    renderNextRuns(runs);
+  };
+
+  // cronの仕様: domとdowの両方が*でない場合はOR条件
+  const matchDayOfMonthAndWeek = (doms, dows, day, weekday, domExpr, dowExpr) => {
+    const domAll = domExpr === '*';
+    const dowAll = dowExpr === '*';
+    if (domAll && dowAll) return true;
+    if (domAll) return dows.includes(weekday);
+    if (dowAll) return doms.includes(day);
+    // 両方指定: OR条件（cron標準仕様）
+    return doms.includes(day) || dows.includes(weekday);
+  };
+
+  const advanceToNextMonth = (cursor, months) => {
+    let y = cursor.getFullYear();
+    let m = cursor.getMonth() + 1;
+    for (let i = 0; i < 24; i++) {
+      m++;
+      if (m > 12) { m = 1; y++; }
+      if (months.includes(m)) {
+        return new Date(y, m - 1, 1, 0, 0, 0);
+      }
+    }
+    return new Date(y + 2, 0, 1); // 安全弁
+  };
+
+  // 次回実行日時の描画
+  const renderNextRuns = (runs) => {
+    const container = document.getElementById('nextRuns');
+    if (runs.length === 0) {
+      container.innerHTML = '<div style="padding:16px;text-align:center;color:#9ca3af;font-size:12px;">該当する実行日時がありません</div>';
+      return;
+    }
+    const now = new Date();
+    container.innerHTML = runs.map((d, i) => {
+      const dateStr = formatDateTime(d);
+      const rel = formatRelative(d, now);
+      return `<div class="next-run-item">
+        <span class="next-run-num">${i + 1}.</span>
+        <span class="next-run-date">${dateStr}</span>
+        <span class="next-run-relative">${rel}</span>
+      </div>`;
+    }).join('');
+  };
+
+  const formatDateTime = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const h = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    const dow = ['日','月','火','水','木','金','土'][d.getDay()];
+    return `${y}-${m}-${day} (${dow}) ${h}:${mi}`;
+  };
+
+  const formatRelative = (future, now) => {
+    const diff = future.getTime() - now.getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}分後`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}時間${mins % 60}分後`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}日後`;
+    const months = Math.floor(days / 30);
+    return `約${months}ヶ月後`;
+  };
+
+  // コピー
+  const copyExpression = () => {
+    const expr = document.getElementById('cronExpression').textContent;
+    navigator.clipboard.writeText(expr).then(() => {
+      const toast = document.getElementById('copiedToast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    });
+  };
+
+  // プリセット適用
+  const applyPreset = (expr) => {
+    document.getElementById('manualInput').value = expr;
+    parseCronToUI(expr);
+  };
+
+  // 手動入力からUIに反映
+  const parseManualInput = () => {
+    // リアルタイムで説明だけ更新（UIは適用ボタンで）
+  };
+
+  const applyManualInput = () => {
+    const expr = document.getElementById('manualInput').value.trim();
+    parseCronToUI(expr);
+  };
+
+  // Cron式をUIに反映
+  const parseCronToUI = (expr) => {
+    const parts = expr.split(/\s+/);
+    if (parts.length !== 5) return;
+
+    const fieldNames = ['min', 'hour', 'dom', 'month', 'dow'];
+    const fieldDefs = [
+      { min: 0, max: 59 },
+      { min: 0, max: 23 },
+      { min: 1, max: 31 },
+      { min: 1, max: 12 },
+      { min: 0, max: 6 },
+    ];
+
+    parts.forEach((part, i) => {
+      const field = fieldNames[i];
+      const def = fieldDefs[i];
+
+      // チェックボックスをすべてリセット
+      document.querySelectorAll(`#${field}_checks input`).forEach(cb => cb.checked = false);
+
+      if (part === '*') {
+        document.querySelector(`input[name="${field}_mode"][value="all"]`).checked = true;
+      } else if (part.match(/^\*\/\d+$/)) {
+        document.querySelector(`input[name="${field}_mode"][value="interval"]`).checked = true;
+        document.getElementById(`${field}_interval`).value = parseInt(part.slice(2));
+      } else {
+        document.querySelector(`input[name="${field}_mode"][value="specific"]`).checked = true;
+        const values = expandField(part, def.min, def.max);
+        values.forEach(v => {
+          const cb = document.querySelector(`#${field}_checks input[value="${v}"]`);
+          if (cb) cb.checked = true;
+        });
+      }
+      updateField(field);
+    });
+  };
+
+  // 初期化
+  initCheckboxes();
+  updateCronExpression();
+</script>
+</body>
+</html>

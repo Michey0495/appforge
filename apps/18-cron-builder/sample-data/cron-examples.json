@@ -1,0 +1,122 @@
+[
+  {
+    "expression": "0 9 * * 1-5",
+    "description_ja": "平日毎朝9時に実行",
+    "description_en": "Every weekday at 9:00 AM",
+    "useCase": "日次バッチ処理（売上集計・レポート生成）"
+  },
+  {
+    "expression": "0 0 1 * *",
+    "description_ja": "毎月1日の0時に実行",
+    "description_en": "At midnight on the 1st of every month",
+    "useCase": "月次レポート生成・請求書発行"
+  },
+  {
+    "expression": "*/5 * * * *",
+    "description_ja": "5分おきに実行",
+    "description_en": "Every 5 minutes",
+    "useCase": "ヘルスチェック・外形監視"
+  },
+  {
+    "expression": "0 18 * * 5",
+    "description_ja": "毎週金曜18時に実行",
+    "description_en": "Every Friday at 6:00 PM",
+    "useCase": "週次バックアップ・週報リマインド通知"
+  },
+  {
+    "expression": "30 2 * * *",
+    "description_ja": "毎日2時30分に実行",
+    "description_en": "Every day at 2:30 AM",
+    "useCase": "DBメンテナンス（VACUUM・インデックス再構築）"
+  },
+  {
+    "expression": "0 9,12,18 * * *",
+    "description_ja": "毎日9時・12時・18時に実行",
+    "description_en": "Every day at 9:00 AM, 12:00 PM, and 6:00 PM",
+    "useCase": "通知配信（朝・昼・夕のプッシュ通知）"
+  },
+  {
+    "expression": "0 0 * * 0",
+    "description_ja": "毎週日曜0時に実行",
+    "description_en": "Every Sunday at midnight",
+    "useCase": "ログローテーション・古いセッションの削除"
+  },
+  {
+    "expression": "0 3 * * 1",
+    "description_ja": "毎週月曜3時に実行",
+    "description_en": "Every Monday at 3:00 AM",
+    "useCase": "週次フルバックアップ"
+  },
+  {
+    "expression": "*/30 * * * *",
+    "description_ja": "30分おきに実行",
+    "description_en": "Every 30 minutes",
+    "useCase": "外部APIデータ同期（在庫・価格更新）"
+  },
+  {
+    "expression": "0 8 * * 1-5",
+    "description_ja": "平日毎朝8時に実行",
+    "description_en": "Every weekday at 8:00 AM",
+    "useCase": "Slack朝会リマインド通知"
+  },
+  {
+    "expression": "0 22 * * *",
+    "description_ja": "毎日22時に実行",
+    "description_en": "Every day at 10:00 PM",
+    "useCase": "日次の差分バックアップ"
+  },
+  {
+    "expression": "0 0 15 * *",
+    "description_ja": "毎月15日の0時に実行",
+    "description_en": "At midnight on the 15th of every month",
+    "useCase": "給与計算処理・社会保険料算出"
+  },
+  {
+    "expression": "0 6 1 1 *",
+    "description_ja": "毎年1月1日の6時に実行",
+    "description_en": "January 1st at 6:00 AM every year",
+    "useCase": "年次データアーカイブ・年度切替処理"
+  },
+  {
+    "expression": "*/10 9-18 * * 1-5",
+    "description_ja": "平日9時～18時の間、10分おきに実行",
+    "description_en": "Every 10 minutes, between 9 AM and 6 PM on weekdays",
+    "useCase": "業務時間帯のキュー処理・メール送信"
+  },
+  {
+    "expression": "0 */2 * * *",
+    "description_ja": "2時間おきに実行",
+    "description_en": "Every 2 hours",
+    "useCase": "キャッシュクリア・一時ファイル削除"
+  },
+  {
+    "expression": "0 10 * * 1",
+    "description_ja": "毎週月曜10時に実行",
+    "description_en": "Every Monday at 10:00 AM",
+    "useCase": "週次KPIレポートのメール配信"
+  },
+  {
+    "expression": "0 4 * * 0,3",
+    "description_ja": "毎週水曜と日曜の4時に実行",
+    "description_en": "Every Wednesday and Sunday at 4:00 AM",
+    "useCase": "セキュリティスキャン（脆弱性チェック）"
+  },
+  {
+    "expression": "0 0 L * *",
+    "description_ja": "毎月末日の0時に実行",
+    "description_en": "At midnight on the last day of every month",
+    "useCase": "月次締め処理・会計データエクスポート"
+  },
+  {
+    "expression": "0 */6 * * *",
+    "description_ja": "6時間おきに実行",
+    "description_en": "Every 6 hours",
+    "useCase": "SSL証明書の有効期限チェック"
+  },
+  {
+    "expression": "15 9 1-7 * 1",
+    "description_ja": "毎月第1月曜の9時15分に実行",
+    "description_en": "At 9:15 AM on the first Monday of every month",
+    "useCase": "月初の全社定例ミーティングリマインド"
+  }
+]

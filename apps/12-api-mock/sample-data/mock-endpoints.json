@@ -1,0 +1,342 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/employees",
+    "statusCode": 200,
+    "delay": 300,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Total-Count": "5",
+      "X-Request-Id": "req_mock_001"
+    },
+    "responseBody": {
+      "success": true,
+      "data": [
+        {
+          "id": "EMP-001",
+          "name": "山田 太郎",
+          "nameKana": "ヤマダ タロウ",
+          "email": "yamada.taro@example-corp.co.jp",
+          "department": "営業部",
+          "position": "課長",
+          "hireDate": "2018-04-01",
+          "status": "active"
+        },
+        {
+          "id": "EMP-002",
+          "name": "佐藤 花子",
+          "nameKana": "サトウ ハナコ",
+          "email": "sato.hanako@example-corp.co.jp",
+          "department": "開発部",
+          "position": "主任",
+          "hireDate": "2020-04-01",
+          "status": "active"
+        },
+        {
+          "id": "EMP-003",
+          "name": "鈴木 一郎",
+          "nameKana": "スズキ イチロウ",
+          "email": "suzuki.ichiro@example-corp.co.jp",
+          "department": "人事部",
+          "position": "部長",
+          "hireDate": "2015-10-01",
+          "status": "active"
+        },
+        {
+          "id": "EMP-004",
+          "name": "高橋 美咲",
+          "nameKana": "タカハシ ミサキ",
+          "email": "takahashi.misaki@example-corp.co.jp",
+          "department": "開発部",
+          "position": "エンジニア",
+          "hireDate": "2022-04-01",
+          "status": "active"
+        },
+        {
+          "id": "EMP-005",
+          "name": "渡辺 健太",
+          "nameKana": "ワタナベ ケンタ",
+          "email": "watanabe.kenta@example-corp.co.jp",
+          "department": "総務部",
+          "position": "係長",
+          "hireDate": "2019-07-01",
+          "status": "leave"
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "perPage": 20,
+        "totalCount": 5,
+        "totalPages": 1
+      }
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/employees/:id",
+    "statusCode": 200,
+    "delay": 200,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Request-Id": "req_mock_002"
+    },
+    "responseBody": {
+      "success": true,
+      "data": {
+        "id": "EMP-001",
+        "name": "山田 太郎",
+        "nameKana": "ヤマダ タロウ",
+        "email": "yamada.taro@example-corp.co.jp",
+        "department": "営業部",
+        "departmentId": "DEPT-01",
+        "position": "課長",
+        "hireDate": "2018-04-01",
+        "birthDate": "1990-05-15",
+        "phone": "090-1234-5678",
+        "address": {
+          "postalCode": "150-0043",
+          "prefecture": "東京都",
+          "city": "渋谷区",
+          "street": "道玄坂1-2-3 ABCビル5F"
+        },
+        "emergencyContact": {
+          "name": "山田 良子",
+          "relationship": "配偶者",
+          "phone": "080-9876-5432"
+        },
+        "skills": ["JavaScript", "TypeScript", "営業企画", "プロジェクト管理"],
+        "status": "active",
+        "createdAt": "2018-04-01T09:00:00+09:00",
+        "updatedAt": "2026-02-15T14:30:00+09:00"
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/employees",
+    "statusCode": 201,
+    "delay": 500,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "Location": "/api/employees/EMP-006",
+      "X-Request-Id": "req_mock_003"
+    },
+    "responseBody": {
+      "success": true,
+      "message": "従業員情報を登録しました",
+      "data": {
+        "id": "EMP-006",
+        "name": "{{request.body.name}}",
+        "nameKana": "{{request.body.nameKana}}",
+        "email": "{{request.body.email}}",
+        "department": "{{request.body.department}}",
+        "position": "{{request.body.position}}",
+        "hireDate": "{{request.body.hireDate}}",
+        "status": "active",
+        "createdAt": "2026-03-15T10:00:00+09:00",
+        "updatedAt": "2026-03-15T10:00:00+09:00"
+      }
+    }
+  },
+  {
+    "method": "PUT",
+    "path": "/api/employees/:id",
+    "statusCode": 200,
+    "delay": 400,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Request-Id": "req_mock_004"
+    },
+    "responseBody": {
+      "success": true,
+      "message": "従業員情報を更新しました",
+      "data": {
+        "id": "{{request.params.id}}",
+        "name": "{{request.body.name}}",
+        "nameKana": "{{request.body.nameKana}}",
+        "email": "{{request.body.email}}",
+        "department": "{{request.body.department}}",
+        "position": "{{request.body.position}}",
+        "status": "active",
+        "updatedAt": "2026-03-15T10:05:00+09:00"
+      }
+    }
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/employees/:id",
+    "statusCode": 200,
+    "delay": 300,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Request-Id": "req_mock_005"
+    },
+    "responseBody": {
+      "success": true,
+      "message": "従業員情報を削除しました",
+      "data": {
+        "id": "{{request.params.id}}",
+        "deletedAt": "2026-03-15T10:10:00+09:00"
+      }
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/departments",
+    "statusCode": 200,
+    "delay": 250,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Request-Id": "req_mock_006"
+    },
+    "responseBody": {
+      "success": true,
+      "data": [
+        {
+          "id": "DEPT-01",
+          "name": "営業部",
+          "manager": "山田 太郎",
+          "headcount": 12,
+          "budget": 45000000,
+          "location": "本社 3F"
+        },
+        {
+          "id": "DEPT-02",
+          "name": "開発部",
+          "manager": "中村 誠",
+          "headcount": 25,
+          "budget": 80000000,
+          "location": "本社 5F"
+        },
+        {
+          "id": "DEPT-03",
+          "name": "人事部",
+          "manager": "鈴木 一郎",
+          "headcount": 8,
+          "budget": 20000000,
+          "location": "本社 2F"
+        },
+        {
+          "id": "DEPT-04",
+          "name": "総務部",
+          "manager": "伊藤 直美",
+          "headcount": 6,
+          "budget": 15000000,
+          "location": "本社 2F"
+        },
+        {
+          "id": "DEPT-05",
+          "name": "経理部",
+          "manager": "小林 裕子",
+          "headcount": 7,
+          "budget": 18000000,
+          "location": "本社 4F"
+        }
+      ]
+    }
+  },
+  {
+    "method": "GET",
+    "path": "/api/attendance",
+    "statusCode": 200,
+    "delay": 400,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Request-Id": "req_mock_007"
+    },
+    "responseBody": {
+      "success": true,
+      "data": {
+        "period": "2026年3月",
+        "summary": {
+          "totalEmployees": 58,
+          "averageWorkingHours": 162.5,
+          "overtimeHours": 18.3,
+          "paidLeaveUsageRate": 0.72,
+          "lateCount": 3,
+          "absentCount": 1
+        },
+        "byDepartment": [
+          {
+            "department": "営業部",
+            "averageWorkingHours": 170.2,
+            "overtimeHours": 25.1,
+            "paidLeaveUsageRate": 0.65
+          },
+          {
+            "department": "開発部",
+            "averageWorkingHours": 168.8,
+            "overtimeHours": 22.4,
+            "paidLeaveUsageRate": 0.68
+          },
+          {
+            "department": "人事部",
+            "averageWorkingHours": 155.0,
+            "overtimeHours": 10.2,
+            "paidLeaveUsageRate": 0.82
+          },
+          {
+            "department": "総務部",
+            "averageWorkingHours": 152.3,
+            "overtimeHours": 8.5,
+            "paidLeaveUsageRate": 0.85
+          },
+          {
+            "department": "経理部",
+            "averageWorkingHours": 160.1,
+            "overtimeHours": 15.3,
+            "paidLeaveUsageRate": 0.78
+          }
+        ],
+        "alerts": [
+          {
+            "type": "overtime_warning",
+            "employeeId": "EMP-002",
+            "name": "佐藤 花子",
+            "message": "今月の残業時間が40時間を超過しています（現在42.5時間）"
+          },
+          {
+            "type": "leave_expiry",
+            "employeeId": "EMP-005",
+            "name": "渡辺 健太",
+            "message": "有給休暇の繰越期限が今月末に迫っています（残8日）"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/login",
+    "statusCode": 200,
+    "delay": 600,
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Request-Id": "req_mock_008"
+    },
+    "responseBody": {
+      "success": true,
+      "message": "ログインに成功しました",
+      "data": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJFTVAtMDAxIiwibmFtZSI6IuWxseeUsOWkqumDjiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTcxMTAwMDAwMCwiZXhwIjoxNzExMDAzNjAwfQ.mock_signature_placeholder",
+        "refreshToken": "rt_a1b2c3d4e5f6g7h8i9j0_mock",
+        "tokenType": "Bearer",
+        "expiresIn": 3600,
+        "user": {
+          "id": "EMP-001",
+          "name": "山田 太郎",
+          "email": "yamada.taro@example-corp.co.jp",
+          "role": "admin",
+          "permissions": [
+            "employees:read",
+            "employees:write",
+            "departments:read",
+            "attendance:read",
+            "attendance:write",
+            "reports:read"
+          ]
+        }
+      }
+    }
+  }
+]

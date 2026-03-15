@@ -1,0 +1,9 @@
+{
+  "id": "06-meeting-minutes",
+  "name": "議事録AI整形ツール",
+  "category": "ai-text",
+  "description": "Zoom/Teams/Slackのチャットログを議事録・決定事項・TODOに自動整形する。",
+  "usesAI": true,
+  "libraries": ["Anthropic API"],
+  "author": "AI駆動開発デモ"
+}

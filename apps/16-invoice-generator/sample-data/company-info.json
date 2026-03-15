@@ -1,0 +1,44 @@
+{
+  "issuer": {
+    "name": "株式会社ネクストビジョン",
+    "zipCode": "150-0002",
+    "address": "東京都渋谷区渋谷二丁目15-1 渋谷クロスタワー12F",
+    "tel": "03-6789-0123",
+    "fax": "03-6789-0124",
+    "email": "info@nextvision.co.jp",
+    "registrationNumber": "T1234567890123",
+    "bankInfo": {
+      "bankName": "三菱UFJ銀行",
+      "branchName": "渋谷支店",
+      "accountType": "普通",
+      "accountNumber": "1234567",
+      "accountHolder": "カ）ネクストビジョン"
+    }
+  },
+  "recipients": [
+    {
+      "name": "東日本電機工業株式会社",
+      "zipCode": "100-0005",
+      "address": "東京都千代田区丸の内一丁目9-2 グラントウキョウサウスタワー8F",
+      "department": "情報システム部",
+      "person": "鈴木 健太郎",
+      "personTitle": "部長"
+    },
+    {
+      "name": "株式会社みらいロジスティクス",
+      "zipCode": "530-0001",
+      "address": "大阪府大阪市北区梅田三丁目3-10 梅田ダイビル15F",
+      "department": "経営企画室 DX推進グループ",
+      "person": "田村 直子",
+      "personTitle": "グループリーダー"
+    },
+    {
+      "name": "北海道フーズホールディングス株式会社",
+      "zipCode": "060-0042",
+      "address": "北海道札幌市中央区大通西四丁目1 道銀ビルディング6F",
+      "department": "管理本部 情報技術課",
+      "person": "高橋 誠",
+      "personTitle": "課長"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "15-gantt-chart",
+  "name": "ガントチャート生成",
+  "category": "project-management",
+  "description": "タスクのスケジュールをCanvas上にガントチャートとして描画。日/週/月スケール切替、PNG出力、今日マーカー表示。",
+  "usesAI": false,
+  "libraries": ["Vanilla JS", "Canvas API"],
+  "author": "AI駆動開発デモ"
+}

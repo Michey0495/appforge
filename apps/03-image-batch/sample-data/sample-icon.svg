@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff"/>
+
+  <!-- 外枠 -->
+  <rect x="56" y="56" width="400" height="400" rx="48" fill="#1e3461"/>
+
+  <!-- 内側の背景 -->
+  <rect x="80" y="80" width="352" height="352" rx="32" fill="#1e3461"/>
+
+  <!-- ドキュメントアイコン（メイン） -->
+  <rect x="160" y="120" width="192" height="240" rx="8" fill="#4a90d9"/>
+
+  <!-- ドキュメントの折り返し -->
+  <polygon points="304,120 352,168 304,168" fill="#1e3461"/>
+  <polygon points="304,120 352,168 304,168" fill="rgba(255,255,255,0.15)"/>
+
+  <!-- テキスト行を表す線 -->
+  <rect x="188" y="190" width="136" height="6" rx="3" fill="rgba(255,255,255,0.7)"/>
+  <rect x="188" y="214" width="108" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+  <rect x="188" y="238" width="124" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+  <rect x="188" y="262" width="88" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+  <rect x="188" y="286" width="136" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+  <rect x="188" y="310" width="100" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
+
+  <!-- チェックマーク（右下） -->
+  <circle cx="330" cy="340" r="40" fill="#ffffff"/>
+  <circle cx="330" cy="340" r="32" fill="#2d8a4e"/>
+  <polyline points="310,340 324,356 352,324" fill="none" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- アプリ名 -->
+  <text x="256" y="420" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#ffffff" font-weight="bold" letter-spacing="2">BridgeWork</text>
+</svg>

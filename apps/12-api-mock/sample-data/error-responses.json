@@ -1,0 +1,119 @@
+[
+  {
+    "statusCode": 400,
+    "statusText": "Bad Request",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "responseBody": {
+      "success": false,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "入力内容に不備があります",
+        "details": [
+          {
+            "field": "email",
+            "message": "メールアドレスの形式が正しくありません"
+          },
+          {
+            "field": "name",
+            "message": "氏名は必須項目です"
+          }
+        ]
+      },
+      "timestamp": "2026-03-15T10:30:00+09:00",
+      "requestId": "req_err_400"
+    }
+  },
+  {
+    "statusCode": 401,
+    "statusText": "Unauthorized",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "WWW-Authenticate": "Bearer realm=\"example-corp\""
+    },
+    "responseBody": {
+      "success": false,
+      "error": {
+        "code": "UNAUTHORIZED",
+        "message": "認証に失敗しました。ログインし直してください。",
+        "details": [
+          {
+            "reason": "アクセストークンの有効期限が切れています"
+          }
+        ]
+      },
+      "timestamp": "2026-03-15T10:31:00+09:00",
+      "requestId": "req_err_401"
+    }
+  },
+  {
+    "statusCode": 403,
+    "statusText": "Forbidden",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "responseBody": {
+      "success": false,
+      "error": {
+        "code": "FORBIDDEN",
+        "message": "この操作を実行する権限がありません",
+        "details": [
+          {
+            "requiredPermission": "employees:write",
+            "currentRole": "viewer",
+            "message": "従業員情報の編集には管理者権限が必要です。システム管理者にお問い合わせください。"
+          }
+        ]
+      },
+      "timestamp": "2026-03-15T10:32:00+09:00",
+      "requestId": "req_err_403"
+    }
+  },
+  {
+    "statusCode": 404,
+    "statusText": "Not Found",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8"
+    },
+    "responseBody": {
+      "success": false,
+      "error": {
+        "code": "RESOURCE_NOT_FOUND",
+        "message": "指定されたリソースが見つかりません",
+        "details": [
+          {
+            "resource": "Employee",
+            "id": "EMP-999",
+            "message": "従業員ID「EMP-999」に該当するデータは存在しません。IDをご確認の上、再度お試しください。"
+          }
+        ]
+      },
+      "timestamp": "2026-03-15T10:33:00+09:00",
+      "requestId": "req_err_404"
+    }
+  },
+  {
+    "statusCode": 500,
+    "statusText": "Internal Server Error",
+    "headers": {
+      "Content-Type": "application/json; charset=utf-8",
+      "Retry-After": "30"
+    },
+    "responseBody": {
+      "success": false,
+      "error": {
+        "code": "INTERNAL_SERVER_ERROR",
+        "message": "サーバー内部でエラーが発生しました。しばらく時間をおいてから再度お試しください。",
+        "details": [
+          {
+            "traceId": "trace_20260315_103400_abc123",
+            "message": "データベース接続がタイムアウトしました。問題が続く場合はシステム管理者までご連絡ください。"
+          }
+        ]
+      },
+      "timestamp": "2026-03-15T10:34:00+09:00",
+      "requestId": "req_err_500"
+    }
+  }
+]

@@ -1,0 +1,9 @@
+{
+  "id": "12-api-mock",
+  "name": "APIモックサーバー",
+  "category": "dev-tool",
+  "description": "ブラウザ内でAPIモックエンドポイントを定義し、テストリクエストを送信。遅延やカスタムヘッダーにも対応。",
+  "usesAI": false,
+  "libraries": ["Vanilla JS"],
+  "author": "AI駆動開発デモ"
+}

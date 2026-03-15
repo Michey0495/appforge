@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日報AIジェネレーター</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"], input[type="date"], input[type="password"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus {
+    border-color: #1e3461;
+  }
+  textarea {
+    min-height: 160px;
+    resize: vertical;
+    line-height: 1.7;
+  }
+
+  select {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.15s;
+  }
+  select:focus { border-color: #1e3461; }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .btn-lg {
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .section {
+    margin-bottom: 24px;
+  }
+
+  /* フォームレイアウト */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .form-row > * { flex: 1; }
+
+  /* ラジオボタン */
+  .radio-group {
+    display: flex;
+    gap: 16px;
+    margin-top: 4px;
+  }
+
+  .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    text-transform: none;
+    letter-spacing: normal;
+    color: #1a1a2e;
+    margin-bottom: 0;
+  }
+
+  .radio-label input[type="radio"] {
+    width: auto;
+    accent-color: #1e3461;
+    cursor: pointer;
+  }
+
+  /* APIキー */
+  .api-key-section {
+    padding: 16px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    background: #fafafa;
+  }
+
+  .api-key-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .api-key-row input {
+    flex: 1;
+  }
+
+  .toggle-btn {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 7px 10px;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 12px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
+  .toggle-btn:hover { border-color: #1e3461; color: #1e3461; }
+
+  .api-key-note {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 6px;
+  }
+
+  /* 区切り線 */
+  .divider {
+    border: none;
+    border-top: 1px solid #f3f4f6;
+    margin: 28px 0;
+  }
+
+  /* 生成ボタン */
+  .generate-row {
+    display: flex;
+    justify-content: center;
+    margin: 28px 0;
+  }
+
+  /* ローディング */
+  .loading {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 32px;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+  .loading.visible { display: flex; }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #1e3461;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* 出力 */
+  .output-section {
+    display: none;
+    margin-top: 24px;
+  }
+  .output-section.visible { display: block; }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .output-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .output-content {
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 20px 24px;
+    background: #fafafa;
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.8;
+    min-height: 200px;
+  }
+
+  .output-content h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 16px 0 6px 0;
+    color: #1e3461;
+  }
+  .output-content h3:first-child { margin-top: 0; }
+
+  /* エラー */
+  .error-bar {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 2px;
+    margin-top: 16px;
+    display: none;
+  }
+  .error-bar.visible { display: block; }
+
+  .success-bar {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 2px;
+    margin-top: 16px;
+    display: none;
+  }
+  .success-bar.visible { display: block; }
+
+  /* レスポンシブ */
+  @media (max-width: 640px) {
+    .form-row { flex-direction: column; gap: 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .radio-group { flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="header-title">日報AIジェネレーター</span>
+    <span class="header-subtitle">Claude API</span>
+  </div>
+
+  <!-- APIキー設定 -->
+  <div class="api-key-section">
+    <label>Anthropic API Key</label>
+    <div class="api-key-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off">
+      <button class="toggle-btn" id="toggleKey" onclick="toggleApiKeyVisibility()">表示</button>
+      <button class="btn btn-sm" onclick="saveApiKey()">保存</button>
+    </div>
+    <div class="api-key-note">APIキーはブラウザのlocalStorageに保存されます。サーバーには送信されません。</div>
+  </div>
+
+  <!-- 入力セクション -->
+  <div class="form-group">
+    <label>箇条書きメモ（今日やったこと）</label>
+    <textarea id="memoInput" placeholder="- 顧客A社とのミーティング実施&#10;- 提案資料の修正&#10;- 新機能のコードレビュー&#10;- チームの進捗確認会議に参加"></textarea>
+  </div>
+
+  <div class="form-row">
+    <div>
+      <label>対象日</label>
+      <input type="date" id="reportDate">
+    </div>
+    <div>
+      <label>レポート種別</label>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" name="reportType" value="daily" checked>
+          日報
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="reportType" value="weekly">
+          週報
+        </label>
+      </div>
+    </div>
+    <div>
+      <label>トーン</label>
+      <select id="toneSelect">
+        <option value="polite">上司向け（丁寧）</option>
+        <option value="casual">チーム向け（カジュアル）</option>
+        <option value="concise">経営層向け（簡潔）</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>明日の予定（任意）</label>
+    <textarea id="tomorrowPlan" style="min-height:80px" placeholder="- 顧客B社への訪問&#10;- 週次定例ミーティング"></textarea>
+  </div>
+
+  <!-- 生成ボタン -->
+  <div class="generate-row">
+    <button class="btn btn-lg" id="generateBtn" onclick="generateReport()">日報を生成</button>
+  </div>
+
+  <!-- ローディング -->
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <span>日報を生成中...</span>
+  </div>
+
+  <!-- エラー・成功 -->
+  <div id="errorBar" class="error-bar"></div>
+  <div id="successBar" class="success-bar"></div>
+
+  <!-- 出力 -->
+  <div id="outputSection" class="output-section">
+    <div class="output-header">
+      <label style="margin-bottom:0">生成結果</label>
+      <div class="output-actions">
+        <button class="btn btn-outline btn-sm" onclick="copyPlain()">コピー</button>
+        <button class="btn btn-outline btn-sm" onclick="copyMarkdown()">Markdown形式でコピー</button>
+      </div>
+    </div>
+    <div id="outputContent" class="output-content"></div>
+  </div>
+</div>
+
+<script>
+const apiKeyInput = document.getElementById('apiKey');
+const toggleKeyBtn = document.getElementById('toggleKey');
+const memoInput = document.getElementById('memoInput');
+const reportDate = document.getElementById('reportDate');
+const toneSelect = document.getElementById('toneSelect');
+const tomorrowPlan = document.getElementById('tomorrowPlan');
+const generateBtn = document.getElementById('generateBtn');
+const loading = document.getElementById('loading');
+const errorBar = document.getElementById('errorBar');
+const successBar = document.getElementById('successBar');
+const outputSection = document.getElementById('outputSection');
+const outputContent = document.getElementById('outputContent');
+
+// 今日の日付をセット
+reportDate.value = new Date().toISOString().split('T')[0];
+
+// localStorageからAPIキーを復元
+const savedKey = localStorage.getItem('anthropic_api_key');
+if (savedKey) apiKeyInput.value = savedKey;
+
+// rawレスポンス保持用
+let rawReportText = '';
+
+function toggleApiKeyVisibility() {
+  const isPassword = apiKeyInput.type === 'password';
+  apiKeyInput.type = isPassword ? 'text' : 'password';
+  toggleKeyBtn.textContent = isPassword ? '非表示' : '表示';
+}
+
+function saveApiKey() {
+  const key = apiKeyInput.value.trim();
+  if (!key) {
+    showError('APIキーを入力してください');
+    return;
+  }
+  localStorage.setItem('anthropic_api_key', key);
+  showSuccess('APIキーを保存しました');
+}
+
+function showError(msg) {
+  successBar.classList.remove('visible');
+  errorBar.textContent = msg;
+  errorBar.classList.add('visible');
+  setTimeout(() => errorBar.classList.remove('visible'), 8000);
+}
+
+function showSuccess(msg) {
+  errorBar.classList.remove('visible');
+  successBar.textContent = msg;
+  successBar.classList.add('visible');
+  setTimeout(() => successBar.classList.remove('visible'), 4000);
+}
+
+function getReportType() {
+  return document.querySelector('input[name="reportType"]:checked').value;
+}
+
+function getToneDescription(tone) {
+  const map = {
+    polite: '上司に提出する丁寧な敬語体。です・ます調で、簡潔かつ正確に記述してください。',
+    casual: 'チームメンバー向けのカジュアルなトーン。親しみやすく、要点を押さえた書き方で。',
+    concise: '経営層向けの簡潔なトーン。結論ファーストで、数字やインパクトを重視してください。'
+  };
+  return map[tone] || map.polite;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+  const weekday = weekdays[d.getDay()];
+  return `${year}年${month}月${day}日（${weekday}）`;
+}
+
+async function generateReport() {
+  const apiKey = apiKeyInput.value.trim() || localStorage.getItem('anthropic_api_key');
+  if (!apiKey) {
+    showError('APIキーが設定されていません。上部のフィールドにAnthropicのAPIキーを入力してください。');
+    return;
+  }
+
+  const memo = memoInput.value.trim();
+  if (!memo) {
+    showError('箇条書きメモを入力してください');
+    return;
+  }
+
+  const date = reportDate.value;
+  const reportType = getReportType();
+  const tone = toneSelect.value;
+  const tomorrow = tomorrowPlan.value.trim();
+  const reportLabel = reportType === 'daily' ? '日報' : '週報';
+  const formattedDate = formatDate(date);
+
+  const toneDesc = getToneDescription(tone);
+
+  const systemPrompt = `あなたはビジネス文書作成のプロフェッショナルです。以下のルールに従って日本語の業務${reportLabel}を作成してください。
+
+トーン: ${toneDesc}
+
+構成（必ずこの順番で、各セクションの見出しをつけてください）:
+1. 業務内容 - 今日取り組んだ作業の概要
+2. 進捗状況 - 各タスクの進捗（完了・進行中・未着手）
+3. 課題・気づき - 業務で感じた課題や改善点
+4. 翌営業日の予定 - 明日以降の予定
+5. 所感 - 一日の振り返りや気づき
+
+注意事項:
+- 箇条書きメモの内容を膨らませつつ、事実に基づいた記述にする
+- 見出しは「■」を使う（例: ■ 業務内容）
+- 各セクションは箇条書きを活用
+- 冒頭に「${formattedDate} ${reportLabel}」とタイトルを記載
+- 報告者名は空欄にしておく（報告者: ___）
+- 過度な装飾や絵文字は使わない
+- 不自然に長くせず、読みやすさを重視する`;
+
+  let userMessage = `以下の箇条書きメモから${reportLabel}を作成してください。
+
+対象日: ${formattedDate}
+
+【今日の業務メモ】
+${memo}`;
+
+  if (tomorrow) {
+    userMessage += `
+
+【明日の予定】
+${tomorrow}`;
+  }
+
+  // UIの状態を更新
+  generateBtn.disabled = true;
+  loading.classList.add('visible');
+  outputSection.classList.remove('visible');
+  errorBar.classList.remove('visible');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2048,
+        system: systemPrompt,
+        messages: [
+          { role: 'user', content: userMessage }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      if (response.status === 401) {
+        throw new Error('APIキーが無効です。正しいAnthropicのAPIキーを入力してください。');
+      }
+      if (response.status === 429) {
+        throw new Error('APIのレート制限に達しました。しばらく待ってから再試行してください。');
+      }
+      if (response.status === 400 && errorData) {
+        throw new Error('リクエストエラー: ' + (errorData.error?.message || JSON.stringify(errorData)));
+      }
+      throw new Error(`API Error (${response.status}): ${errorData?.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const reportText = data.content[0].text;
+    rawReportText = reportText;
+
+    // 出力を整形して表示
+    renderReport(reportText);
+    outputSection.classList.add('visible');
+    showSuccess(`${reportLabel}を生成しました`);
+
+  } catch (error) {
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      showError('APIへの接続に失敗しました。ネットワーク接続を確認してください。CORSエラーの場合はブラウザの設定を確認してください。');
+    } else {
+      showError(error.message);
+    }
+  } finally {
+    generateBtn.disabled = false;
+    loading.classList.remove('visible');
+  }
+}
+
+function renderReport(text) {
+  // テキストをHTMLに整形
+  const lines = text.split('\n');
+  let html = '';
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // セクション見出し（■ で始まる行）
+    if (trimmed.startsWith('■')) {
+      html += `<h3>${escapeHTML(trimmed)}</h3>\n`;
+    } else if (trimmed === '') {
+      html += '\n';
+    } else {
+      html += escapeHTML(line) + '\n';
+    }
+  }
+
+  outputContent.innerHTML = html;
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function copyPlain() {
+  if (!rawReportText) {
+    showError('コピーする内容がありません');
+    return;
+  }
+  navigator.clipboard.writeText(rawReportText).then(() => {
+    showSuccess('クリップボードにコピーしました');
+  }).catch(() => {
+    // フォールバック
+    const ta = document.createElement('textarea');
+    ta.value = rawReportText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showSuccess('クリップボードにコピーしました');
+  });
+}
+
+function copyMarkdown() {
+  if (!rawReportText) {
+    showError('コピーする内容がありません');
+    return;
+  }
+
+  // ■ 見出しを Markdown の ## に変換
+  const mdText = rawReportText.replace(/^■\s*/gm, '## ');
+
+  navigator.clipboard.writeText(mdText).then(() => {
+    showSuccess('Markdown形式でコピーしました');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = mdText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showSuccess('Markdown形式でコピーしました');
+  });
+}
+</script>
+</body>
+</html>

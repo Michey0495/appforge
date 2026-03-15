@@ -1,0 +1,170 @@
+{
+  "status": "success",
+  "pagination": {
+    "total": 128,
+    "page": 1,
+    "per_page": 5,
+    "total_pages": 26,
+    "has_next": true,
+    "has_prev": false
+  },
+  "data": [
+    {
+      "id": "usr_a1b2c3d4",
+      "name": {
+        "first": "太郎",
+        "last": "山田",
+        "display": "山田 太郎"
+      },
+      "email": "t.yamada@example-corp.co.jp",
+      "department": "技術開発部",
+      "position": "シニアエンジニア",
+      "joined_at": "2019-04-01T00:00:00+09:00",
+      "is_active": true,
+      "address": {
+        "postal_code": "100-0005",
+        "prefecture": "東京都",
+        "city": "千代田区",
+        "street": "丸の内1-9-2",
+        "building": "グラントウキョウサウスタワー 12F"
+      },
+      "contacts": {
+        "phone": "03-1234-5678",
+        "mobile": "090-1234-5678",
+        "extension": "4521"
+      },
+      "permissions": ["read", "write", "admin", "export"],
+      "metadata": {
+        "last_login": "2026-03-14T09:32:15+09:00",
+        "login_count": 847,
+        "preferred_language": "ja"
+      }
+    },
+    {
+      "id": "usr_e5f6g7h8",
+      "name": {
+        "first": "花子",
+        "last": "佐藤",
+        "display": "佐藤 花子"
+      },
+      "email": "h.sato@example-corp.co.jp",
+      "department": "マーケティング部",
+      "position": "マネージャー",
+      "joined_at": "2018-10-01T00:00:00+09:00",
+      "is_active": true,
+      "address": {
+        "postal_code": "150-0002",
+        "prefecture": "東京都",
+        "city": "渋谷区",
+        "street": "渋谷2-21-1",
+        "building": "渋谷ヒカリエ 28F"
+      },
+      "contacts": {
+        "phone": "03-2345-6789",
+        "mobile": "080-2345-6789",
+        "extension": "3104"
+      },
+      "permissions": ["read", "write", "export"],
+      "metadata": {
+        "last_login": "2026-03-14T14:08:42+09:00",
+        "login_count": 1203,
+        "preferred_language": "ja"
+      }
+    },
+    {
+      "id": "usr_i9j0k1l2",
+      "name": {
+        "first": "健一",
+        "last": "鈴木",
+        "display": "鈴木 健一"
+      },
+      "email": "k.suzuki@example-corp.co.jp",
+      "department": "営業部",
+      "position": "主任",
+      "joined_at": "2021-04-01T00:00:00+09:00",
+      "is_active": true,
+      "address": {
+        "postal_code": "530-0001",
+        "prefecture": "大阪府",
+        "city": "大阪市北区",
+        "street": "梅田3-1-3",
+        "building": "ノースゲートビルディング 15F"
+      },
+      "contacts": {
+        "phone": "06-3456-7890",
+        "mobile": "070-3456-7890",
+        "extension": "7802"
+      },
+      "permissions": ["read", "write"],
+      "metadata": {
+        "last_login": "2026-03-13T17:45:03+09:00",
+        "login_count": 412,
+        "preferred_language": "ja"
+      }
+    },
+    {
+      "id": "usr_m3n4o5p6",
+      "name": {
+        "first": "美咲",
+        "last": "高橋",
+        "display": "高橋 美咲"
+      },
+      "email": "m.takahashi@example-corp.co.jp",
+      "department": "人事部",
+      "position": "部長",
+      "joined_at": "2015-04-01T00:00:00+09:00",
+      "is_active": true,
+      "address": {
+        "postal_code": "100-0005",
+        "prefecture": "東京都",
+        "city": "千代田区",
+        "street": "丸の内1-9-2",
+        "building": "グラントウキョウサウスタワー 10F"
+      },
+      "contacts": {
+        "phone": "03-4567-8901",
+        "mobile": "090-4567-8901",
+        "extension": "2001"
+      },
+      "permissions": ["read", "write", "admin", "hr_admin", "export"],
+      "metadata": {
+        "last_login": "2026-03-14T11:22:58+09:00",
+        "login_count": 2156,
+        "preferred_language": "ja"
+      }
+    },
+    {
+      "id": "usr_q7r8s9t0",
+      "name": {
+        "first": "翔太",
+        "last": "伊藤",
+        "display": "伊藤 翔太"
+      },
+      "email": "s.ito@example-corp.co.jp",
+      "department": "技術開発部",
+      "position": "ジュニアエンジニア",
+      "joined_at": "2025-04-01T00:00:00+09:00",
+      "is_active": false,
+      "address": {
+        "postal_code": "460-0008",
+        "prefecture": "愛知県",
+        "city": "名古屋市中区",
+        "street": "栄3-15-33",
+        "building": "栄ガスビル 8F"
+      },
+      "contacts": {
+        "phone": "052-5678-9012",
+        "mobile": "080-5678-9012",
+        "extension": null
+      },
+      "permissions": ["read"],
+      "metadata": {
+        "last_login": "2026-02-28T16:30:00+09:00",
+        "login_count": 53,
+        "preferred_language": "ja"
+      }
+    }
+  ],
+  "request_id": "req_7f8a9b0c1d2e",
+  "timestamp": "2026-03-15T10:00:00+09:00"
+}

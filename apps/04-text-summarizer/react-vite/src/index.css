@@ -1,0 +1,34 @@
+/* Tailwind ベーススタイル */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 基本スタイル */
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+  background-color: #ffffff;
+  color: #333333;
+  line-height: 1.6;
+}
+
+/* テキストエリアのリサイズ方向 */
+textarea {
+  resize: vertical;
+}
+
+/* ローディングスピナー */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}

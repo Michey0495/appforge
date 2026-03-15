@@ -1,0 +1,9 @@
+{
+  "id": "07-json-formatter",
+  "name": "JSON / APIレスポンス整形ツール",
+  "category": "dev-tools",
+  "description": "JSONの整形・検証・差分比較・JSONPathサーチをブラウザだけで行う。",
+  "usesAI": false,
+  "libraries": [],
+  "author": "AI駆動開発デモ"
+}

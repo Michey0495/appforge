@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slackリアクション集計</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"], input[type="date"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="date"]:focus {
+    border-color: #1e3461;
+  }
+  textarea {
+    min-height: 200px;
+    resize: vertical;
+    line-height: 1.5;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 11px;
+  }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  .section { margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 20px; }
+
+  .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .form-row > * { flex: 1; }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 24px;
+  }
+  .tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color 0.15s;
+  }
+  .tab:hover { color: #1a1a2e; }
+  .tab.active {
+    color: #1e3461;
+    border-bottom-color: #1e3461;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* バーチャート */
+  .chart-section { margin-bottom: 32px; }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .bar-label {
+    width: 100px;
+    font-size: 12px;
+    text-align: right;
+    padding-right: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    background: #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: #1e3461;
+    border-radius: 2px;
+    transition: width 0.3s;
+    min-width: 2px;
+  }
+  .bar-value {
+    width: 48px;
+    text-align: right;
+    font-size: 11px;
+    color: #6b7280;
+    padding-left: 8px;
+  }
+
+  /* マトリクス */
+  .matrix-wrap { overflow-x: auto; }
+  .matrix {
+    border-collapse: collapse;
+    font-size: 11px;
+    width: 100%;
+  }
+  .matrix th {
+    background: #f8f9fb;
+    padding: 6px 8px;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .matrix th:first-child { text-align: left; }
+  .matrix td {
+    padding: 5px 8px;
+    border-bottom: 1px solid #f3f4f6;
+    text-align: center;
+  }
+  .matrix td:first-child { text-align: left; font-weight: 500; }
+  .matrix td.has-value { background: #f0f4ff; }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .code-block {
+    background: #f8f9fb;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    padding: 16px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    color: #1a1a2e;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  .error-msg {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 8px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: #991b1b;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    padding: 16px;
+  }
+  .summary-card-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+  .summary-card-value {
+    font-size: 20px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">Slackリアクション集計</div>
+      <div class="header-subtitle">チャンネルのリアクション利用状況を可視化</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="paste">JSONデータを貼り付け</button>
+    <button class="tab" data-tab="script">スクリプトで取得</button>
+  </div>
+
+  <!-- JSONデータ貼り付けモード -->
+  <div class="tab-content active" id="tab-paste">
+    <div class="section">
+      <div class="form-group">
+        <label>Slack API レスポンス JSON</label>
+        <textarea id="jsonInput" placeholder='conversations.history APIのレスポンスJSONを貼り付けてください。&#10;&#10;{"ok":true,"messages":[{"type":"message","text":"...","reactions":[{"name":"thumbsup","users":["U123"],"count":1}]},...]}'>
+</textarea>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+      <button class="btn" onclick="analyzeJSON()">集計する</button>
+    </div>
+  </div>
+
+  <!-- スクリプトモード -->
+  <div class="tab-content" id="tab-script">
+    <div class="section">
+      <p style="font-size:12px; color:#6b7280; margin-bottom:16px;">
+        ブラウザからSlack APIを直接呼び出すことはCORS制約で不可能です。<br>
+        以下のNode.jsスクリプトを実行し、出力されたJSONを上のタブに貼り付けてください。
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Slack Token</label>
+          <input type="text" id="slackToken" placeholder="xoxb-..." />
+        </div>
+        <div class="form-group">
+          <label>Channel ID</label>
+          <input type="text" id="channelId" placeholder="C01ABCDEF" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>実行コマンド</label>
+        <div class="code-block" id="scriptCommand">SLACK_TOKEN=xoxb-your-token CHANNEL_ID=C01ABCDEF node script/index.js</div>
+      </div>
+      <p style="font-size:11px; color:#9ca3af; margin-top:8px;">
+        script/index.js は同梱のNode.jsスクリプトです。npm不要で動作します。
+      </p>
+    </div>
+  </div>
+
+  <!-- 結果エリア -->
+  <div id="results" style="display:none;">
+    <div style="border-top:1px solid #f3f4f6; margin:24px 0;"></div>
+
+    <div class="summary-cards" id="summaryCards"></div>
+
+    <div class="chart-section">
+      <div class="chart-title">リアクション絵文字ランキング（上位20件）</div>
+      <div id="emojiChart"></div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">ユーザー別リアクション数（上位20件）</div>
+      <div id="userChart"></div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">ユーザー x 絵文字 マトリクス</div>
+      <div class="matrix-wrap">
+        <table class="matrix" id="matrixTable"></table>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" onclick="exportCSV()">CSV出力</button>
+      <button class="btn btn-outline" onclick="exportJSON()">JSON出力</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// タブ切り替え
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach((c) => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+  });
+});
+
+// スクリプトコマンド更新
+['slackToken', 'channelId'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', updateCommand);
+});
+
+function updateCommand() {
+  const token = document.getElementById('slackToken').value || 'xoxb-your-token';
+  const channel = document.getElementById('channelId').value || 'C01ABCDEF';
+  document.getElementById('scriptCommand').textContent =
+    `SLACK_TOKEN=${token} CHANNEL_ID=${channel} node script/index.js`;
+}
+
+let analysisResult = null;
+
+function analyzeJSON() {
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.style.display = 'none';
+
+  const raw = document.getElementById('jsonInput').value.trim();
+  if (!raw) {
+    showError('JSONデータを入力してください');
+    return;
+  }
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    showError(`JSON解析エラー: ${e.message}`);
+    return;
+  }
+
+  // Slack APIレスポンス形式のバリエーションに対応
+  let messages = [];
+  if (Array.isArray(data)) {
+    messages = data;
+  } else if (data.messages && Array.isArray(data.messages)) {
+    messages = data.messages;
+  } else {
+    showError('messagesフィールドが見つかりません。conversations.historyのレスポンスを貼り付けてください。');
+    return;
+  }
+
+  // リアクション集計
+  const emojiCounts = {};
+  const userCounts = {};
+  const userEmojiMatrix = {};
+  let totalReactions = 0;
+
+  messages.forEach((msg) => {
+    if (!msg.reactions) return;
+    msg.reactions.forEach((reaction) => {
+      const emoji = reaction.name;
+      const count = reaction.count || (reaction.users ? reaction.users.length : 1);
+
+      emojiCounts[emoji] = (emojiCounts[emoji] || 0) + count;
+      totalReactions += count;
+
+      if (reaction.users) {
+        reaction.users.forEach((userId) => {
+          userCounts[userId] = (userCounts[userId] || 0) + 1;
+          if (!userEmojiMatrix[userId]) userEmojiMatrix[userId] = {};
+          userEmojiMatrix[userId][emoji] = (userEmojiMatrix[userId][emoji] || 0) + 1;
+        });
+      }
+    });
+  });
+
+  const messagesWithReactions = messages.filter((m) => m.reactions && m.reactions.length > 0).length;
+
+  analysisResult = { emojiCounts, userCounts, userEmojiMatrix, totalReactions, messagesWithReactions, totalMessages: messages.length };
+
+  renderResults(analysisResult);
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function renderResults({ emojiCounts, userCounts, userEmojiMatrix, totalReactions, messagesWithReactions, totalMessages }) {
+  document.getElementById('results').style.display = '';
+
+  // サマリーカード
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-card-label">メッセージ数</div>
+      <div class="summary-card-value">${totalMessages}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">リアクション付きメッセージ</div>
+      <div class="summary-card-value">${messagesWithReactions}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">リアクション総数</div>
+      <div class="summary-card-value">${totalReactions}</div>
+    </div>
+  `;
+
+  // 絵文字ランキング
+  renderBarChart('emojiChart', emojiCounts, 20);
+
+  // ユーザーランキング
+  renderBarChart('userChart', userCounts, 20);
+
+  // マトリクス
+  renderMatrix(userEmojiMatrix, emojiCounts);
+}
+
+function renderBarChart(containerId, data, limit) {
+  const sorted = Object.entries(data)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit);
+
+  if (sorted.length === 0) {
+    document.getElementById(containerId).innerHTML = '<div class="empty-state">データなし</div>';
+    return;
+  }
+
+  const maxVal = sorted[0][1];
+  const html = sorted.map(([label, count]) => {
+    const pct = (count / maxVal) * 100;
+    return `
+      <div class="bar-row">
+        <div class="bar-label" title="${label}">:${label}:</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="bar-value">${count}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function renderMatrix(userEmojiMatrix, emojiCounts) {
+  const table = document.getElementById('matrixTable');
+
+  // 上位10絵文字のみ表示
+  const topEmojis = Object.entries(emojiCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([e]) => e);
+
+  const users = Object.keys(userEmojiMatrix).sort();
+
+  if (users.length === 0 || topEmojis.length === 0) {
+    table.innerHTML = '<tr><td class="empty-state">データなし</td></tr>';
+    return;
+  }
+
+  let html = '<thead><tr><th>ユーザー</th>';
+  topEmojis.forEach((e) => { html += `<th>:${e}:</th>`; });
+  html += '<th>合計</th></tr></thead><tbody>';
+
+  users.forEach((userId) => {
+    html += `<tr><td>${userId}</td>`;
+    let userTotal = 0;
+    topEmojis.forEach((e) => {
+      const val = userEmojiMatrix[userId]?.[e] || 0;
+      userTotal += val;
+      html += `<td class="${val > 0 ? 'has-value' : ''}">${val || '-'}</td>`;
+    });
+    html += `<td style="font-weight:600">${userTotal}</td></tr>`;
+  });
+
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function exportCSV() {
+  if (!analysisResult) return;
+  const bom = '\uFEFF';
+  let csv = bom + '種別,名前,カウント\n';
+
+  Object.entries(analysisResult.emojiCounts)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([name, count]) => {
+      csv += `絵文字,":${name}:",${count}\n`;
+    });
+
+  Object.entries(analysisResult.userCounts)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([name, count]) => {
+      csv += `ユーザー,"${name}",${count}\n`;
+    });
+
+  downloadBlob(
+    new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
+    `slack_reactions_${formatDate()}.csv`
+  );
+}
+
+function exportJSON() {
+  if (!analysisResult) return;
+  const output = {
+    summary: {
+      totalMessages: analysisResult.totalMessages,
+      messagesWithReactions: analysisResult.messagesWithReactions,
+      totalReactions: analysisResult.totalReactions
+    },
+    emojiCounts: analysisResult.emojiCounts,
+    userCounts: analysisResult.userCounts,
+    userEmojiMatrix: analysisResult.userEmojiMatrix
+  };
+
+  downloadBlob(
+    new Blob([JSON.stringify(output, null, 2)], { type: 'application/json' }),
+    `slack_reactions_${formatDate()}.json`
+  );
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatDate() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+}
+</script>
+</body>
+</html>

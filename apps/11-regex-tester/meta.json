@@ -1,0 +1,9 @@
+{
+  "id": "11-regex-tester",
+  "name": "正規表現テスター",
+  "category": "dev-tool",
+  "description": "正規表現パターンをリアルタイムでテスト。マッチのハイライト、キャプチャグループ表示、置換プレビュー機能付き。",
+  "usesAI": false,
+  "libraries": ["Vanilla JS"],
+  "author": "AI駆動開発デモ"
+}

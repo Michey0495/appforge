@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プロンプトビルダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff; color: #1a1a2e;
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px; letter-spacing: -0.01em; line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; }
+  .header .subtitle { font-size: 11px; color: #9ca3af; }
+  label {
+    display: block; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
+  }
+  select, textarea {
+    border: 1px solid #e5e7eb; padding: 8px 12px; font-size: 13px;
+    border-radius: 2px; width: 100%; font-family: inherit;
+    color: #1a1a2e; background: #ffffff; outline: none;
+  }
+  textarea { resize: vertical; }
+  select:focus, textarea:focus { border-color: #1e3461; }
+  .btn {
+    background: #1e3461; color: #ffffff; padding: 8px 16px; font-size: 12px;
+    border-radius: 2px; border: none; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn-secondary {
+    background: #ffffff; border: 1px solid #e5e7eb; color: #6b7280;
+  }
+  .btn-secondary:hover { background: #f9fafb; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-danger { color: #ef4444; }
+  .btn-danger:hover { background: #fef2f2; border-color: #fecaca; }
+  .section { margin-bottom: 32px; }
+  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+
+  .toolbar {
+    display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .toolbar > div { min-width: 0; }
+
+  /* ブロック */
+  .block {
+    border: 1px solid #e5e7eb; border-radius: 2px; margin-bottom: 12px;
+    background: #ffffff;
+    transition: box-shadow 0.15s;
+  }
+  .block:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .block-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; border-bottom: 1px solid #f3f4f6; background: #fafafa;
+  }
+  .block-type {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #1e3461;
+  }
+  .block-actions { display: flex; gap: 4px; }
+  .block-body { padding: 12px; }
+  .block-body textarea { min-height: 60px; }
+
+  /* タイプ別の左ボーダー */
+  .block-role { border-left: 3px solid #1e3461; }
+  .block-instruction { border-left: 3px solid #2e4f87; }
+  .block-constraint { border-left: 3px solid #ef4444; }
+  .block-output-format { border-left: 3px solid #f59e0b; }
+  .block-example { border-left: 3px solid #22c55e; }
+  .block-context { border-left: 3px solid #6b7280; }
+
+  /* プレビュー */
+  .preview {
+    border: 1px solid #e5e7eb; border-radius: 2px; background: #fafafa;
+    padding: 16px; font-family: monospace; font-size: 12px;
+    white-space: pre-wrap; word-break: break-all;
+    max-height: 400px; overflow-y: auto; line-height: 1.7;
+  }
+  .preview .tag { color: #1e3461; font-weight: 600; }
+  .preview .tag-content { color: #1a1a2e; }
+
+  .token-info {
+    display: flex; gap: 20px; font-size: 12px; color: #6b7280;
+    padding: 10px 0; border-top: 1px solid #f3f4f6; margin-top: 12px;
+  }
+  .token-info .num { font-weight: 600; color: #1e3461; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+
+  .preset-section { margin-bottom: 20px; }
+  .preset-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .preset-chip {
+    padding: 4px 12px; font-size: 11px; border: 1px solid #e5e7eb;
+    border-radius: 2px; cursor: pointer; color: #6b7280; background: #ffffff;
+    font-family: inherit;
+  }
+  .preset-chip:hover { border-color: #1e3461; color: #1e3461; }
+
+  .empty-state { text-align: center; padding: 32px; color: #9ca3af; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>プロンプトビルダー</h1>
+    <div class="subtitle">ブロック構成でプロンプトを組み立てる</div>
+  </div>
+
+  <div class="grid-2">
+    <!-- 左: ブロック編集 -->
+    <div>
+      <div class="section">
+        <div class="preset-section">
+          <label>テンプレート</label>
+          <div class="preset-chips">
+            <button class="preset-chip" onclick="loadPreset('summary')">要約</button>
+            <button class="preset-chip" onclick="loadPreset('translate')">翻訳</button>
+            <button class="preset-chip" onclick="loadPreset('code-review')">コードレビュー</button>
+            <button class="preset-chip" onclick="loadPreset('email')">メール作成</button>
+            <button class="preset-chip" onclick="loadPreset('minutes')">議事録整形</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div style="flex:1;">
+            <label>ブロックタイプ</label>
+            <select id="blockType">
+              <option value="role">ロール</option>
+              <option value="instruction">指示</option>
+              <option value="constraint">制約</option>
+              <option value="output-format">出力形式</option>
+              <option value="example">例</option>
+              <option value="context">コンテキスト</option>
+            </select>
+          </div>
+          <button class="btn" onclick="addBlock()">ブロック追加</button>
+        </div>
+
+        <div id="blockList">
+          <div class="empty-state">ブロックを追加してプロンプトを構築してください</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右: プレビュー -->
+    <div>
+      <div class="section">
+        <h2>プレビュー</h2>
+        <div class="preview" id="preview">
+          <span style="color:#9ca3af;">プレビューがここに表示されます</span>
+        </div>
+        <div class="token-info" id="tokenInfo">
+          <div>文字数: <span class="num" id="charCount">0</span></div>
+          <div>推定トークン数: <span class="num" id="tokenCount">0</span></div>
+        </div>
+        <div style="margin-top: 12px;">
+          <button class="btn" onclick="copyPrompt()">プロンプトをコピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TYPE_LABELS = {
+    'role': 'ロール',
+    'instruction': '指示',
+    'constraint': '制約',
+    'output-format': '出力形式',
+    'example': '例',
+    'context': 'コンテキスト'
+  };
+
+  const TAG_NAMES = {
+    'role': 'role',
+    'instruction': 'instruction',
+    'constraint': 'constraint',
+    'output-format': 'output_format',
+    'example': 'example',
+    'context': 'context'
+  };
+
+  let blocks = [];
+  let nextId = 0;
+
+  function addBlock(type, content) {
+    const blockType = type || document.getElementById('blockType').value;
+    const blockContent = content || '';
+    blocks = [...blocks, { id: nextId++, type: blockType, content: blockContent }];
+    renderBlocks();
+    updatePreview();
+  }
+
+  function removeBlock(id) {
+    blocks = blocks.filter(b => b.id !== id);
+    renderBlocks();
+    updatePreview();
+  }
+
+  function moveBlock(id, direction) {
+    const idx = blocks.findIndex(b => b.id === id);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= blocks.length) return;
+    const newBlocks = [...blocks];
+    const temp = newBlocks[idx];
+    newBlocks[idx] = newBlocks[newIdx];
+    newBlocks[newIdx] = temp;
+    blocks = newBlocks;
+    renderBlocks();
+    updatePreview();
+  }
+
+  function updateBlockContent(id, content) {
+    blocks = blocks.map(b => b.id === id ? { ...b, content } : b);
+    updatePreview();
+  }
+
+  function renderBlocks() {
+    const container = document.getElementById('blockList');
+    if (blocks.length === 0) {
+      container.innerHTML = '<div class="empty-state">ブロックを追加してプロンプトを構築してください</div>';
+      return;
+    }
+    container.innerHTML = blocks.map((b, i) => `
+      <div class="block block-${b.type}">
+        <div class="block-header">
+          <span class="block-type">${escapeHtml(TYPE_LABELS[b.type] || b.type)}</span>
+          <div class="block-actions">
+            <button class="btn btn-secondary btn-sm" onclick="moveBlock(${b.id},-1)" ${i === 0 ? 'disabled' : ''}>上</button>
+            <button class="btn btn-secondary btn-sm" onclick="moveBlock(${b.id},1)" ${i === blocks.length - 1 ? 'disabled' : ''}>下</button>
+            <button class="btn btn-secondary btn-sm btn-danger" onclick="removeBlock(${b.id})">削除</button>
+          </div>
+        </div>
+        <div class="block-body">
+          <textarea rows="3" oninput="updateBlockContent(${b.id}, this.value)" placeholder="${escapeHtml(TYPE_LABELS[b.type])}の内容を入力...">${escapeHtml(b.content)}</textarea>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updatePreview() {
+    const preview = document.getElementById('preview');
+    if (blocks.length === 0) {
+      preview.innerHTML = '<span style="color:#9ca3af;">プレビューがここに表示されます</span>';
+      document.getElementById('charCount').textContent = '0';
+      document.getElementById('tokenCount').textContent = '0';
+      return;
+    }
+
+    let promptText = '';
+    let previewHtml = '';
+
+    blocks.forEach(b => {
+      const tag = TAG_NAMES[b.type] || b.type;
+      const content = b.content || '';
+      promptText += `<${tag}>\n${content}\n</${tag}>\n\n`;
+      previewHtml += `<span class="tag">&lt;${escapeHtml(tag)}&gt;</span>\n<span class="tag-content">${escapeHtml(content)}</span>\n<span class="tag">&lt;/${escapeHtml(tag)}&gt;</span>\n\n`;
+    });
+
+    preview.innerHTML = previewHtml;
+
+    // トークン推定
+    const charCount = promptText.length;
+    // 日本語と英語が混在する想定: ざっくり文字数 / 2 (日本語1文字 ~ 1-2トークン)
+    const jpChars = (promptText.match(/[\u3000-\u9fff\uff00-\uffef]/g) || []).length;
+    const enChars = charCount - jpChars;
+    const estimatedTokens = Math.ceil(jpChars / 1.5 + enChars / 4);
+
+    document.getElementById('charCount').textContent = charCount;
+    document.getElementById('tokenCount').textContent = estimatedTokens;
+  }
+
+  function copyPrompt() {
+    let promptText = '';
+    blocks.forEach(b => {
+      const tag = TAG_NAMES[b.type] || b.type;
+      promptText += `<${tag}>\n${b.content || ''}\n</${tag}>\n\n`;
+    });
+    navigator.clipboard.writeText(promptText.trim());
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // プリセットテンプレート
+  const PRESETS = {
+    'summary': [
+      { type: 'role', content: 'あなたは優秀な文書要約の専門家です。' },
+      { type: 'instruction', content: '以下のテキストを要約してください。要点を箇条書きでまとめた後、200文字以内の要約文を作成してください。' },
+      { type: 'constraint', content: '- 原文の意味を歪めないこと\n- 専門用語はそのまま使用すること\n- 主観的な解釈を加えないこと' },
+      { type: 'output-format', content: '## 要点\n- ...\n\n## 要約\n...' },
+      { type: 'context', content: '(ここに要約したいテキストを貼り付けてください)' }
+    ],
+    'translate': [
+      { type: 'role', content: 'あなたはプロフェッショナルな翻訳者です。' },
+      { type: 'instruction', content: '以下のテキストを日本語から英語に翻訳してください。自然で流暢な表現を使用してください。' },
+      { type: 'constraint', content: '- 直訳ではなく意訳を心がけること\n- 専門用語は適切な英語表現に変換すること\n- 文化的なニュアンスも反映させること' },
+      { type: 'context', content: '(ここに翻訳したいテキストを貼り付けてください)' }
+    ],
+    'code-review': [
+      { type: 'role', content: 'あなたはシニアソフトウェアエンジニアです。10年以上の経験があります。' },
+      { type: 'instruction', content: '以下のコードをレビューしてください。バグ、セキュリティリスク、パフォーマンス改善点、可読性について指摘してください。' },
+      { type: 'constraint', content: '- 各指摘には理由と改善案を必ず添えること\n- 重要度をHigh/Medium/Lowで分類すること\n- 良い点も言及すること' },
+      { type: 'output-format', content: '### 指摘事項\n1. [重要度] 指摘内容\n   - 理由: ...\n   - 改善案: ...\n\n### 良い点\n- ...' },
+      { type: 'context', content: '(ここにレビュー対象のコードを貼り付けてください)' }
+    ],
+    'email': [
+      { type: 'role', content: 'あなたはビジネスメール作成のプロフェッショナルです。' },
+      { type: 'instruction', content: '以下の要件に基づいてビジネスメールを作成してください。' },
+      { type: 'constraint', content: '- 敬語を適切に使用すること\n- 簡潔で分かりやすい文章にすること\n- 件名も作成すること' },
+      { type: 'output-format', content: '件名: ...\n\n本文:\n...' },
+      { type: 'context', content: '(メールの目的や相手の情報を記入してください)' }
+    ],
+    'minutes': [
+      { type: 'role', content: 'あなたは議事録整形の専門家です。' },
+      { type: 'instruction', content: '以下の会議メモを、構造化された議事録に整形してください。' },
+      { type: 'constraint', content: '- 発言者ごとに整理すること\n- 決定事項とアクションアイテムを明確に区別すること\n- 時系列を維持すること' },
+      { type: 'output-format', content: '## 会議概要\n- 日時:\n- 参加者:\n- 議題:\n\n## 議論内容\n...\n\n## 決定事項\n- ...\n\n## アクションアイテム\n| 担当 | 内容 | 期限 |\n|---|---|---|' },
+      { type: 'context', content: '(ここに会議メモを貼り付けてください)' }
+    ]
+  };
+
+  function loadPreset(name) {
+    const preset = PRESETS[name];
+    if (!preset) return;
+    blocks = [];
+    nextId = 0;
+    preset.forEach(p => {
+      blocks = [...blocks, { id: nextId++, type: p.type, content: p.content }];
+    });
+    renderBlocks();
+    updatePreview();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSV可視化ダッシュボード</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- PapaParse: CSV解析ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js: グラフ描画ライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .page-header p {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+    }
+
+    /* ドロップゾーン */
+    .drop-zone {
+      border: 2px dashed #e5e7eb;
+      border-radius: 2px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background-color 0.2s;
+      background: #ffffff;
+      margin-bottom: 32px;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: #1e3461;
+      background: #f3f4f6;
+    }
+
+    .drop-zone-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    .drop-zone-sub {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .drop-zone input[type="file"] {
+      display: none;
+    }
+
+    /* ファイル情報 */
+    .file-info {
+      display: none;
+      background: #f3f4f6;
+      border-left: 3px solid #1e3461;
+      padding: 12px 16px;
+      margin-bottom: 32px;
+      font-size: 13px;
+      color: #1a1a2e;
+    }
+
+    .file-info span {
+      font-weight: 600;
+      color: #1e3461;
+    }
+
+    /* コントロールパネル */
+    .controls {
+      display: none;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+      align-items: flex-end;
+    }
+
+    .controls.visible {
+      display: flex;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .control-group label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .control-group select {
+      padding: 8px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 2px;
+      font-size: 13px;
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: #fff;
+      color: #1a1a2e;
+      min-width: 160px;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .control-group select:focus {
+      border-color: #1e3461;
+    }
+
+    /* グラフコンテナ */
+    .chart-container {
+      display: none;
+      background: #ffffff;
+      border: 1px solid #f3f4f6;
+      border-radius: 2px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .chart-container.visible {
+      display: block;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      max-height: 450px;
+    }
+
+    /* 統計量テーブル */
+    .stats-section {
+      display: none;
+      margin-bottom: 32px;
+    }
+
+    .stats-section.visible {
+      display: block;
+    }
+
+    .stats-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .stats-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .stats-table th {
+      background: #f3f4f6;
+      color: #1e3461;
+      font-weight: 600;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 12px;
+    }
+
+    .stats-table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid #f3f4f6;
+      color: #1a1a2e;
+    }
+
+    .stats-table tr:hover td {
+      background: #f3f4f6;
+    }
+
+    /* データプレビュー */
+    .preview-section {
+      display: none;
+      margin-bottom: 32px;
+    }
+
+    .preview-section.visible {
+      display: block;
+    }
+
+    .preview-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .preview-table-wrapper {
+      overflow-x: auto;
+    }
+
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .preview-table th {
+      background: #1e3461;
+      color: #ffffff;
+      font-weight: 500;
+      padding: 8px 12px;
+      text-align: left;
+      white-space: nowrap;
+      font-size: 12px;
+    }
+
+    .preview-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f3f4f6;
+      white-space: nowrap;
+      color: #1a1a2e;
+    }
+
+    .preview-table tr:nth-child(even) td {
+      background: #f3f4f6;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px 16px;
+      }
+
+      .page-header h1 {
+        font-size: 18px;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .control-group select {
+        min-width: 100%;
+      }
+
+      .drop-zone {
+        padding: 32px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-header">
+      <h1>CSV可視化ダッシュボード</h1>
+      <p>CSVファイルをアップロードしてデータを可視化</p>
+    </div>
+
+    <!-- ドロップゾーン -->
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-title">CSVファイルをここにドラッグ&ドロップ</div>
+      <div class="drop-zone-sub">またはクリックしてファイルを選択</div>
+      <input type="file" id="fileInput" accept=".csv" />
+    </div>
+
+    <!-- ファイル情報 -->
+    <div class="file-info" id="fileInfo">
+      読み込み完了: <span id="fileName"></span> (<span id="rowCount"></span>行 x <span id="colCount"></span>列)
+    </div>
+
+    <!-- コントロール -->
+    <div class="controls" id="controls">
+      <div class="control-group">
+        <label>グラフ種類</label>
+        <select id="chartType">
+          <option value="bar">棒グラフ</option>
+          <option value="line">折れ線グラフ</option>
+          <option value="pie">円グラフ</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>ラベル列（X軸）</label>
+        <select id="labelColumn"></select>
+      </div>
+      <div class="control-group">
+        <label>データ列（Y軸）</label>
+        <select id="dataColumn"></select>
+      </div>
+    </div>
+
+    <!-- グラフ -->
+    <div class="chart-container" id="chartContainer">
+      <div class="chart-wrapper">
+        <canvas id="chart"></canvas>
+      </div>
+    </div>
+
+    <!-- 統計量 -->
+    <section class="stats-section" id="statsSection">
+      <h2 class="stats-title">基本統計量</h2>
+      <table class="stats-table" id="statsTable">
+        <thead>
+          <tr>
+            <th>カラム</th>
+            <th>平均</th>
+            <th>中央値</th>
+            <th>最大値</th>
+            <th>最小値</th>
+            <th>標準偏差</th>
+          </tr>
+        </thead>
+        <tbody id="statsBody"></tbody>
+      </table>
+    </section>
+
+    <!-- データプレビュー -->
+    <section class="preview-section" id="previewSection">
+      <h2 class="preview-title">データプレビュー（先頭10行）</h2>
+      <div class="preview-table-wrapper">
+        <table class="preview-table" id="previewTable"></table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // === 状態管理 ===
+    let parsedData = [];
+    let headers = [];
+    let currentChart = null;
+
+    // === DOM要素の取得 ===
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const rowCount = document.getElementById('rowCount');
+    const colCount = document.getElementById('colCount');
+    const controls = document.getElementById('controls');
+    const chartType = document.getElementById('chartType');
+    const labelColumn = document.getElementById('labelColumn');
+    const dataColumn = document.getElementById('dataColumn');
+    const chartContainer = document.getElementById('chartContainer');
+    const chartCanvas = document.getElementById('chart');
+    const statsSection = document.getElementById('statsSection');
+    const statsBody = document.getElementById('statsBody');
+    const previewSection = document.getElementById('previewSection');
+    const previewTable = document.getElementById('previewTable');
+
+    // === ドラッグ&ドロップイベント ===
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.csv')) {
+        handleFile(file);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFile(file);
+    });
+
+    // === ファイル読み込み処理 ===
+    function handleFile(file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          parsedData = results.data;
+          headers = results.meta.fields || [];
+
+          // ファイル情報を表示
+          fileName.textContent = file.name;
+          rowCount.textContent = parsedData.length;
+          colCount.textContent = headers.length;
+          fileInfo.style.display = 'block';
+
+          // カラム選択肢の構築
+          buildColumnSelectors();
+
+          // UIを表示状態に
+          controls.classList.add('visible');
+          chartContainer.classList.add('visible');
+          statsSection.classList.add('visible');
+          previewSection.classList.add('visible');
+
+          // グラフと統計量を描画
+          renderChart();
+          renderStats();
+          renderPreview();
+        },
+        error: (err) => {
+          alert('CSV解析エラー: ' + err.message);
+        }
+      });
+    }
+
+    // === カラム選択肢の構築 ===
+    function buildColumnSelectors() {
+      labelColumn.innerHTML = '';
+      dataColumn.innerHTML = '';
+
+      // 数値カラムを判定
+      const numericColumns = headers.filter((h) => {
+        return parsedData.some((row) => !isNaN(parseFloat(row[h])) && row[h] !== '');
+      });
+
+      // 非数値カラム（ラベル候補）
+      const textColumns = headers.filter((h) => !numericColumns.includes(h));
+
+      // ラベル列: テキスト列を優先、なければ全カラム
+      const labelCandidates = textColumns.length > 0 ? textColumns : headers;
+      labelCandidates.forEach((h) => {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = h;
+        labelColumn.appendChild(opt);
+      });
+
+      // データ列: 数値列のみ
+      numericColumns.forEach((h) => {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = h;
+        dataColumn.appendChild(opt);
+      });
+
+      // 数値列が2つ以上あれば2番目をデフォルトに（最初はラベルの場合が多い）
+      if (numericColumns.length >= 2) {
+        dataColumn.value = numericColumns[0];
+      }
+    }
+
+    // === グラフ描画 ===
+    function renderChart() {
+      if (currentChart) {
+        currentChart.destroy();
+      }
+
+      const type = chartType.value;
+      const labelCol = labelColumn.value;
+      const dataCol = dataColumn.value;
+
+      if (!labelCol || !dataCol) return;
+
+      const labels = parsedData.map((row) => row[labelCol]);
+      const data = parsedData.map((row) => parseFloat(row[dataCol]) || 0);
+
+      // グラフ色の生成
+      const colors = generateColors(data.length);
+
+      const config = {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: dataCol,
+            data: data,
+            backgroundColor: type === 'pie' ? colors : 'rgba(30, 52, 97, 0.7)',
+            borderColor: type === 'pie' ? colors.map(() => '#ffffff') : '#1e3461',
+            borderWidth: type === 'pie' ? 2 : 2,
+            tension: 0.3,
+            fill: type === 'line' ? false : undefined,
+            pointBackgroundColor: '#1e3461',
+            pointRadius: type === 'line' ? 4 : undefined,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              display: type === 'pie',
+              position: 'right',
+              labels: {
+                font: {
+                  family: "'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif",
+                  size: 12
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: dataCol + 'の分布',
+              font: {
+                family: "'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif",
+                size: 14,
+                weight: '600'
+              },
+              color: '#1a1a2e'
+            }
+          },
+          scales: type === 'pie' ? {} : {
+            x: {
+              grid: { color: '#f3f4f6' },
+              ticks: {
+                font: {
+                  family: "'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif",
+                  size: 11
+                }
+              }
+            },
+            y: {
+              grid: { color: '#f3f4f6' },
+              beginAtZero: true,
+              ticks: {
+                font: {
+                  family: "'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif",
+                  size: 11
+                }
+              }
+            }
+          }
+        }
+      };
+
+      currentChart = new Chart(chartCanvas, config);
+    }
+
+    // === 円グラフ用カラー生成 ===
+    function generateColors(count) {
+      const baseHue = 220;
+      return Array.from({ length: count }, (_, i) => {
+        const hue = (baseHue + (i * 360 / count)) % 360;
+        const saturation = 55 + (i % 3) * 10;
+        const lightness = 45 + (i % 4) * 8;
+        return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+      });
+    }
+
+    // === 統計量の計算と表示 ===
+    function renderStats() {
+      statsBody.innerHTML = '';
+
+      // 数値カラムのみ対象
+      const numericColumns = headers.filter((h) => {
+        return parsedData.some((row) => !isNaN(parseFloat(row[h])) && row[h] !== '');
+      });
+
+      numericColumns.forEach((col) => {
+        const values = parsedData
+          .map((row) => parseFloat(row[col]))
+          .filter((v) => !isNaN(v));
+
+        if (values.length === 0) return;
+
+        const stats = calculateStats(values);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight:600;color:#1e3461">${col}</td>
+          <td>${formatNumber(stats.mean)}</td>
+          <td>${formatNumber(stats.median)}</td>
+          <td>${formatNumber(stats.max)}</td>
+          <td>${formatNumber(stats.min)}</td>
+          <td>${formatNumber(stats.stdDev)}</td>
+        `;
+        statsBody.appendChild(tr);
+      });
+    }
+
+    // === 統計量の計算 ===
+    function calculateStats(values) {
+      const sorted = [...values].sort((a, b) => a - b);
+      const n = sorted.length;
+      const sum = sorted.reduce((acc, v) => acc + v, 0);
+      const mean = sum / n;
+
+      // 中央値
+      const median = n % 2 === 0
+        ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2
+        : sorted[Math.floor(n / 2)];
+
+      // 標準偏差
+      const variance = sorted.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / n;
+      const stdDev = Math.sqrt(variance);
+
+      return {
+        mean,
+        median,
+        max: sorted[n - 1],
+        min: sorted[0],
+        stdDev
+      };
+    }
+
+    // === 数値フォーマット ===
+    function formatNumber(num) {
+      if (Number.isInteger(num)) return num.toLocaleString('ja-JP');
+      return num.toLocaleString('ja-JP', { maximumFractionDigits: 2 });
+    }
+
+    // === データプレビュー ===
+    function renderPreview() {
+      const previewRows = parsedData.slice(0, 10);
+      let html = '<thead><tr>';
+      headers.forEach((h) => {
+        html += `<th>${h}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      previewRows.forEach((row) => {
+        html += '<tr>';
+        headers.forEach((h) => {
+          html += `<td>${row[h] || ''}</td>`;
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody>';
+      previewTable.innerHTML = html;
+    }
+
+    // === コントロール変更時の再描画 ===
+    chartType.addEventListener('change', renderChart);
+    labelColumn.addEventListener('change', renderChart);
+    dataColumn.addEventListener('change', renderChart);
+  </script>
+</body>
+</html>

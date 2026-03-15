@@ -1,0 +1,9 @@
+{
+  "id": "05-qr-generator",
+  "name": "QRコード一括生成ツール",
+  "category": "utility",
+  "description": "URL やテキストから一括でQRコードを生成。色・サイズのカスタマイズ、ZIP一括ダウンロードに対応。",
+  "usesAI": false,
+  "libraries": ["qrcode.js"],
+  "author": "AI駆動開発デモ"
+}

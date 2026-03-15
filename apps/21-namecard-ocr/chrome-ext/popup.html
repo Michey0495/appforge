@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    width: 320px;
+    padding: 16px;
+    line-height: 1.6;
+  }
+  h1 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  p { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+  .upload-area {
+    border: 2px dashed #e5e7eb;
+    border-radius: 2px;
+    padding: 24px 12px;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 12px;
+  }
+  .upload-area:hover { border-color: #1e3461; }
+  .upload-area input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .upload-text { font-size: 11px; color: #9ca3af; }
+  .btn {
+    display: block;
+    width: 100%;
+    background: #1e3461;
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    padding: 8px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+  }
+  .btn:hover { background: #2e4f87; }
+  .divider {
+    border-top: 1px solid #f3f4f6;
+    margin: 12px 0;
+  }
+  .link { font-size: 11px; color: #1e3461; text-decoration: none; }
+  .link:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+  <h1>名刺OCR</h1>
+  <p>名刺画像をアップロードして連絡先情報を抽出します。</p>
+
+  <div class="upload-area">
+    <div class="upload-text">画像を選択</div>
+    <input type="file" id="fileInput" accept="image/*" />
+  </div>
+
+  <div class="divider"></div>
+
+  <p>複数枚の処理やCSV/vCardエクスポートはフル版をご利用ください。</p>
+  <a class="btn" href="../html/index.html" target="_blank">フル版を開く</a>
+
+  <script>
+    document.getElementById('fileInput').addEventListener('change', () => {
+      // ポップアップからはフル版へ誘導
+      window.open('../html/index.html', '_blank');
+    });
+  </script>
+</body>
+</html>

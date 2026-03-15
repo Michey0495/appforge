@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON / APIレスポンス整形ツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  textarea, input[type="text"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  textarea:focus, input[type="text"]:focus { border-color: #1e3461; }
+  textarea { min-height: 180px; resize: vertical; line-height: 1.7; }
+
+  .section { margin-bottom: 32px; }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #2e4f87; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+  .btn-outline.active {
+    background: #1e3461;
+    color: #ffffff;
+    border-color: #1e3461;
+  }
+
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .tab {
+    padding: 8px 20px;
+    font-size: 12px;
+    font-family: inherit;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    color: #6b7280;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab:hover { color: #1a1a2e; }
+  .tab.active {
+    color: #1e3461;
+    border-bottom-color: #1e3461;
+    font-weight: 500;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* 横並び（Diff用） */
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* 出力エリア */
+  .output-area {
+    width: 100%;
+    min-height: 200px;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 0;
+    background: #fafafa;
+    overflow: auto;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .output-area:empty::before {
+    content: '結果がここに表示されます';
+    color: #9ca3af;
+    padding: 16px;
+    display: block;
+  }
+
+  /* 行番号付き出力 */
+  .line {
+    display: flex;
+    padding: 0 12px 0 0;
+  }
+  .line-no {
+    display: inline-block;
+    min-width: 36px;
+    padding: 0 8px;
+    text-align: right;
+    color: #9ca3af;
+    user-select: none;
+    background: #f3f4f6;
+    border-right: 1px solid #e5e7eb;
+    flex-shrink: 0;
+  }
+  .line-content {
+    padding-left: 12px;
+    white-space: pre;
+  }
+
+  /* シンタックスハイライト */
+  .json-key { color: #1e3461; }
+  .json-string { color: #166534; }
+  .json-number { color: #c2410c; }
+  .json-boolean { color: #7c3aed; }
+  .json-null { color: #9ca3af; }
+
+  /* ツリービュー */
+  .tree-view { padding: 16px; }
+  .tree-node { margin-left: 20px; }
+  .tree-toggle {
+    cursor: pointer;
+    user-select: none;
+    color: #6b7280;
+    display: inline-block;
+    width: 12px;
+  }
+  .tree-toggle:hover { color: #1e3461; }
+  .tree-key { color: #1e3461; font-weight: 500; }
+  .tree-children { display: block; }
+  .tree-children.collapsed { display: none; }
+
+  /* Diff色 */
+  .diff-added { background: #ecfdf5; }
+  .diff-removed { background: #fef2f2; }
+  .diff-changed { background: #fffbeb; }
+
+  /* エラー */
+  .error-msg {
+    color: #b91c1c;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  /* JSONPathセクション */
+  .search-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .search-row .field { flex: 1; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="header-title">JSON / APIレスポンス整形ツール</span>
+    <span class="header-subtitle">JSON Formatter & Diff</span>
+  </div>
+
+  <!-- タブ切替 -->
+  <div class="tabs">
+    <button class="tab active" data-tab="format">整形 / 検証</button>
+    <button class="tab" data-tab="diff">差分比較</button>
+  </div>
+
+  <!-- 整形パネル -->
+  <div class="panel active" id="panelFormat">
+    <div class="section">
+      <label>JSON入力</label>
+      <textarea id="jsonInput" placeholder='{"key": "value", ...}'></textarea>
+    </div>
+
+    <div class="section">
+      <div class="btn-group">
+        <button class="btn" id="btnFormat">整形</button>
+        <button class="btn btn-outline" id="btnMinify">圧縮</button>
+        <button class="btn btn-outline" id="btnValidate">検証</button>
+        <button class="btn btn-outline" id="btnTreeView">ツリー表示</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="search-row">
+        <div class="field">
+          <label>JSONPath検索</label>
+          <input type="text" id="jsonPath" placeholder="例: data.users[0].name">
+        </div>
+        <button class="btn" id="btnSearch" style="margin-bottom: 0;">検索</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="result-header">
+        <label style="margin-bottom:0;">結果</label>
+        <button class="btn btn-outline" id="btnCopyFormat" style="font-size:11px; padding:4px 10px;">コピー</button>
+      </div>
+      <div class="output-area" id="formatOutput"></div>
+    </div>
+  </div>
+
+  <!-- 差分パネル -->
+  <div class="panel" id="panelDiff">
+    <div class="section">
+      <div class="side-by-side">
+        <div>
+          <label>JSON A</label>
+          <textarea id="diffA" placeholder="1つ目のJSON"></textarea>
+        </div>
+        <div>
+          <label>JSON B</label>
+          <textarea id="diffB" placeholder="2つ目のJSON"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <button class="btn" id="btnDiff">差分を表示</button>
+    </div>
+
+    <div class="section">
+      <label>差分結果</label>
+      <div class="output-area" id="diffOutput"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+  // タブ切替
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel' + capitalize(tab.dataset.tab)).classList.add('active');
+    });
+  });
+
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // シンタックスハイライト付きHTML生成
+  function highlightJson(json, indent) {
+    const formatted = JSON.stringify(json, null, indent);
+    // HTMLエスケープしてからハイライト
+    const escaped = formatted
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    return escaped.replace(
+      /("(?:\\.|[^"\\])*")\s*:/g,
+      '<span class="json-key">$1</span>:'
+    ).replace(
+      /:\s*("(?:\\.|[^"\\])*")/g,
+      ': <span class="json-string">$1</span>'
+    ).replace(
+      /:\s*(-?\d+\.?\d*(?:[eE][+-]?\d+)?)/g,
+      ': <span class="json-number">$1</span>'
+    ).replace(
+      /:\s*(true|false)/g,
+      ': <span class="json-boolean">$1</span>'
+    ).replace(
+      /:\s*(null)/g,
+      ': <span class="json-null">$1</span>'
+    ).replace(
+      // 配列内の値もハイライト
+      /(?<=[\[,]\s*)("(?:\\.|[^"\\])*")(?=\s*[,\]])/g,
+      '<span class="json-string">$1</span>'
+    ).replace(
+      /(?<=[\[,]\s*)(-?\d+\.?\d*(?:[eE][+-]?\d+)?)(?=\s*[,\]])/g,
+      '<span class="json-number">$1</span>'
+    ).replace(
+      /(?<=[\[,]\s*)(true|false)(?=\s*[,\]])/g,
+      '<span class="json-boolean">$1</span>'
+    ).replace(
+      /(?<=[\[,]\s*)(null)(?=\s*[,\]])/g,
+      '<span class="json-null">$1</span>'
+    );
+  }
+
+  // 行番号付きで出力
+  function renderWithLineNumbers(el, html) {
+    const lines = html.split('\n');
+    el.innerHTML = lines.map((line, i) =>
+      `<div class="line"><span class="line-no">${i + 1}</span><span class="line-content">${line}</span></div>`
+    ).join('');
+  }
+
+  // JSONパース共通
+  function tryParseJson(text) {
+    try {
+      return { data: JSON.parse(text), error: null };
+    } catch (e) {
+      return { data: null, error: e.message };
+    }
+  }
+
+  // 整形ボタン
+  document.getElementById('btnFormat').addEventListener('click', () => {
+    const input = document.getElementById('jsonInput').value.trim();
+    const output = document.getElementById('formatOutput');
+    const { data, error } = tryParseJson(input);
+    if (error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+      return;
+    }
+    const html = highlightJson(data, 2);
+    renderWithLineNumbers(output, html);
+  });
+
+  // 圧縮ボタン
+  document.getElementById('btnMinify').addEventListener('click', () => {
+    const input = document.getElementById('jsonInput').value.trim();
+    const output = document.getElementById('formatOutput');
+    const { data, error } = tryParseJson(input);
+    if (error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+      return;
+    }
+    const minified = JSON.stringify(data);
+    renderWithLineNumbers(output, escapeHtml(minified));
+  });
+
+  // 検証ボタン
+  document.getElementById('btnValidate').addEventListener('click', () => {
+    const input = document.getElementById('jsonInput').value.trim();
+    const output = document.getElementById('formatOutput');
+    const { data, error } = tryParseJson(input);
+    if (error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">不正なJSON: ${error}</div>`;
+    } else {
+      const type = Array.isArray(data) ? '配列' : typeof data === 'object' ? 'オブジェクト' : typeof data;
+      const keys = typeof data === 'object' && data !== null ? Object.keys(data).length : 0;
+      const size = new Blob([input]).size;
+      output.innerHTML = `<div style="padding:16px;">有効なJSONです<br>型: ${type}<br>キー数: ${keys}<br>サイズ: ${size} bytes</div>`;
+    }
+  });
+
+  // ツリービュー
+  document.getElementById('btnTreeView').addEventListener('click', () => {
+    const input = document.getElementById('jsonInput').value.trim();
+    const output = document.getElementById('formatOutput');
+    const { data, error } = tryParseJson(input);
+    if (error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+      return;
+    }
+    output.innerHTML = '<div class="tree-view">' + buildTree(data, '') + '</div>';
+    // トグル動作
+    output.querySelectorAll('.tree-toggle').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const children = toggle.parentElement.querySelector('.tree-children');
+        if (children) {
+          children.classList.toggle('collapsed');
+          toggle.textContent = children.classList.contains('collapsed') ? '+' : '-';
+        }
+      });
+    });
+  });
+
+  function buildTree(obj, path) {
+    if (obj === null) return '<span class="json-null">null</span>';
+    if (typeof obj !== 'object') {
+      if (typeof obj === 'string') return `<span class="json-string">"${escapeHtml(obj)}"</span>`;
+      if (typeof obj === 'number') return `<span class="json-number">${obj}</span>`;
+      if (typeof obj === 'boolean') return `<span class="json-boolean">${obj}</span>`;
+      return String(obj);
+    }
+
+    const isArray = Array.isArray(obj);
+    const entries = isArray ? obj.map((v, i) => [i, v]) : Object.entries(obj);
+    const bracket = isArray ? ['[', ']'] : ['{', '}'];
+
+    if (entries.length === 0) return bracket[0] + bracket[1];
+
+    let html = `<span class="tree-toggle">-</span> ${bracket[0]}<div class="tree-children">`;
+    entries.forEach(([key, val]) => {
+      const keyLabel = isArray ? `<span class="json-number">${key}</span>` : `<span class="tree-key">"${escapeHtml(String(key))}"</span>`;
+      html += `<div class="tree-node">${keyLabel}: ${buildTree(val, path + '.' + key)}</div>`;
+    });
+    html += `</div>${bracket[1]}`;
+    return html;
+  }
+
+  // JSONPath検索
+  document.getElementById('btnSearch').addEventListener('click', () => {
+    const input = document.getElementById('jsonInput').value.trim();
+    const pathStr = document.getElementById('jsonPath').value.trim();
+    const output = document.getElementById('formatOutput');
+    const { data, error } = tryParseJson(input);
+    if (error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+      return;
+    }
+    if (!pathStr) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">パスを入力してください</div>`;
+      return;
+    }
+
+    try {
+      const result = resolveJsonPath(data, pathStr);
+      const html = highlightJson(result, 2);
+      renderWithLineNumbers(output, html);
+    } catch (e) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">パス解決エラー: ${e.message}</div>`;
+    }
+  });
+
+  // 簡易JSONPathリゾルバ（ドット記法・ブラケット記法対応）
+  function resolveJsonPath(obj, path) {
+    const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+    let current = obj;
+    for (const part of parts) {
+      if (current === null || current === undefined) {
+        throw new Error(`パス "${path}" が見つかりません`);
+      }
+      current = current[part];
+    }
+    if (current === undefined) {
+      throw new Error(`パス "${path}" が見つかりません`);
+    }
+    return current;
+  }
+
+  // 差分比較
+  document.getElementById('btnDiff').addEventListener('click', () => {
+    const a = document.getElementById('diffA').value.trim();
+    const b = document.getElementById('diffB').value.trim();
+    const output = document.getElementById('diffOutput');
+
+    const parsedA = tryParseJson(a);
+    const parsedB = tryParseJson(b);
+
+    if (parsedA.error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON A エラー: ${parsedA.error}</div>`;
+      return;
+    }
+    if (parsedB.error) {
+      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON B エラー: ${parsedB.error}</div>`;
+      return;
+    }
+
+    const diffs = computeDiff(parsedA.data, parsedB.data, '');
+    if (diffs.length === 0) {
+      output.innerHTML = '<div style="padding:16px; color:#6b7280;">差分はありません</div>';
+      return;
+    }
+
+    let html = '';
+    let lineNo = 0;
+    diffs.forEach(d => {
+      lineNo++;
+      let cls = '';
+      if (d.type === 'added') cls = 'diff-added';
+      if (d.type === 'removed') cls = 'diff-removed';
+      if (d.type === 'changed') cls = 'diff-changed';
+
+      const prefix = d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~';
+      html += `<div class="line ${cls}"><span class="line-no">${lineNo}</span><span class="line-content">${prefix} ${escapeHtml(d.path)}: ${escapeHtml(d.detail)}</span></div>`;
+    });
+
+    output.innerHTML = html;
+  });
+
+  // 再帰的差分計算
+  function computeDiff(a, b, path) {
+    const diffs = [];
+    const aType = typeof a;
+    const bType = typeof b;
+
+    if (aType !== bType || Array.isArray(a) !== Array.isArray(b)) {
+      diffs.push({ type: 'changed', path: path || '(root)', detail: `${JSON.stringify(a)} -> ${JSON.stringify(b)}` });
+      return diffs;
+    }
+
+    if (a === null || b === null || aType !== 'object') {
+      if (a !== b) {
+        diffs.push({ type: 'changed', path: path || '(root)', detail: `${JSON.stringify(a)} -> ${JSON.stringify(b)}` });
+      }
+      return diffs;
+    }
+
+    const aKeys = new Set(Object.keys(a));
+    const bKeys = new Set(Object.keys(b));
+
+    // Aにだけ存在
+    aKeys.forEach(key => {
+      if (!bKeys.has(key)) {
+        diffs.push({ type: 'removed', path: `${path}.${key}`, detail: JSON.stringify(a[key]) });
+      }
+    });
+
+    // Bにだけ存在
+    bKeys.forEach(key => {
+      if (!aKeys.has(key)) {
+        diffs.push({ type: 'added', path: `${path}.${key}`, detail: JSON.stringify(b[key]) });
+      }
+    });
+
+    // 両方に存在
+    aKeys.forEach(key => {
+      if (bKeys.has(key)) {
+        const childDiffs = computeDiff(a[key], b[key], `${path}.${key}`);
+        diffs.push(...childDiffs);
+      }
+    });
+
+    return diffs;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // コピー
+  document.getElementById('btnCopyFormat').addEventListener('click', () => {
+    const output = document.getElementById('formatOutput');
+    const text = output.textContent || output.innerText;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
+    });
+  });
+</script>
+</body>
+</html>

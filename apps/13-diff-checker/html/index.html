@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テキスト差分チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff; color: #1a1a2e;
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px; letter-spacing: -0.01em; line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; }
+  .header .subtitle { font-size: 11px; color: #9ca3af; }
+  label {
+    display: block; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
+  }
+  textarea {
+    border: 1px solid #e5e7eb; padding: 8px 12px; font-size: 13px;
+    border-radius: 2px; width: 100%; font-family: 'Inter', monospace;
+    color: #1a1a2e; background: #ffffff; outline: none; resize: vertical;
+  }
+  textarea:focus { border-color: #1e3461; }
+  .btn {
+    background: #1e3461; color: #ffffff; padding: 8px 16px; font-size: 12px;
+    border-radius: 2px; border: none; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn-secondary {
+    background: #ffffff; border: 1px solid #e5e7eb; color: #6b7280;
+  }
+  .btn-secondary:hover { background: #f9fafb; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .btn-active { background: #1e3461; color: #ffffff; border-color: #1e3461; }
+  .section { margin-bottom: 32px; }
+  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .toolbar-group { display: flex; gap: 8px; }
+  .stats {
+    display: flex; gap: 20px; font-size: 12px; color: #6b7280;
+    padding: 12px 0; border-bottom: 1px solid #f3f4f6; margin-bottom: 16px;
+  }
+  .stats .num { font-weight: 600; }
+  .stat-added .num { color: #15803d; }
+  .stat-removed .num { color: #dc2626; }
+  .stat-unchanged .num { color: #6b7280; }
+
+  /* Unified diff表示 */
+  .diff-view { border: 1px solid #e5e7eb; border-radius: 2px; font-family: monospace; font-size: 12px; overflow-x: auto; }
+  .diff-line { display: flex; min-height: 24px; }
+  .diff-line-num {
+    min-width: 40px; padding: 2px 8px; text-align: right;
+    color: #9ca3af; user-select: none; background: #fafafa;
+    border-right: 1px solid #f3f4f6; flex-shrink: 0;
+  }
+  .diff-line-content { padding: 2px 12px; white-space: pre-wrap; word-break: break-all; flex: 1; }
+  .diff-added { background: #f0fdf4; border-left: 3px solid #22c55e; }
+  .diff-removed { background: #fef2f2; border-left: 3px solid #ef4444; }
+  .diff-changed { background: #fffbeb; border-left: 3px solid #f59e0b; }
+  .diff-unchanged { border-left: 3px solid transparent; }
+
+  /* Split view */
+  .split-view { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #e5e7eb; border-radius: 2px; }
+  .split-pane { overflow-x: auto; font-family: monospace; font-size: 12px; }
+  .split-pane:first-child { border-right: 1px solid #e5e7eb; }
+  .split-line { display: flex; min-height: 24px; }
+  .split-line-num {
+    min-width: 36px; padding: 2px 6px; text-align: right;
+    color: #9ca3af; user-select: none; background: #fafafa;
+    border-right: 1px solid #f3f4f6; flex-shrink: 0;
+  }
+  .split-line-content { padding: 2px 8px; white-space: pre-wrap; word-break: break-all; flex: 1; }
+  .split-added { background: #f0fdf4; }
+  .split-removed { background: #fef2f2; }
+  .split-empty { background: #f9fafb; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>テキスト差分チェッカー</h1>
+    <div class="subtitle">2つのテキストを行単位で比較</div>
+  </div>
+
+  <div class="section">
+    <div class="grid-2">
+      <div>
+        <label>テキスト A</label>
+        <textarea id="textA" rows="12" placeholder="元のテキストを入力..."></textarea>
+      </div>
+      <div>
+        <label>テキスト B</label>
+        <textarea id="textB" rows="12" placeholder="比較するテキストを入力..."></textarea>
+      </div>
+    </div>
+    <div style="margin-top: 16px;">
+      <button class="btn" onclick="runDiff()">比較する</button>
+    </div>
+  </div>
+
+  <div class="section" id="resultSection" style="display:none;">
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button class="btn btn-secondary btn-active" id="btnUnified" onclick="setView('unified')">統合ビュー</button>
+        <button class="btn btn-secondary" id="btnSplit" onclick="setView('split')">分割ビュー</button>
+      </div>
+      <div class="toolbar-group">
+        <button class="btn btn-secondary" onclick="copyDiffResult()">差分をコピー</button>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div id="diffOutput"></div>
+  </div>
+</div>
+
+<script>
+  let currentView = 'unified';
+  let lastDiffResult = null;
+  let diffText = '';
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function runDiff() {
+    const textA = document.getElementById('textA').value;
+    const textB = document.getElementById('textB').value;
+
+    // 行単位のdiffを取得
+    const changes = Diff.diffLines(textA, textB);
+    lastDiffResult = changes;
+
+    // 統計の計算
+    let added = 0, removed = 0, unchanged = 0;
+    changes.forEach(part => {
+      const lineCount = part.value.replace(/\n$/, '').split('\n').length;
+      if (part.added) added += lineCount;
+      else if (part.removed) removed += lineCount;
+      else unchanged += lineCount;
+    });
+
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-added">追加: <span class="num">+${added}</span> 行</div>
+      <div class="stat-removed">削除: <span class="num">-${removed}</span> 行</div>
+      <div class="stat-unchanged">変更なし: <span class="num">${unchanged}</span> 行</div>
+    `;
+
+    document.getElementById('resultSection').style.display = 'block';
+    renderDiff();
+  }
+
+  function setView(view) {
+    currentView = view;
+    document.getElementById('btnUnified').classList.toggle('btn-active', view === 'unified');
+    document.getElementById('btnSplit').classList.toggle('btn-active', view === 'split');
+    renderDiff();
+  }
+
+  function renderDiff() {
+    if (!lastDiffResult) return;
+    if (currentView === 'unified') renderUnified();
+    else renderSplit();
+  }
+
+  function renderUnified() {
+    const output = document.getElementById('diffOutput');
+    let html = '<div class="diff-view">';
+    let lineNumA = 1;
+    let lineNumB = 1;
+    diffText = '';
+
+    lastDiffResult.forEach(part => {
+      const lines = part.value.replace(/\n$/, '').split('\n');
+      lines.forEach(line => {
+        if (part.added) {
+          html += `<div class="diff-line diff-added">
+            <div class="diff-line-num"></div>
+            <div class="diff-line-num">${lineNumB}</div>
+            <div class="diff-line-content">+ ${escapeHtml(line)}</div>
+          </div>`;
+          diffText += `+ ${line}\n`;
+          lineNumB++;
+        } else if (part.removed) {
+          html += `<div class="diff-line diff-removed">
+            <div class="diff-line-num">${lineNumA}</div>
+            <div class="diff-line-num"></div>
+            <div class="diff-line-content">- ${escapeHtml(line)}</div>
+          </div>`;
+          diffText += `- ${line}\n`;
+          lineNumA++;
+        } else {
+          html += `<div class="diff-line diff-unchanged">
+            <div class="diff-line-num">${lineNumA}</div>
+            <div class="diff-line-num">${lineNumB}</div>
+            <div class="diff-line-content">  ${escapeHtml(line)}</div>
+          </div>`;
+          diffText += `  ${line}\n`;
+          lineNumA++;
+          lineNumB++;
+        }
+      });
+    });
+
+    html += '</div>';
+    output.innerHTML = html;
+  }
+
+  function renderSplit() {
+    const output = document.getElementById('diffOutput');
+    // 左右のペインを構築
+    const leftLines = [];
+    const rightLines = [];
+    let lineNumA = 1;
+    let lineNumB = 1;
+    diffText = '';
+
+    lastDiffResult.forEach(part => {
+      const lines = part.value.replace(/\n$/, '').split('\n');
+      if (part.added) {
+        lines.forEach(line => {
+          leftLines.push({ num: '', content: '', type: 'empty' });
+          rightLines.push({ num: lineNumB, content: line, type: 'added' });
+          diffText += `+ ${line}\n`;
+          lineNumB++;
+        });
+      } else if (part.removed) {
+        lines.forEach(line => {
+          leftLines.push({ num: lineNumA, content: line, type: 'removed' });
+          rightLines.push({ num: '', content: '', type: 'empty' });
+          diffText += `- ${line}\n`;
+          lineNumA++;
+        });
+      } else {
+        lines.forEach(line => {
+          leftLines.push({ num: lineNumA, content: line, type: '' });
+          rightLines.push({ num: lineNumB, content: line, type: '' });
+          diffText += `  ${line}\n`;
+          lineNumA++;
+          lineNumB++;
+        });
+      }
+    });
+
+    const maxLen = Math.max(leftLines.length, rightLines.length);
+    let leftHtml = '';
+    let rightHtml = '';
+
+    for (let i = 0; i < maxLen; i++) {
+      const l = leftLines[i] || { num: '', content: '', type: 'empty' };
+      const r = rightLines[i] || { num: '', content: '', type: 'empty' };
+
+      const lClass = l.type === 'removed' ? 'split-removed' : l.type === 'empty' ? 'split-empty' : '';
+      const rClass = r.type === 'added' ? 'split-added' : r.type === 'empty' ? 'split-empty' : '';
+
+      leftHtml += `<div class="split-line ${lClass}">
+        <div class="split-line-num">${l.num}</div>
+        <div class="split-line-content">${escapeHtml(l.content)}</div>
+      </div>`;
+
+      rightHtml += `<div class="split-line ${rClass}">
+        <div class="split-line-num">${r.num}</div>
+        <div class="split-line-content">${escapeHtml(r.content)}</div>
+      </div>`;
+    }
+
+    output.innerHTML = `<div class="split-view">
+      <div class="split-pane">${leftHtml}</div>
+      <div class="split-pane">${rightHtml}</div>
+    </div>`;
+  }
+
+  function copyDiffResult() {
+    if (diffText) {
+      navigator.clipboard.writeText(diffText);
+    }
+  }
+</script>
+</body>
+</html>

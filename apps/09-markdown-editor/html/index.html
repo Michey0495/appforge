@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdownライブプレビュー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ダークモード */
+  body.dark {
+    background: #1a1a2e;
+    color: #e5e7eb;
+  }
+  body.dark .header { border-bottom-color: #2d2d44; }
+  body.dark .toolbar { border-bottom-color: #2d2d44; }
+  body.dark .editor-pane { background: #1a1a2e; color: #e5e7eb; border-right-color: #2d2d44; }
+  body.dark .editor-pane textarea { background: #1a1a2e; color: #e5e7eb; border-color: #2d2d44; }
+  body.dark .preview-pane { background: #22223a; color: #e5e7eb; }
+  body.dark .preview-pane h1,
+  body.dark .preview-pane h2,
+  body.dark .preview-pane h3 { color: #e5e7eb; }
+  body.dark .preview-pane code { background: #2d2d44; color: #e5e7eb; }
+  body.dark .preview-pane pre { background: #2d2d44; }
+  body.dark .preview-pane blockquote { border-left-color: #3d3d5c; color: #9ca3af; }
+  body.dark .preview-pane a { color: #6b8fd4; }
+  body.dark .preview-pane table th { background: #2d2d44; }
+  body.dark .preview-pane table td,
+  body.dark .preview-pane table th { border-color: #3d3d5c; }
+  body.dark .footer { background: #22223a; border-top-color: #2d2d44; color: #9ca3af; }
+  body.dark .toolbar-btn { color: #9ca3af; border-color: #2d2d44; }
+  body.dark .toolbar-btn:hover { background: #2d2d44; color: #e5e7eb; }
+  body.dark .btn { background: #2e4f87; }
+  body.dark .btn-outline { color: #9ca3af; border-color: #2d2d44; }
+  body.dark .btn-outline:hover { background: #2d2d44; }
+  body.dark .pane-label { background: #22223a; border-bottom-color: #2d2d44; color: #6b7280; }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: baseline; gap: 12px; }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+  .header-actions { display: flex; gap: 8px; }
+
+  label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+  }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn:hover { background: #2e4f87; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  /* ツールバー */
+  .toolbar {
+    display: flex;
+    gap: 4px;
+    padding: 8px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .toolbar-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    cursor: pointer;
+    color: #6b7280;
+    transition: background 0.15s, color 0.15s;
+  }
+  .toolbar-btn:hover { background: #f3f4f6; color: #1a1a2e; }
+
+  /* メインエリア */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .pane-label {
+    padding: 6px 16px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    background: #fafafa;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #f3f4f6;
+    min-width: 0;
+  }
+  .editor-pane textarea {
+    flex: 1;
+    width: 100%;
+    border: none;
+    padding: 16px;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    line-height: 1.7;
+    resize: none;
+    outline: none;
+    color: #1a1a2e;
+    background: #ffffff;
+  }
+
+  .preview-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .preview-content {
+    flex: 1;
+  }
+
+  /* プレビュー内のマークダウンスタイル */
+  .preview-content h1 { font-size: 20px; font-weight: 600; margin: 24px 0 12px; color: #1a1a2e; }
+  .preview-content h2 { font-size: 16px; font-weight: 600; margin: 20px 0 10px; color: #1a1a2e; border-bottom: 1px solid #f3f4f6; padding-bottom: 6px; }
+  .preview-content h3 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; color: #1a1a2e; }
+  .preview-content p { margin: 8px 0; line-height: 1.8; }
+  .preview-content ul, .preview-content ol { margin: 8px 0; padding-left: 24px; }
+  .preview-content li { margin: 4px 0; line-height: 1.7; }
+  .preview-content code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+  }
+  .preview-content pre {
+    background: #f3f4f6;
+    padding: 12px 16px;
+    border-radius: 2px;
+    overflow-x: auto;
+    margin: 12px 0;
+  }
+  .preview-content pre code {
+    background: none;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .preview-content blockquote {
+    border-left: 3px solid #e5e7eb;
+    padding-left: 16px;
+    margin: 12px 0;
+    color: #6b7280;
+  }
+  .preview-content a { color: #1e3461; text-decoration: underline; }
+  .preview-content table { border-collapse: collapse; margin: 12px 0; width: 100%; }
+  .preview-content table th,
+  .preview-content table td {
+    border: 1px solid #e5e7eb;
+    padding: 6px 12px;
+    text-align: left;
+    font-size: 12px;
+  }
+  .preview-content table th { background: #f3f4f6; font-weight: 500; }
+  .preview-content img { max-width: 100%; height: auto; }
+  .preview-content hr { border: none; border-top: 1px solid #f3f4f6; margin: 16px 0; }
+
+  /* フッター */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 24px;
+    border-top: 1px solid #f3f4f6;
+    background: #fafafa;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <span class="header-title">Markdownライブプレビュー</span>
+      <span class="header-subtitle">Markdown Editor</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" id="btnDarkMode">ダークモード</button>
+      <button class="btn" id="btnExport">HTML出力</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="toolbar-btn" data-action="bold" title="太字">B</button>
+    <button class="toolbar-btn" data-action="italic" title="斜体">I</button>
+    <button class="toolbar-btn" data-action="code" title="コード">&lt;/&gt;</button>
+    <button class="toolbar-btn" data-action="link" title="リンク">Link</button>
+    <button class="toolbar-btn" data-action="heading" title="見出し">H</button>
+    <button class="toolbar-btn" data-action="list" title="リスト">List</button>
+  </div>
+
+  <div class="main">
+    <div class="editor-pane">
+      <div class="pane-label">エディタ</div>
+      <textarea id="editor" spellcheck="false" placeholder="Markdownを入力..."></textarea>
+    </div>
+    <div class="preview-pane">
+      <div class="pane-label">プレビュー</div>
+      <div class="preview-content" id="preview"></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span id="wordCount">0 文字 / 0 単語</span>
+    <span id="autoSaveStatus">自動保存: 有効</span>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+  // marked の設定
+  marked.setOptions({
+    highlight: function(code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(code, { language: lang }).value;
+      }
+      return hljs.highlightAuto(code).value;
+    },
+    breaks: true,
+    gfm: true
+  });
+
+  const editor = document.getElementById('editor');
+  const preview = document.getElementById('preview');
+  const wordCountEl = document.getElementById('wordCount');
+
+  // 初期サンプルテキスト
+  const DEFAULT_TEXT = `# Markdownライブプレビュー
+
+段落テキストの例です。このエディタはリアルタイムでプレビューを表示します。
+
+## 機能一覧
+
+- 太字、斜体、コードなどの書式
+- コードハイライト
+- テーブル表示
+- ダークモード
+
+## コード例
+
+\`\`\`javascript
+function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+\`\`\`
+
+> 引用テキストのサンプル
+
+| 項目 | 値 |
+|------|------|
+| 名前 | テスト |
+| 状態 | 有効 |
+
+---
+
+テキストは [localStorage](https://developer.mozilla.org/) に自動保存されます。`;
+
+  // localStorageから復元、なければデフォルト
+  const STORAGE_KEY = 'md-editor-content';
+  const saved = localStorage.getItem(STORAGE_KEY);
+  editor.value = saved !== null ? saved : DEFAULT_TEXT;
+
+  // プレビュー更新
+  function updatePreview() {
+    preview.innerHTML = marked.parse(editor.value);
+    updateWordCount();
+  }
+
+  // 文字数・単語数カウント
+  function updateWordCount() {
+    const text = editor.value;
+    const charCount = text.length;
+    // 日本語と英単語の両方をカウント
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0);
+    const wordCount = text.trim() === '' ? 0 : words.length;
+    wordCountEl.textContent = `${charCount} 文字 / ${wordCount} 単語`;
+  }
+
+  // 自動保存（デバウンス）
+  let saveTimer = null;
+  function autoSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, editor.value);
+    }, 500);
+  }
+
+  // 入力イベント
+  editor.addEventListener('input', () => {
+    updatePreview();
+    autoSave();
+  });
+
+  // 初回描画
+  updatePreview();
+
+  // ツールバー操作
+  document.querySelectorAll('.toolbar-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const action = btn.dataset.action;
+      applyFormat(action);
+    });
+  });
+
+  function applyFormat(action) {
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const text = editor.value;
+    const selected = text.substring(start, end);
+    let replacement = '';
+    let cursorOffset = 0;
+
+    switch (action) {
+      case 'bold':
+        replacement = `**${selected || 'テキスト'}**`;
+        cursorOffset = selected ? replacement.length : 2;
+        break;
+      case 'italic':
+        replacement = `*${selected || 'テキスト'}*`;
+        cursorOffset = selected ? replacement.length : 1;
+        break;
+      case 'code':
+        if (selected.includes('\n')) {
+          replacement = `\`\`\`\n${selected}\n\`\`\``;
+        } else {
+          replacement = `\`${selected || 'code'}\``;
+        }
+        cursorOffset = selected ? replacement.length : 1;
+        break;
+      case 'link':
+        replacement = `[${selected || 'リンクテキスト'}](url)`;
+        cursorOffset = selected ? replacement.length : 1;
+        break;
+      case 'heading':
+        // 行頭に ## を挿入
+        const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+        const lineText = text.substring(lineStart, end);
+        if (lineText.startsWith('### ')) {
+          // 3段まで来たらリセット
+          editor.value = text.substring(0, lineStart) + lineText.replace(/^### /, '') + text.substring(end);
+        } else if (lineText.startsWith('## ')) {
+          editor.value = text.substring(0, lineStart) + lineText.replace(/^## /, '### ') + text.substring(end);
+        } else if (lineText.startsWith('# ')) {
+          editor.value = text.substring(0, lineStart) + lineText.replace(/^# /, '## ') + text.substring(end);
+        } else {
+          editor.value = text.substring(0, lineStart) + '# ' + lineText + text.substring(end);
+        }
+        updatePreview();
+        autoSave();
+        editor.focus();
+        return;
+      case 'list':
+        const lines = (selected || '項目').split('\n');
+        replacement = lines.map(l => `- ${l}`).join('\n');
+        cursorOffset = replacement.length;
+        break;
+    }
+
+    editor.value = text.substring(0, start) + replacement + text.substring(end);
+    editor.selectionStart = start + cursorOffset;
+    editor.selectionEnd = start + cursorOffset;
+    editor.focus();
+    updatePreview();
+    autoSave();
+  }
+
+  // ダークモード切替
+  document.getElementById('btnDarkMode').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    document.getElementById('btnDarkMode').textContent = isDark ? 'ライトモード' : 'ダークモード';
+
+    // highlight.jsのスタイルも切替
+    const hlLink = document.querySelector('link[href*="highlight.js"]');
+    if (isDark) {
+      hlLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css';
+    } else {
+      hlLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css';
+    }
+
+    // プレビューを再レンダリングしてハイライト更新
+    updatePreview();
+  });
+
+  // HTMLエクスポート
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown出力</title>
+<style>
+body { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; color: #1a1a2e; line-height: 1.8; font-size: 14px; }
+h1 { font-size: 24px; margin: 32px 0 16px; }
+h2 { font-size: 18px; margin: 24px 0 12px; border-bottom: 1px solid #f3f4f6; padding-bottom: 6px; }
+h3 { font-size: 15px; margin: 20px 0 8px; }
+code { background: #f3f4f6; padding: 2px 6px; border-radius: 2px; font-size: 13px; }
+pre { background: #f3f4f6; padding: 16px; border-radius: 2px; overflow-x: auto; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 3px solid #e5e7eb; padding-left: 16px; color: #6b7280; margin: 12px 0; }
+table { border-collapse: collapse; margin: 12px 0; }
+th, td { border: 1px solid #e5e7eb; padding: 8px 12px; }
+th { background: #f3f4f6; }
+a { color: #1e3461; }
+</style>
+</head>
+<body>
+${marked.parse(editor.value)}
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'markdown-output.html';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast('HTMLファイルをダウンロードしました');
+  });
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  }
+</script>
+</body>
+</html>

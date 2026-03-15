@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    width: 300px;
+    padding: 16px;
+    line-height: 1.6;
+  }
+  h1 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
+  p { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+  .feature {
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 12px;
+  }
+  .feature:last-child { border-bottom: none; }
+  .feature-title { font-weight: 600; margin-bottom: 2px; }
+  .feature-desc { color: #6b7280; font-size: 11px; }
+  .note {
+    margin-top: 12px;
+    padding: 8px;
+    background: #f8f9fb;
+    border-radius: 2px;
+    font-size: 11px;
+    color: #6b7280;
+  }
+</style>
+</head>
+<body>
+  <h1>Meet議事録タイムスタンプ</h1>
+  <p>Google Meet画面上にフローティングメモ帳を自動表示します。</p>
+
+  <div class="feature">
+    <div class="feature-title">タイムスタンプ挿入</div>
+    <div class="feature-desc">ボタンひとつで [HH:MM:SS] 形式のタイムスタンプをカーソル位置に挿入</div>
+  </div>
+  <div class="feature">
+    <div class="feature-title">自動保存</div>
+    <div class="feature-desc">入力内容はリアルタイムでlocalStorageに保存。ページリロードしても消えない</div>
+  </div>
+  <div class="feature">
+    <div class="feature-title">Markdown出力</div>
+    <div class="feature-desc">タイムスタンプ付きのMarkdownリスト形式でクリップボードにコピー可能</div>
+  </div>
+  <div class="feature">
+    <div class="feature-title">ドラッグ移動</div>
+    <div class="feature-desc">ヘッダーをドラッグして任意の位置に配置。折りたたみにも対応</div>
+  </div>
+
+  <div class="note">
+    Google Meetのページ (meet.google.com/*) にアクセスするとメモ帳が自動表示されます。
+  </div>
+</body>
+</html>

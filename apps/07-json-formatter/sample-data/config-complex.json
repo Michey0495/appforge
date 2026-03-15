@@ -1,0 +1,178 @@
+{
+  "app": {
+    "name": "顧客管理システム",
+    "version": "2.4.1",
+    "environment": "production",
+    "debug": false,
+    "maintenance_mode": false,
+    "allowed_origins": [
+      "https://crm.example-corp.co.jp",
+      "https://admin.example-corp.co.jp"
+    ]
+  },
+  "database": {
+    "primary": {
+      "host": "db-primary.internal.example-corp.co.jp",
+      "port": 5432,
+      "name": "crm_production",
+      "pool": {
+        "min": 5,
+        "max": 50,
+        "idle_timeout_ms": 30000,
+        "acquire_timeout_ms": 10000
+      },
+      "ssl": {
+        "enabled": true,
+        "reject_unauthorized": true,
+        "ca_path": "/etc/ssl/certs/db-ca.pem"
+      }
+    },
+    "replica": {
+      "host": "db-replica.internal.example-corp.co.jp",
+      "port": 5432,
+      "name": "crm_production",
+      "pool": {
+        "min": 2,
+        "max": 30,
+        "idle_timeout_ms": 30000,
+        "acquire_timeout_ms": 10000
+      },
+      "ssl": {
+        "enabled": true,
+        "reject_unauthorized": true,
+        "ca_path": "/etc/ssl/certs/db-ca.pem"
+      }
+    },
+    "redis": {
+      "host": "redis.internal.example-corp.co.jp",
+      "port": 6379,
+      "db": 0,
+      "key_prefix": "crm:",
+      "ttl_seconds": 3600
+    }
+  },
+  "api": {
+    "base_url": "https://api.example-corp.co.jp/v2",
+    "timeout_ms": 15000,
+    "retry": {
+      "max_attempts": 3,
+      "backoff_multiplier": 2,
+      "initial_delay_ms": 500
+    },
+    "rate_limit": {
+      "window_ms": 60000,
+      "max_requests": 1000
+    },
+    "endpoints": {
+      "auth": "/auth",
+      "users": "/users",
+      "customers": "/customers",
+      "orders": "/orders",
+      "reports": "/reports",
+      "webhooks": "/webhooks"
+    }
+  },
+  "auth": {
+    "jwt": {
+      "algorithm": "RS256",
+      "access_token_expiry": "15m",
+      "refresh_token_expiry": "7d",
+      "issuer": "crm.example-corp.co.jp"
+    },
+    "session": {
+      "max_age_hours": 8,
+      "cookie_name": "crm_session",
+      "secure": true,
+      "http_only": true,
+      "same_site": "strict"
+    },
+    "mfa": {
+      "enabled": true,
+      "methods": ["totp", "email"],
+      "totp_issuer": "ExampleCorp CRM"
+    }
+  },
+  "feature_flags": {
+    "new_dashboard": true,
+    "ai_chat_support": false,
+    "bulk_export_v2": true,
+    "advanced_search": true,
+    "realtime_notifications": false,
+    "beta_analytics": false,
+    "customer_portal": true
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "outputs": [
+      {
+        "type": "stdout",
+        "level": "info"
+      },
+      {
+        "type": "file",
+        "path": "/var/log/crm/app.log",
+        "level": "debug",
+        "rotation": {
+          "max_size_mb": 100,
+          "max_files": 10,
+          "compress": true
+        }
+      },
+      {
+        "type": "external",
+        "service": "datadog",
+        "level": "warn",
+        "tags": ["service:crm", "env:production"]
+      }
+    ],
+    "sensitive_fields": [
+      "password",
+      "token",
+      "credit_card",
+      "ssn"
+    ]
+  },
+  "security": {
+    "cors": {
+      "enabled": true,
+      "max_age": 86400
+    },
+    "helmet": {
+      "content_security_policy": true,
+      "hsts": {
+        "max_age": 31536000,
+        "include_subdomains": true,
+        "preload": true
+      }
+    },
+    "ip_whitelist": [
+      "203.0.113.0/24",
+      "198.51.100.0/24"
+    ],
+    "encryption": {
+      "algorithm": "aes-256-gcm",
+      "key_rotation_days": 90
+    }
+  },
+  "notifications": {
+    "email": {
+      "provider": "ses",
+      "region": "ap-northeast-1",
+      "from": "noreply@example-corp.co.jp",
+      "reply_to": "support@example-corp.co.jp"
+    },
+    "slack": {
+      "webhook_channel": "#crm-alerts",
+      "notify_on": ["error", "deployment", "security"]
+    }
+  },
+  "storage": {
+    "provider": "s3",
+    "region": "ap-northeast-1",
+    "bucket": "example-corp-crm-assets",
+    "max_file_size_mb": 50,
+    "allowed_extensions": [".pdf", ".xlsx", ".csv", ".png", ".jpg"],
+    "cdn_base_url": "https://cdn.example-corp.co.jp"
+  }
+}

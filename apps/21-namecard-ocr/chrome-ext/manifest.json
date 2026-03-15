@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "名刺OCR",
+  "version": "1.0.0",
+  "description": "名刺画像から連絡先情報を抽出し、CSV/vCard形式で出力するツール",
+  "permissions": ["activeTab"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "名刺OCR"
+  },
+  "icons": {}
+}

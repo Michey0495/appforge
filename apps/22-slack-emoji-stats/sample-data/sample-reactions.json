@@ -1,0 +1,206 @@
+{
+  "user_mapping": {
+    "U01ABC001": "田中太郎",
+    "U02DEF002": "佐藤花子",
+    "U03GHI003": "鈴木健一",
+    "U04JKL004": "高橋美咲",
+    "U05MNO005": "伊藤大輔",
+    "U06PQR006": "渡辺あゆみ",
+    "U07STU007": "山本拓也",
+    "U08VWX008": "中村理恵"
+  },
+  "channel": {
+    "id": "C01PROJ001",
+    "name": "proj-customer-portal"
+  },
+  "messages": [
+    {
+      "user": "U01ABC001",
+      "text": "本番リリース完了しました。全テストグリーンです。",
+      "ts": "1741856400.000100",
+      "reactions": [
+        { "name": "tada", "users": ["U02DEF002", "U03GHI003", "U04JKL004", "U05MNO005", "U06PQR006", "U07STU007", "U08VWX008"], "count": 7 },
+        { "name": "rocket", "users": ["U03GHI003", "U05MNO005", "U07STU007"], "count": 3 },
+        { "name": "clap", "users": ["U02DEF002", "U04JKL004", "U06PQR006"], "count": 3 }
+      ]
+    },
+    {
+      "user": "U02DEF002",
+      "text": "来週の定例ですが、水曜14時に変更しても大丈夫でしょうか？",
+      "ts": "1741852800.000200",
+      "reactions": [
+        { "name": "thumbsup", "users": ["U01ABC001", "U03GHI003", "U04JKL004", "U05MNO005"], "count": 4 },
+        { "name": "white_check_mark", "users": ["U06PQR006", "U08VWX008"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U03GHI003",
+      "text": "API仕様書のv2をConfluenceにアップしました。レビューお願いします。\nhttps://wiki.example.com/api-spec-v2",
+      "ts": "1741849200.000300",
+      "reactions": [
+        { "name": "eyes", "users": ["U01ABC001", "U02DEF002", "U07STU007"], "count": 3 },
+        { "name": "thumbsup", "users": ["U05MNO005"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U05MNO005",
+      "text": "ステージング環境でN+1クエリ見つけました。修正PR出してます。 #1234",
+      "ts": "1741845600.000400",
+      "reactions": [
+        { "name": "eyes", "users": ["U01ABC001", "U03GHI003"], "count": 2 },
+        { "name": "pray", "users": ["U02DEF002", "U04JKL004"], "count": 2 },
+        { "name": "fire", "users": ["U07STU007"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U04JKL004",
+      "text": "新メンバーの山田さん、来週月曜から合流予定です。よろしくお願いします。",
+      "ts": "1741842000.000500",
+      "reactions": [
+        { "name": "raised_hands", "users": ["U01ABC001", "U02DEF002", "U03GHI003", "U05MNO005", "U06PQR006", "U07STU007", "U08VWX008"], "count": 7 },
+        { "name": "heart", "users": ["U02DEF002", "U06PQR006"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U07STU007",
+      "text": "CI/CDパイプラインのビルド時間、キャッシュ最適化で12分から4分に短縮できました。",
+      "ts": "1741770000.000600",
+      "reactions": [
+        { "name": "fire", "users": ["U01ABC001", "U03GHI003", "U05MNO005", "U08VWX008"], "count": 4 },
+        { "name": "100", "users": ["U02DEF002", "U04JKL004", "U06PQR006"], "count": 3 },
+        { "name": "rocket", "users": ["U03GHI003", "U05MNO005"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U06PQR006",
+      "text": "お客様からポータルのUIに関するフィードバックをまとめました。添付ファイルご確認ください。",
+      "ts": "1741766400.000700",
+      "reactions": [
+        { "name": "thumbsup", "users": ["U01ABC001", "U04JKL004"], "count": 2 },
+        { "name": "eyes", "users": ["U02DEF002", "U03GHI003", "U08VWX008"], "count": 3 }
+      ]
+    },
+    {
+      "user": "U08VWX008",
+      "text": "DBマイグレーションのロールバック手順書を作りました。Wikiに置いてあります。",
+      "ts": "1741762800.000800",
+      "reactions": [
+        { "name": "pray", "users": ["U01ABC001", "U05MNO005", "U07STU007"], "count": 3 },
+        { "name": "white_check_mark", "users": ["U03GHI003"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U01ABC001",
+      "text": "今月のスプリントレトロ、金曜16時でいきます。事前にMiroボードに書き込んでおいてください。",
+      "ts": "1741683600.000900",
+      "reactions": [
+        { "name": "thumbsup", "users": ["U02DEF002", "U03GHI003", "U04JKL004", "U05MNO005", "U06PQR006", "U07STU007", "U08VWX008"], "count": 7 }
+      ]
+    },
+    {
+      "user": "U03GHI003",
+      "text": "認証周りのリファクタリング、テストカバレッジ85%まで上げました。",
+      "ts": "1741680000.001000",
+      "reactions": [
+        { "name": "100", "users": ["U01ABC001", "U07STU007"], "count": 2 },
+        { "name": "clap", "users": ["U02DEF002", "U05MNO005", "U08VWX008"], "count": 3 },
+        { "name": "tada", "users": ["U04JKL004"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U02DEF002",
+      "text": "障害報告: 本日10:15頃からCSVエクスポート機能でタイムアウトが発生しています。調査中。",
+      "ts": "1741676400.001100",
+      "reactions": [
+        { "name": "eyes", "users": ["U01ABC001", "U03GHI003", "U05MNO005", "U07STU007"], "count": 4 },
+        { "name": "thinking_face", "users": ["U08VWX008"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U02DEF002",
+      "text": "CSVエクスポートの件、原因特定しました。インデックスが欠落していたため大量データで遅延が発生。修正済み。",
+      "ts": "1741680000.001200",
+      "reactions": [
+        { "name": "tada", "users": ["U01ABC001", "U03GHI003", "U04JKL004"], "count": 3 },
+        { "name": "pray", "users": ["U05MNO005", "U06PQR006", "U08VWX008"], "count": 3 },
+        { "name": "fire", "users": ["U07STU007"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U05MNO005",
+      "text": "フロントエンドのバンドルサイズ分析結果です。lodash全体インポートが最大の原因でした。tree-shakingで38%削減見込み。",
+      "ts": "1741597200.001300",
+      "reactions": [
+        { "name": "thinking_face", "users": ["U01ABC001", "U03GHI003"], "count": 2 },
+        { "name": "thumbsup", "users": ["U07STU007", "U08VWX008"], "count": 2 },
+        { "name": "fire", "users": ["U02DEF002"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U04JKL004",
+      "text": "来期の開発ロードマップのドラフトをNotionに共有しました。コメントで意見ください。",
+      "ts": "1741593600.001400",
+      "reactions": [
+        { "name": "eyes", "users": ["U01ABC001", "U02DEF002", "U03GHI003", "U05MNO005", "U06PQR006"], "count": 5 },
+        { "name": "raised_hands", "users": ["U07STU007", "U08VWX008"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U06PQR006",
+      "text": "ユーザーインタビュー5件完了しました。主要な要望はダッシュボードのカスタマイズ機能です。",
+      "ts": "1741590000.001500",
+      "reactions": [
+        { "name": "heart", "users": ["U01ABC001", "U04JKL004"], "count": 2 },
+        { "name": "thumbsup", "users": ["U02DEF002", "U03GHI003", "U05MNO005"], "count": 3 },
+        { "name": "100", "users": ["U08VWX008"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U07STU007",
+      "text": "Terraformのモジュール化完了。dev/stg/prd環境を同一テンプレートで管理できるようになりました。",
+      "ts": "1741510800.001600",
+      "reactions": [
+        { "name": "rocket", "users": ["U01ABC001", "U03GHI003", "U05MNO005"], "count": 3 },
+        { "name": "clap", "users": ["U02DEF002", "U04JKL004"], "count": 2 },
+        { "name": "100", "users": ["U08VWX008"], "count": 1 }
+      ]
+    },
+    {
+      "user": "U08VWX008",
+      "text": "セキュリティスキャン結果: 重大な脆弱性は0件。中程度が2件（依存パッケージの更新で対応可能）。",
+      "ts": "1741507200.001700",
+      "reactions": [
+        { "name": "white_check_mark", "users": ["U01ABC001", "U04JKL004", "U07STU007"], "count": 3 },
+        { "name": "raised_hands", "users": ["U02DEF002", "U06PQR006"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U01ABC001",
+      "text": "四半期目標の達成率をまとめました。開発速度KPI: 達成。品質KPI: 達成。顧客満足度KPI: あと3ポイント。",
+      "ts": "1741424400.001800",
+      "reactions": [
+        { "name": "thumbsup", "users": ["U02DEF002", "U04JKL004", "U06PQR006"], "count": 3 },
+        { "name": "thinking_face", "users": ["U03GHI003", "U05MNO005"], "count": 2 },
+        { "name": "raised_hands", "users": ["U07STU007", "U08VWX008"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U03GHI003",
+      "text": "GraphQLのスキーマ設計、既存REST APIとの互換性を維持する方針で進めます。ドキュメント: https://wiki.example.com/graphql-design",
+      "ts": "1741420800.001900",
+      "reactions": [
+        { "name": "thumbsup", "users": ["U01ABC001", "U05MNO005", "U07STU007"], "count": 3 },
+        { "name": "eyes", "users": ["U02DEF002", "U08VWX008"], "count": 2 }
+      ]
+    },
+    {
+      "user": "U04JKL004",
+      "text": "リマインド: 明日15時から全体定例です。各チームの進捗を3分以内にまとめてきてください。",
+      "ts": "1741338000.002000",
+      "reactions": [
+        { "name": "thumbsup", "users": ["U01ABC001", "U02DEF002", "U03GHI003", "U05MNO005", "U06PQR006", "U07STU007", "U08VWX008"], "count": 7 },
+        { "name": "pray", "users": ["U06PQR006"], "count": 1 }
+      ]
+    }
+  ]
+}

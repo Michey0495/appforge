@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QRコード一括生成ツール</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- QRCode.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <!-- JSZip CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <!-- FileSaver CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: #ffffff;
+      color: #1a1a2e;
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-header h1 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 4px;
+    }
+
+    .page-header p {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+    }
+
+    /* 入力セクション */
+    .input-section {
+      margin-bottom: 32px;
+    }
+
+    .input-section label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-bottom: 8px;
+    }
+
+    .textarea-wrapper {
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 12px 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 2px;
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      font-size: 13px;
+      line-height: 1.8;
+      resize: vertical;
+      transition: border-color 0.2s;
+      color: #1a1a2e;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #1e3461;
+    }
+
+    textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    /* CSV読み込み */
+    .csv-upload {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .csv-upload-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 2px;
+      font-size: 12px;
+      cursor: pointer;
+      color: #6b7280;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .csv-upload-label:hover {
+      border-color: #1e3461;
+      color: #1e3461;
+    }
+
+    .csv-upload input[type="file"] {
+      display: none;
+    }
+
+    .csv-filename {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    /* 設定パネル */
+    .settings-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+      padding: 20px;
+      background: #f3f4f6;
+      border-radius: 2px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .setting-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .color-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-input-wrapper input[type="color"] {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #e5e7eb;
+      border-radius: 2px;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .color-input-wrapper .color-hex {
+      font-size: 12px;
+      color: #6b7280;
+      font-family: monospace;
+    }
+
+    .size-slider-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #e5e7eb;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #1e3461;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .size-value {
+      font-size: 12px;
+      color: #6b7280;
+      min-width: 48px;
+      text-align: right;
+      font-family: monospace;
+    }
+
+    /* ボタン群 */
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 2px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #1e3461;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #2e4f87;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #6b7280;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      border-color: #1e3461;
+      color: #1e3461;
+    }
+
+    .btn-danger {
+      background: #ffffff;
+      color: #b91c1c;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      border-color: #b91c1c;
+    }
+
+    /* 結果グリッド */
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .results-header h2 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
+    }
+
+    .results-count {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .qr-card {
+      border: 1px solid #f3f4f6;
+      border-radius: 2px;
+      padding: 16px;
+      text-align: center;
+      background: #ffffff;
+      transition: border-color 0.2s;
+    }
+
+    .qr-card:hover {
+      border-color: #e5e7eb;
+    }
+
+    .qr-card .qr-label {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 12px;
+      word-break: break-all;
+      line-height: 1.4;
+      max-height: 2.8em;
+      overflow: hidden;
+    }
+
+    .qr-card .qr-image-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .qr-card .qr-image-wrapper > div {
+      display: inline-block;
+    }
+
+    .qr-card .qr-download-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #6b7280;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    }
+
+    .qr-card .qr-download-btn:hover {
+      border-color: #1e3461;
+      color: #1e3461;
+    }
+
+    /* 空状態 */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: #9ca3af;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+    }
+
+    /* 生成中のローディング */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #1e3461;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* フッター */
+    .footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 11px;
+      color: #9ca3af;
+      border-top: 1px solid #f3f4f6;
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="page-header">
+      <h1>QRコード一括生成ツール</h1>
+      <p>URLやテキストからQRコードをまとめて生成</p>
+    </div>
+
+    <!-- 入力エリア -->
+    <div class="input-section">
+      <label for="textInput">テキスト入力（1行に1つのURL / テキスト）</label>
+      <div class="textarea-wrapper">
+        <textarea
+          id="textInput"
+          placeholder="https://example.com&#10;https://google.com&#10;https://github.com"
+        ></textarea>
+      </div>
+      <div class="csv-upload">
+        <label class="csv-upload-label" for="csvFile">
+          CSVから読み込み
+        </label>
+        <input type="file" id="csvFile" accept=".csv" />
+        <span class="csv-filename" id="csvFilename"></span>
+      </div>
+    </div>
+
+    <!-- 設定パネル -->
+    <div class="settings-panel">
+      <div class="setting-group">
+        <label>前景色</label>
+        <div class="color-input-wrapper">
+          <input type="color" id="fgColor" value="#1a1a2e" />
+          <span class="color-hex" id="fgHex">#1a1a2e</span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label>背景色</label>
+        <div class="color-input-wrapper">
+          <input type="color" id="bgColor" value="#ffffff" />
+          <span class="color-hex" id="bgHex">#ffffff</span>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label>サイズ</label>
+        <div class="size-slider-wrapper">
+          <input type="range" id="qrSize" min="128" max="512" value="256" step="16" />
+          <span class="size-value" id="sizeValue">256px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ボタン群 -->
+    <div class="actions">
+      <button class="btn btn-primary" id="generateBtn">生成する</button>
+      <button class="btn btn-secondary" id="downloadAllBtn" disabled>ZIP一括ダウンロード</button>
+      <button class="btn btn-danger" id="clearBtn">すべてクリア</button>
+    </div>
+
+    <!-- 結果表示 -->
+    <div id="resultsSection" style="display: none;">
+      <div class="results-header">
+        <h2>生成結果</h2>
+        <span class="results-count" id="resultsCount"></span>
+      </div>
+      <div class="qr-grid" id="qrGrid"></div>
+    </div>
+
+    <!-- 空状態 -->
+    <div class="empty-state" id="emptyState">
+      <p>テキストを入力してQRコードを生成してください</p>
+    </div>
+  </main>
+
+  <!-- ローディング -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- フッター -->
+  <footer class="footer">
+    QRコード一括生成ツール
+  </footer>
+
+  <script>
+    // DOM要素の参照
+    const textInput = document.getElementById('textInput');
+    const csvFile = document.getElementById('csvFile');
+    const csvFilename = document.getElementById('csvFilename');
+    const fgColor = document.getElementById('fgColor');
+    const bgColor = document.getElementById('bgColor');
+    const fgHex = document.getElementById('fgHex');
+    const bgHex = document.getElementById('bgHex');
+    const qrSize = document.getElementById('qrSize');
+    const sizeValue = document.getElementById('sizeValue');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const qrGrid = document.getElementById('qrGrid');
+    const resultsSection = document.getElementById('resultsSection');
+    const resultsCount = document.getElementById('resultsCount');
+    const emptyState = document.getElementById('emptyState');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    // 生成済みQRコードのデータを保持する配列
+    let generatedItems = [];
+
+    // カラーピッカーの値をHEX表示に反映
+    fgColor.addEventListener('input', () => {
+      fgHex.textContent = fgColor.value;
+    });
+
+    bgColor.addEventListener('input', () => {
+      bgHex.textContent = bgColor.value;
+    });
+
+    // サイズスライダーの値を表示に反映
+    qrSize.addEventListener('input', () => {
+      sizeValue.textContent = qrSize.value + 'px';
+    });
+
+    // CSVファイル読み込み
+    csvFile.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      csvFilename.textContent = file.name;
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const csvText = e.target.result;
+        const lines = csvText.split('\n').filter(line => line.trim());
+
+        // ヘッダー行をスキップ（URL列を特定する）
+        const header = lines[0].split(',');
+        const urlIndex = header.findIndex(h =>
+          h.trim().toLowerCase() === 'url'
+        );
+
+        // URLカラムが見つかった場合はデータ行から抽出、見つからなければ1列目を使う
+        const startIndex = urlIndex >= 0 ? 1 : 0;
+        const colIndex = urlIndex >= 0 ? urlIndex : 0;
+
+        const urls = lines.slice(startIndex).map(line => {
+          const cols = line.split(',');
+          return cols[colIndex] ? cols[colIndex].trim() : '';
+        }).filter(url => url.length > 0);
+
+        // 既存のテキストに追加（空行で区切る）
+        const existingText = textInput.value.trim();
+        const newText = existingText
+          ? existingText + '\n' + urls.join('\n')
+          : urls.join('\n');
+        textInput.value = newText;
+      };
+
+      reader.readAsText(file);
+    });
+
+    // QRコード生成
+    generateBtn.addEventListener('click', () => {
+      const rawText = textInput.value.trim();
+      if (!rawText) return;
+
+      // 入力を行ごとに分割し、空行を除外
+      const entries = rawText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      if (entries.length === 0) return;
+
+      // 前回の結果をクリア
+      qrGrid.innerHTML = '';
+      generatedItems = [];
+      loadingOverlay.classList.add('active');
+
+      const size = parseInt(qrSize.value, 10);
+      const fg = fgColor.value;
+      const bg = bgColor.value;
+
+      // QRコード生成は非同期的に順次処理（DOM操作のため）
+      let processed = 0;
+
+      entries.forEach((text, index) => {
+        const card = document.createElement('div');
+        card.className = 'qr-card';
+
+        // ラベル表示
+        const label = document.createElement('div');
+        label.className = 'qr-label';
+        label.textContent = text;
+        card.appendChild(label);
+
+        // QRコード描画用コンテナ
+        const qrWrapper = document.createElement('div');
+        qrWrapper.className = 'qr-image-wrapper';
+        const qrContainer = document.createElement('div');
+        qrWrapper.appendChild(qrContainer);
+        card.appendChild(qrWrapper);
+
+        // QRコード生成（qrcodejsのコンストラクタを使用）
+        const qrInstance = new QRCode(qrContainer, {
+          text: text,
+          width: size,
+          height: size,
+          colorDark: fg,
+          colorLight: bg,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+
+        // ダウンロードボタン
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'qr-download-btn';
+        downloadBtn.textContent = 'PNGダウンロード';
+        downloadBtn.addEventListener('click', () => {
+          downloadSingleQr(qrContainer, text, index);
+        });
+        card.appendChild(downloadBtn);
+
+        qrGrid.appendChild(card);
+
+        // 生成データを保持
+        generatedItems.push({
+          text: text,
+          container: qrContainer,
+          index: index
+        });
+
+        processed++;
+        if (processed === entries.length) {
+          // 全件処理完了
+          loadingOverlay.classList.remove('active');
+          resultsSection.style.display = 'block';
+          emptyState.style.display = 'none';
+          resultsCount.textContent = entries.length + '件';
+          downloadAllBtn.disabled = false;
+        }
+      });
+    });
+
+    // 個別ダウンロード
+    function downloadSingleQr(container, text, index) {
+      // qrcodejsはcanvasかimgを生成する
+      const canvas = container.querySelector('canvas');
+      const img = container.querySelector('img');
+
+      if (canvas) {
+        const dataUrl = canvas.toDataURL('image/png');
+        triggerDownload(dataUrl, generateFilename(text, index));
+      } else if (img) {
+        triggerDownload(img.src, generateFilename(text, index));
+      }
+    }
+
+    // ファイル名を生成（URLからドメイン名を抽出、無理なら連番）
+    function generateFilename(text, index) {
+      try {
+        const url = new URL(text);
+        const domain = url.hostname.replace(/\./g, '_');
+        return 'qr_' + domain + '.png';
+      } catch {
+        return 'qr_' + String(index + 1).padStart(3, '0') + '.png';
+      }
+    }
+
+    // ダウンロードをトリガー
+    function triggerDownload(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // ZIP一括ダウンロード
+    downloadAllBtn.addEventListener('click', async () => {
+      if (generatedItems.length === 0) return;
+
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = '作成中...';
+      loadingOverlay.classList.add('active');
+
+      try {
+        const zip = new JSZip();
+
+        // canvasまたはimgからBlobを取得してZIPに追加
+        for (const item of generatedItems) {
+          const canvas = item.container.querySelector('canvas');
+          const img = item.container.querySelector('img');
+          const filename = generateFilename(item.text, item.index);
+
+          if (canvas) {
+            const blob = await canvasToBlob(canvas);
+            zip.file(filename, blob);
+          } else if (img) {
+            // imgのsrcからBlobに変換
+            const response = await fetch(img.src);
+            const blob = await response.blob();
+            zip.file(filename, blob);
+          }
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' });
+        saveAs(zipBlob, 'qr_codes.zip');
+      } catch (error) {
+        console.error('ZIP生成に失敗:', error);
+        alert('ZIP生成中にエラーが発生しました');
+      } finally {
+        loadingOverlay.classList.remove('active');
+        downloadAllBtn.disabled = false;
+        downloadAllBtn.textContent = 'ZIP一括ダウンロード';
+      }
+    });
+
+    // canvasをBlobに変換するユーティリティ
+    function canvasToBlob(canvas) {
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/png');
+      });
+    }
+
+    // すべてクリア
+    clearBtn.addEventListener('click', () => {
+      textInput.value = '';
+      csvFile.value = '';
+      csvFilename.textContent = '';
+      qrGrid.innerHTML = '';
+      generatedItems = [];
+      resultsSection.style.display = 'none';
+      emptyState.style.display = 'block';
+      downloadAllBtn.disabled = true;
+    });
+  </script>
+</body>
+</html>

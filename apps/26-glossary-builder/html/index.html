@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>社内用語辞書ビルダー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="search"], textarea, select {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="search"]:focus, textarea:focus, select:focus {
+    border-color: #1e3461;
+  }
+  textarea { min-height: 80px; resize: vertical; line-height: 1.7; }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: #1e3461; color: #ffffff; }
+  .btn-primary:hover { background: #2e4f87; }
+  .btn-secondary { background: #f3f4f6; color: #1a1a2e; border: 1px solid #e5e7eb; }
+  .btn-secondary:hover { background: #e5e7eb; }
+  .btn-danger { background: #dc2626; color: #ffffff; }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* 統計バー */
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    padding: 16px 20px;
+    background: #fafbfc;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 18px; font-weight: 600; color: #1e3461; }
+  .stat-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ツールバー */
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .toolbar .search-box { flex: 1; min-width: 200px; }
+
+  /* カテゴリフィルタ */
+  .category-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .cat-btn {
+    padding: 4px 12px;
+    font-size: 11px;
+    font-family: inherit;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    background: #ffffff;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .cat-btn:hover { border-color: #1e3461; color: #1e3461; }
+  .cat-btn.active { background: #1e3461; color: #ffffff; border-color: #1e3461; }
+
+  /* 用語カード */
+  .term-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .term-card {
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    padding: 16px 20px;
+    transition: border-color 0.15s;
+  }
+  .term-card:hover { border-color: #e5e7eb; }
+
+  .term-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+  .term-name { font-size: 15px; font-weight: 600; }
+  .term-reading { font-size: 11px; color: #9ca3af; margin-left: 8px; }
+  .term-actions { display: flex; gap: 6px; }
+
+  .term-category {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 2px;
+    margin-bottom: 8px;
+  }
+  .term-description {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .term-related {
+    font-size: 11px;
+    color: #9ca3af;
+  }
+  .term-related a {
+    color: #1e3461;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .term-related a:hover { text-decoration: underline; }
+
+  /* インラインフォーム */
+  .add-form {
+    border: 1px solid #1e3461;
+    border-radius: 2px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .add-form.visible { display: block; }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .form-full { grid-column: 1 / -1; }
+  .form-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  /* インポート/エクスポート */
+  .io-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .io-bar input[type="file"] { display: none; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: #9ca3af;
+    font-size: 13px;
+  }
+
+  .sort-select {
+    width: auto;
+    min-width: 160px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">社内用語辞書ビルダー</div>
+      <div class="header-subtitle">用語の追加・検索・管理</div>
+    </div>
+  </div>
+
+  <!-- 統計 -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">
+      <span class="stat-value" id="totalCount">0</span>
+      <span class="stat-label">登録用語数</span>
+    </div>
+  </div>
+
+  <!-- インポート・エクスポート -->
+  <div class="io-bar">
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('csvFile').click()">CSVインポート</button>
+    <input type="file" id="csvFile" accept=".csv" onchange="handleCsvImport(event)">
+    <button class="btn btn-secondary btn-sm" onclick="exportCsv()">CSVエクスポート</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportJson()">JSONエクスポート</button>
+  </div>
+
+  <!-- ツールバー -->
+  <div class="toolbar">
+    <input type="search" id="searchInput" class="search-box" placeholder="用語・説明を検索..." oninput="renderTerms()">
+    <select id="sortSelect" class="sort-select" onchange="renderTerms()">
+      <option value="alphabetical">あいうえお順</option>
+      <option value="newest">新しい順</option>
+    </select>
+    <button class="btn btn-primary" onclick="toggleAddForm()">用語を追加</button>
+  </div>
+
+  <!-- カテゴリフィルタ -->
+  <div class="category-filters" id="categoryFilters"></div>
+
+  <!-- 追加フォーム（インライン） -->
+  <div class="add-form" id="addForm">
+    <div style="font-size: 13px; font-weight: 600; margin-bottom: 12px;" id="formTitle">用語を追加</div>
+    <div class="form-grid">
+      <div>
+        <label>用語</label>
+        <input type="text" id="termName" placeholder="例: API">
+      </div>
+      <div>
+        <label>読み</label>
+        <input type="text" id="termReading" placeholder="例: えーぴーあい">
+      </div>
+      <div>
+        <label>カテゴリ</label>
+        <input type="text" id="termCategory" placeholder="例: 開発">
+      </div>
+      <div>
+        <label>関連用語（カンマ区切り）</label>
+        <input type="text" id="termRelated" placeholder="例: REST, HTTP">
+      </div>
+      <div class="form-full">
+        <label>説明</label>
+        <textarea id="termDescription" placeholder="用語の説明を入力..."></textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="cancelForm()">キャンセル</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="saveTerm()">追加</button>
+    </div>
+  </div>
+
+  <!-- 用語リスト -->
+  <div class="term-list" id="termList"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'glossary-builder-terms';
+let terms = [];
+let activeCategory = null;
+let editingId = null;
+
+// 初期データ
+const DEFAULT_TERMS = [
+  {
+    id: generateId(),
+    name: 'API',
+    reading: 'えーぴーあい',
+    description: 'Application Programming Interface の略。ソフトウェア同士がデータをやり取りするための仕組み。社内ではREST APIを主に使用している。',
+    category: '開発',
+    related: ['REST', 'HTTP', 'エンドポイント'],
+    createdAt: Date.now() - 50000
+  },
+  {
+    id: generateId(),
+    name: 'CI/CD',
+    reading: 'しーあいしーでぃー',
+    description: '継続的インテグレーション / 継続的デリバリーの略。コードの変更を自動でビルド・テスト・デプロイする仕組み。社内ではGitHub Actionsを利用。',
+    category: '開発',
+    related: ['GitHub Actions', 'デプロイ', 'パイプライン'],
+    createdAt: Date.now() - 40000
+  },
+  {
+    id: generateId(),
+    name: 'SLA',
+    reading: 'えすえるえー',
+    description: 'Service Level Agreement の略。サービス提供者と利用者の間で合意されるサービス品質の基準。稼働率99.9%のように数値で定義する。',
+    category: 'インフラ',
+    related: ['SLO', 'SLI', '可用性'],
+    createdAt: Date.now() - 30000
+  },
+  {
+    id: generateId(),
+    name: 'KPI',
+    reading: 'けーぴーあい',
+    description: 'Key Performance Indicator の略。事業目標の達成度を測る定量的な指標。月次レビューで各部署のKPIを確認する。',
+    category: 'ビジネス',
+    related: ['KGI', 'OKR', 'ROI'],
+    createdAt: Date.now() - 20000
+  },
+  {
+    id: generateId(),
+    name: 'オンプレミス',
+    reading: 'おんぷれみす',
+    description: '自社の敷地内にサーバーやネットワーク機器を設置して運用する形態。クラウドと対比して使われる。社内の基幹システムの一部はまだオンプレミスで稼働中。',
+    category: 'インフラ',
+    related: ['クラウド', 'ハイブリッド', 'データセンター'],
+    createdAt: Date.now() - 10000
+  }
+];
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function loadTerms() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    terms = JSON.parse(stored);
+  } else {
+    terms = DEFAULT_TERMS;
+    saveToStorage();
+  }
+}
+
+function saveToStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(terms));
+}
+
+// 統計の更新
+function updateStats() {
+  const statsBar = document.getElementById('statsBar');
+  const categories = {};
+  terms.forEach(t => {
+    categories[t.category] = (categories[t.category] || 0) + 1;
+  });
+
+  let html = `
+    <div class="stat-item">
+      <span class="stat-value">${terms.length}</span>
+      <span class="stat-label">登録用語数</span>
+    </div>
+  `;
+  Object.entries(categories).sort((a, b) => b[1] - a[1]).forEach(([cat, count]) => {
+    html += `
+      <div class="stat-item">
+        <span class="stat-value">${count}</span>
+        <span class="stat-label">${cat}</span>
+      </div>
+    `;
+  });
+  statsBar.innerHTML = html;
+}
+
+// カテゴリフィルタの更新
+function updateCategoryFilters() {
+  const cats = [...new Set(terms.map(t => t.category))].sort();
+  const container = document.getElementById('categoryFilters');
+
+  let html = `<button class="cat-btn ${activeCategory === null ? 'active' : ''}" onclick="filterCategory(null)">すべて</button>`;
+  cats.forEach(cat => {
+    html += `<button class="cat-btn ${activeCategory === cat ? 'active' : ''}" onclick="filterCategory('${escapeHtml(cat)}')">${escapeHtml(cat)}</button>`;
+  });
+  container.innerHTML = html;
+}
+
+function filterCategory(cat) {
+  activeCategory = cat;
+  updateCategoryFilters();
+  renderTerms();
+}
+
+// あいうえお順ソート（読みがなベース）
+function sortByReading(a, b) {
+  const readingA = a.reading || a.name;
+  const readingB = b.reading || b.name;
+  return readingA.localeCompare(readingB, 'ja');
+}
+
+function sortByNewest(a, b) {
+  return (b.createdAt || 0) - (a.createdAt || 0);
+}
+
+// 用語リストの描画
+function renderTerms() {
+  const query = document.getElementById('searchInput').value.toLowerCase();
+  const sortMode = document.getElementById('sortSelect').value;
+  const container = document.getElementById('termList');
+
+  let filtered = terms.filter(t => {
+    const matchesCategory = activeCategory === null || t.category === activeCategory;
+    const matchesSearch = query === '' ||
+      t.name.toLowerCase().includes(query) ||
+      t.description.toLowerCase().includes(query) ||
+      (t.reading && t.reading.toLowerCase().includes(query));
+    return matchesCategory && matchesSearch;
+  });
+
+  const sortFn = sortMode === 'alphabetical' ? sortByReading : sortByNewest;
+  filtered.sort(sortFn);
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state">該当する用語がありません</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(t => {
+    const relatedHtml = t.related && t.related.length > 0
+      ? `<div class="term-related">関連: ${t.related.map(r => `<a onclick="searchTerm('${escapeAttr(r)}')">${escapeHtml(r)}</a>`).join(', ')}</div>`
+      : '';
+
+    return `
+      <div class="term-card">
+        <div class="term-header">
+          <div>
+            <span class="term-name">${escapeHtml(t.name)}</span>
+            ${t.reading ? `<span class="term-reading">${escapeHtml(t.reading)}</span>` : ''}
+          </div>
+          <div class="term-actions">
+            <button class="btn btn-secondary btn-sm" onclick="editTerm('${t.id}')">編集</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteTerm('${t.id}')">削除</button>
+          </div>
+        </div>
+        <span class="term-category">${escapeHtml(t.category)}</span>
+        <div class="term-description">${escapeHtml(t.description)}</div>
+        ${relatedHtml}
+      </div>
+    `;
+  }).join('');
+}
+
+function searchTerm(name) {
+  document.getElementById('searchInput').value = name;
+  activeCategory = null;
+  updateCategoryFilters();
+  renderTerms();
+}
+
+// フォーム操作
+function toggleAddForm() {
+  const form = document.getElementById('addForm');
+  if (form.classList.contains('visible') && editingId === null) {
+    form.classList.remove('visible');
+  } else {
+    editingId = null;
+    clearForm();
+    document.getElementById('formTitle').textContent = '用語を追加';
+    document.getElementById('submitBtn').textContent = '追加';
+    form.classList.add('visible');
+  }
+}
+
+function cancelForm() {
+  document.getElementById('addForm').classList.remove('visible');
+  editingId = null;
+  clearForm();
+}
+
+function clearForm() {
+  document.getElementById('termName').value = '';
+  document.getElementById('termReading').value = '';
+  document.getElementById('termDescription').value = '';
+  document.getElementById('termCategory').value = '';
+  document.getElementById('termRelated').value = '';
+}
+
+function saveTerm() {
+  const name = document.getElementById('termName').value.trim();
+  const reading = document.getElementById('termReading').value.trim();
+  const description = document.getElementById('termDescription').value.trim();
+  const category = document.getElementById('termCategory').value.trim();
+  const relatedStr = document.getElementById('termRelated').value.trim();
+  const related = relatedStr ? relatedStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  if (!name || !description || !category) {
+    alert('用語、説明、カテゴリは必須です');
+    return;
+  }
+
+  if (editingId) {
+    terms = terms.map(t => t.id === editingId
+      ? { ...t, name, reading, description, category, related }
+      : t
+    );
+  } else {
+    const newTerm = {
+      id: generateId(),
+      name,
+      reading,
+      description,
+      category,
+      related,
+      createdAt: Date.now()
+    };
+    terms = [...terms, newTerm];
+  }
+
+  saveToStorage();
+  cancelForm();
+  refresh();
+}
+
+function editTerm(id) {
+  const t = terms.find(term => term.id === id);
+  if (!t) return;
+
+  editingId = id;
+  document.getElementById('termName').value = t.name;
+  document.getElementById('termReading').value = t.reading || '';
+  document.getElementById('termDescription').value = t.description;
+  document.getElementById('termCategory').value = t.category;
+  document.getElementById('termRelated').value = (t.related || []).join(', ');
+  document.getElementById('formTitle').textContent = '用語を編集';
+  document.getElementById('submitBtn').textContent = '更新';
+  document.getElementById('addForm').classList.add('visible');
+  document.getElementById('addForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function deleteTerm(id) {
+  if (!confirm('この用語を削除しますか?')) return;
+  terms = terms.filter(t => t.id !== id);
+  saveToStorage();
+  refresh();
+}
+
+// CSV インポート
+function handleCsvImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    if (lines.length < 2) {
+      alert('CSVにデータがありません');
+      return;
+    }
+
+    // ヘッダー行をスキップ
+    const importedTerms = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = parseCsvLine(lines[i]);
+      if (cols.length >= 3) {
+        importedTerms.push({
+          id: generateId(),
+          name: cols[0] || '',
+          reading: cols[1] || '',
+          description: cols[2] || '',
+          category: cols[3] || '未分類',
+          related: [],
+          createdAt: Date.now() + i
+        });
+      }
+    }
+
+    if (importedTerms.length === 0) {
+      alert('インポート可能なデータがありません');
+      return;
+    }
+
+    terms = [...terms, ...importedTerms];
+    saveToStorage();
+    refresh();
+    alert(`${importedTerms.length}件の用語をインポートしました`);
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// CSV エクスポート
+function exportCsv() {
+  if (terms.length === 0) {
+    alert('エクスポートする用語がありません');
+    return;
+  }
+
+  const bom = '\uFEFF';
+  let csv = bom + '用語,読み,説明,カテゴリ,関連用語\n';
+  terms.forEach(t => {
+    csv += [
+      quoteCsv(t.name),
+      quoteCsv(t.reading || ''),
+      quoteCsv(t.description),
+      quoteCsv(t.category),
+      quoteCsv((t.related || []).join('; '))
+    ].join(',') + '\n';
+  });
+
+  downloadFile(csv, 'glossary.csv', 'text/csv;charset=utf-8');
+}
+
+function quoteCsv(val) {
+  if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+    return '"' + val.replace(/"/g, '""') + '"';
+  }
+  return val;
+}
+
+// JSON エクスポート
+function exportJson() {
+  if (terms.length === 0) {
+    alert('エクスポートする用語がありません');
+    return;
+  }
+
+  const data = terms.map(t => ({
+    name: t.name,
+    reading: t.reading || '',
+    description: t.description,
+    category: t.category,
+    related: t.related || []
+  }));
+
+  const json = JSON.stringify(data, null, 2);
+  downloadFile(json, 'glossary.json', 'application/json');
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function refresh() {
+  updateStats();
+  updateCategoryFilters();
+  renderTerms();
+}
+
+// 初期化
+loadTerms();
+refresh();
+</script>
+</body>
+</html>

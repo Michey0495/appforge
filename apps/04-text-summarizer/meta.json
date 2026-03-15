@@ -1,0 +1,9 @@
+{
+  "id": "04-text-summarizer",
+  "name": "テキスト要約・翻訳ツール",
+  "category": "ai-text",
+  "description": "長文テキストをAIで要約（箇条書き/段落形式）。日英翻訳にも対応する。",
+  "usesAI": true,
+  "libraries": ["Anthropic API"],
+  "author": "AI駆動開発デモ"
+}

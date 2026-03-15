@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #2c52a4;
+  --color-navy-light: #3a65bf;
+  --color-navy-dark: #1e3a73;
+  --color-diff-red: #ff4444;
+  --color-bg: #fafafa;
+  --color-border: #e0e0e0;
+  --color-text: #262626;
+  --color-text-sub: #666666;
+}
+
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* ドラッグ&ドロップ領域のホバー */
+.drop-zone-active {
+  border-color: var(--color-navy) !important;
+  background-color: #f0f4ff !important;
+}

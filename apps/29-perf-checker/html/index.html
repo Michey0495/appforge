@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ページ速度チェッカー - Chrome拡張</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+
+  .header {
+    margin-bottom: 40px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .header-subtitle { font-size: 12px; color: #9ca3af; }
+
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    margin-top: 32px;
+    color: #1e3461;
+  }
+
+  p {
+    margin-bottom: 12px;
+    line-height: 1.8;
+    color: #374151;
+  }
+
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .feature-card {
+    padding: 16px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+  }
+  .feature-card-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .feature-card-desc {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  .install-steps {
+    margin: 20px 0;
+    counter-reset: step;
+  }
+  .install-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .install-step:last-child { border-bottom: none; }
+
+  .step-number {
+    flex: 0 0 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1e3461;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 2px;
+  }
+  .step-text {
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.6;
+  }
+
+  code {
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 11px;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 2px;
+    color: #1e3461;
+  }
+
+  .metrics-list {
+    margin: 16px 0;
+  }
+  .metric-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    gap: 12px;
+  }
+  .metric-item:last-child { border-bottom: none; }
+  .metric-name { font-weight: 500; min-width: 160px; font-size: 12px; }
+  .metric-desc { font-size: 12px; color: #6b7280; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-title">ページ速度チェッカー</div>
+    <div class="header-subtitle">Chrome拡張 - Performance APIによるページ計測ツール</div>
+  </div>
+
+  <p>
+    閲覧中のページのパフォーマンスを即座に計測するChrome拡張です。
+    ブラウザの Performance API を使って、読み込み時間やリソースの状況を可視化し、改善ポイントを提示します。
+  </p>
+
+  <h2>計測項目</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">DOMContentLoaded</div>
+      <div class="feature-card-desc">HTMLの解析が完了しDOMツリーが構築されるまでの時間</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Load Time</div>
+      <div class="feature-card-desc">画像やスタイルシート含む全リソースの読み込み完了時間</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">TTFB</div>
+      <div class="feature-card-desc">Time to First Byte。サーバーからの最初のレスポンス到達時間</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">DOM要素数</div>
+      <div class="feature-card-desc">ページ内の全DOM要素の数。多すぎるとレンダリングに影響</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">リソース集計</div>
+      <div class="feature-card-desc">読み込まれたリソースの件数と合計サイズ</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">画像分析</div>
+      <div class="feature-card-desc">画像ファイルの枚数と合計転送サイズ</div>
+    </div>
+  </div>
+
+  <h2>スコア判定</h2>
+  <p>
+    各指標を総合的に評価し、100点満点のスコアと Good / Medium / Bad の3段階で判定を表示します。
+    基準値を超えた項目には具体的な改善提案を表示します。
+  </p>
+
+  <h2>インストール手順</h2>
+  <div class="install-steps">
+    <div class="install-step">
+      <div class="step-number">1</div>
+      <div class="step-text"><code>chrome-ext</code> フォルダを任意の場所に配置します。</div>
+    </div>
+    <div class="install-step">
+      <div class="step-number">2</div>
+      <div class="step-text">Chrome で <code>chrome://extensions</code> を開きます。</div>
+    </div>
+    <div class="install-step">
+      <div class="step-number">3</div>
+      <div class="step-text">右上の「デベロッパーモード」をオンにします。</div>
+    </div>
+    <div class="install-step">
+      <div class="step-number">4</div>
+      <div class="step-text">「パッケージ化されていない拡張機能を読み込む」をクリックし、<code>chrome-ext</code> フォルダを選択します。</div>
+    </div>
+    <div class="install-step">
+      <div class="step-number">5</div>
+      <div class="step-text">ツールバーに追加された拡張アイコンをクリックすると、現在のページの計測結果が表示されます。</div>
+    </div>
+  </div>
+
+  <h2>使用技術</h2>
+  <div class="metrics-list">
+    <div class="metric-item">
+      <div class="metric-name">Performance API</div>
+      <div class="metric-desc">ブラウザ標準のナビゲーション・リソースタイミング情報</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">Chrome Extensions API</div>
+      <div class="metric-desc">Manifest V3、chrome.scripting.executeScript</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-name">activeTab権限</div>
+      <div class="metric-desc">拡張クリック時のみアクティブタブにアクセス。常時監視はしない</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>経費精算レシート読み取り</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus {
+    border-color: #1e3461;
+  }
+
+  select {
+    border: 1px solid #e5e7eb;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+  }
+  select:focus { border-color: #1e3461; }
+
+  .btn {
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-outline {
+    background: transparent;
+    color: #1e3461;
+    border: 1px solid #e5e7eb;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  .section { margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 20px; }
+
+  /* ドロップゾーン */
+  .dropzone {
+    border: 2px dashed #e5e7eb;
+    border-radius: 2px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: #1e3461;
+    background: #f8f9fb;
+  }
+  .dropzone-text { font-size: 13px; color: #9ca3af; }
+  .dropzone-text span { color: #1e3461; text-decoration: underline; cursor: pointer; }
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* サムネイルキュー */
+  .thumb-queue {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .thumb-item {
+    width: 80px;
+    position: relative;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .thumb-item img {
+    width: 100%;
+    height: 56px;
+    object-fit: cover;
+    display: block;
+  }
+  .thumb-status {
+    font-size: 9px;
+    padding: 3px 4px;
+    color: #9ca3af;
+    text-align: center;
+  }
+  .thumb-status.processing { color: #1e3461; }
+  .thumb-status.done { color: #059669; }
+  .thumb-status.error { color: #dc2626; }
+
+  .spinner {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #1e3461;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 3px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* テーブル */
+  .table-wrap { overflow-x: auto; margin-top: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    background: #f8f9fb;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+  td {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+  td input, td select {
+    width: 100%;
+    border: 1px solid transparent;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 2px;
+    background: transparent;
+    outline: none;
+  }
+  td input:hover, td select:hover { border-color: #e5e7eb; }
+  td input:focus, td select:focus { border-color: #1e3461; background: #ffffff; }
+
+  .actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  .api-row {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+  }
+  .api-row .form-group { flex: 1; margin-bottom: 0; }
+
+  .delete-row {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+  }
+  .delete-row:hover { color: #dc2626; }
+
+  /* 合計行 */
+  .total-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 10px;
+    border-top: 2px solid #1e3461;
+    margin-top: 4px;
+    font-size: 13px;
+  }
+  .total-label { font-weight: 600; color: #6b7280; }
+  .total-value { font-weight: 700; font-size: 16px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">経費精算レシート読み取り</div>
+      <div class="header-subtitle">レシート画像からAIが自動で項目を抽出、勘定科目を提案</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="api-row">
+      <div class="form-group">
+        <label>Anthropic API Key</label>
+        <input type="password" id="apiKey" placeholder="sk-ant-..." />
+      </div>
+      <button class="btn btn-sm btn-outline" onclick="saveApiKey()">保存</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>レシート画像をドロップまたは選択</label>
+    <div class="dropzone" id="dropzone">
+      <div class="dropzone-text">ここにレシート画像をドラッグ&ドロップ、または<span>クリックして選択</span></div>
+      <input type="file" id="fileInput" accept="image/*" multiple />
+    </div>
+    <div class="thumb-queue" id="thumbQueue"></div>
+  </div>
+
+  <div class="section">
+    <div class="table-wrap" id="tableWrap">
+      <div class="empty-state" id="emptyState">レシート画像をアップロードすると、ここに抽出結果が表示されます</div>
+      <table id="resultTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>店名</th>
+            <th>金額(税込)</th>
+            <th>税額</th>
+            <th>支払方法</th>
+            <th>勘定科目</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+      <div class="total-bar" id="totalBar" style="display:none;">
+        <span class="total-label">合計金額(税込)</span>
+        <span class="total-value" id="totalAmount">0</span>
+      </div>
+    </div>
+    <div class="actions" id="exportActions" style="display:none;">
+      <button class="btn" onclick="downloadCSV()">CSVダウンロード</button>
+      <button class="btn btn-outline" onclick="clearAll()">全件クリア</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FIELDS = ['date', 'store', 'amount', 'tax', 'payment', 'category'];
+const HEADERS_JP = ['日付', '店名', '金額(税込)', '税額', '支払方法', '勘定科目'];
+const CATEGORIES = ['交通費', '交際費', '消耗品費', '会議費', '通信費', '福利厚生費', '新聞図書費', '旅費交通費', 'その他'];
+
+let receiptData = [];
+
+// API Key
+function loadApiKey() {
+  const saved = localStorage.getItem('receipt_reader_api_key');
+  if (saved) document.getElementById('apiKey').value = saved;
+}
+function saveApiKey() {
+  localStorage.setItem('receipt_reader_api_key', document.getElementById('apiKey').value.trim());
+}
+loadApiKey();
+
+// ドロップゾーン
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+
+dropzone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropzone.classList.add('dragover');
+});
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+function handleFiles(files) {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) {
+    alert('APIキーを入力してください');
+    return;
+  }
+  Array.from(files).forEach((file) => {
+    if (!file.type.startsWith('image/')) return;
+    const idx = addThumb(file);
+    processReceipt(file, apiKey, idx);
+  });
+}
+
+function addThumb(file) {
+  const queue = document.getElementById('thumbQueue');
+  const idx = queue.children.length;
+  const item = document.createElement('div');
+  item.className = 'thumb-item';
+  item.id = `thumb-${idx}`;
+
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(file);
+  item.appendChild(img);
+
+  const status = document.createElement('div');
+  status.className = 'thumb-status processing';
+  status.innerHTML = '<span class="spinner"></span>処理中';
+  item.appendChild(status);
+
+  queue.appendChild(item);
+  return idx;
+}
+
+function updateThumbStatus(idx, state, text) {
+  const item = document.getElementById(`thumb-${idx}`);
+  if (!item) return;
+  const status = item.querySelector('.thumb-status');
+  status.className = `thumb-status ${state}`;
+  status.textContent = text;
+}
+
+async function processReceipt(file, apiKey, idx) {
+  try {
+    const base64 = await fileToBase64(file);
+    const mediaType = file.type || 'image/jpeg';
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: mediaType, data: base64 }
+            },
+            {
+              type: 'text',
+              text: `このレシート画像から以下の情報をJSON形式で抽出してください。読み取れない項目は空文字にしてください。
+金額は数値のみ（カンマなし）で記入してください。
+勘定科目は以下から最も適切なものを1つ選んでください: 交通費, 交際費, 消耗品費, 会議費, 通信費, 福利厚生費, 新聞図書費, 旅費交通費, その他
+
+出力形式（JSONのみ、他のテキスト不要）:
+{"date":"YYYY-MM-DD","store":"店名","amount":"税込金額(数値)","tax":"税額(数値)","payment":"支払方法","category":"勘定科目"}`
+            }
+          ]
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    const text = data.content[0].text;
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('JSONの抽出に失敗');
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    addRow(parsed);
+    updateThumbStatus(idx, 'done', '完了');
+
+  } catch (err) {
+    console.error('レシート処理エラー:', err);
+    updateThumbStatus(idx, 'error', 'エラー');
+    alert(`レシート ${idx + 1} の処理に失敗: ${err.message}`);
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function addRow(data) {
+  document.getElementById('resultTable').style.display = '';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('exportActions').style.display = '';
+  document.getElementById('totalBar').style.display = '';
+
+  const rowIdx = receiptData.length;
+  receiptData = [...receiptData, { ...data }];
+
+  const tbody = document.getElementById('resultBody');
+  const tr = document.createElement('tr');
+  tr.id = `row-${rowIdx}`;
+
+  FIELDS.forEach((field) => {
+    const td = document.createElement('td');
+
+    if (field === 'category') {
+      const sel = document.createElement('select');
+      CATEGORIES.forEach((cat) => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        if (cat === data[field]) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.dataset.field = field;
+      sel.dataset.row = rowIdx;
+      sel.addEventListener('change', (e) => {
+        receiptData = receiptData.map((item, i) =>
+          i === parseInt(e.target.dataset.row) ? { ...item, [field]: e.target.value } : item
+        );
+      });
+      td.appendChild(sel);
+    } else {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = data[field] || '';
+      input.dataset.field = field;
+      input.dataset.row = rowIdx;
+      input.addEventListener('change', (e) => {
+        receiptData = receiptData.map((item, i) =>
+          i === parseInt(e.target.dataset.row) ? { ...item, [field]: e.target.value } : item
+        );
+        if (field === 'amount') updateTotal();
+      });
+      td.appendChild(input);
+    }
+
+    tr.appendChild(td);
+  });
+
+  const tdDel = document.createElement('td');
+  const delBtn = document.createElement('button');
+  delBtn.className = 'delete-row';
+  delBtn.textContent = 'x';
+  delBtn.onclick = () => removeRow(rowIdx);
+  tdDel.appendChild(delBtn);
+  tr.appendChild(tdDel);
+
+  tbody.appendChild(tr);
+  updateTotal();
+}
+
+function removeRow(idx) {
+  const tr = document.getElementById(`row-${idx}`);
+  if (tr) tr.remove();
+  receiptData = receiptData.map((item, i) => i === idx ? null : item).filter(Boolean);
+  updateTotal();
+
+  if (receiptData.length === 0) {
+    document.getElementById('resultTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('exportActions').style.display = 'none';
+    document.getElementById('totalBar').style.display = 'none';
+  }
+}
+
+function updateTotal() {
+  const total = receiptData.reduce((sum, d) => {
+    const val = parseInt(String(d.amount).replace(/[^0-9]/g, ''), 10);
+    return sum + (isNaN(val) ? 0 : val);
+  }, 0);
+  document.getElementById('totalAmount').textContent = total.toLocaleString() + ' 円';
+}
+
+function downloadCSV() {
+  if (receiptData.length === 0) return;
+
+  const bom = '\uFEFF';
+  const header = '日付,勘定科目,摘要,金額,税額,支払方法';
+  const rows = receiptData.map((d) =>
+    [d.date, d.category, d.store, d.amount, d.tax, d.payment]
+      .map((v) => `"${(v || '').replace(/"/g, '""')}"`)
+      .join(',')
+  );
+  const csv = bom + header + '\n' + rows.join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, `経費精算_${formatDate()}.csv`);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatDate() {
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function clearAll() {
+  if (!confirm('全件クリアしますか？')) return;
+  receiptData = [];
+  document.getElementById('resultBody').innerHTML = '';
+  document.getElementById('resultTable').style.display = 'none';
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('exportActions').style.display = 'none';
+  document.getElementById('totalBar').style.display = 'none';
+  document.getElementById('thumbQueue').innerHTML = '';
+}
+</script>
+</body>
+</html>

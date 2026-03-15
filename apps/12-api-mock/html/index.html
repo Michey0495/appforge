@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API モックサーバー</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff; color: #1a1a2e;
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px; letter-spacing: -0.01em; line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; }
+  .header .subtitle { font-size: 11px; color: #9ca3af; }
+  label {
+    display: block; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"], textarea, select {
+    border: 1px solid #e5e7eb; padding: 8px 12px; font-size: 13px;
+    border-radius: 2px; width: 100%; font-family: inherit;
+    color: #1a1a2e; background: #ffffff; outline: none;
+  }
+  input:focus, textarea:focus, select:focus { border-color: #1e3461; }
+  textarea { resize: vertical; font-family: 'Inter', monospace; }
+  .btn {
+    background: #1e3461; color: #ffffff; padding: 8px 16px; font-size: 12px;
+    border-radius: 2px; border: none; cursor: pointer; font-family: inherit;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn-secondary {
+    background: #ffffff; border: 1px solid #e5e7eb; color: #6b7280;
+  }
+  .btn-secondary:hover { background: #f9fafb; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .btn-danger {
+    background: #ffffff; border: 1px solid #e5e7eb; color: #ef4444;
+  }
+  .btn-danger:hover { background: #fef2f2; }
+  .section { margin-bottom: 32px; }
+  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+  .form-row > * { flex: 1; }
+  .form-group { margin-bottom: 12px; }
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  .slider-row input[type="range"] { flex: 1; accent-color: #1e3461; }
+  .slider-value { font-size: 12px; color: #6b7280; min-width: 50px; text-align: right; }
+  .mock-list { border: 1px solid #f3f4f6; border-radius: 2px; }
+  .mock-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid #f3f4f6;
+  }
+  .mock-item:last-child { border-bottom: none; }
+  .mock-item:hover { background: #fafafa; }
+  .mock-method {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 2px; margin-right: 8px;
+    text-transform: uppercase; min-width: 52px; text-align: center;
+  }
+  .method-GET { background: rgba(30,52,97,0.08); color: #1e3461; }
+  .method-POST { background: rgba(34,197,94,0.08); color: #15803d; }
+  .method-PUT { background: rgba(245,158,11,0.08); color: #b45309; }
+  .method-DELETE { background: rgba(239,68,68,0.08); color: #dc2626; }
+  .mock-path { font-family: monospace; font-size: 12px; }
+  .mock-status { font-size: 11px; color: #6b7280; margin-left: 8px; }
+  .response-panel {
+    border: 1px solid #e5e7eb; border-radius: 2px; background: #fafafa;
+  }
+  .response-header {
+    display: flex; justify-content: space-between; padding: 8px 16px;
+    border-bottom: 1px solid #f3f4f6; font-size: 12px;
+  }
+  .response-status { font-weight: 600; }
+  .status-2xx { color: #15803d; }
+  .status-4xx { color: #b45309; }
+  .status-5xx { color: #dc2626; }
+  .response-body {
+    padding: 16px; font-family: monospace; font-size: 12px;
+    white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto;
+  }
+  .response-headers-list {
+    padding: 8px 16px; border-bottom: 1px solid #f3f4f6;
+    font-size: 11px; color: #6b7280;
+  }
+  .response-headers-list div { margin-bottom: 2px; }
+  .empty-state {
+    text-align: center; padding: 32px; color: #9ca3af; font-size: 12px;
+  }
+  .header-entry { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end; }
+  .header-entry input { flex: 1; }
+  .line-numbers-wrap { display: flex; border: 1px solid #e5e7eb; border-radius: 2px; }
+  .line-numbers {
+    background: #f9fafb; color: #9ca3af; padding: 8px 8px 8px 12px;
+    font-family: monospace; font-size: 13px; line-height: 1.6;
+    text-align: right; user-select: none; min-width: 36px; border-right: 1px solid #f3f4f6;
+  }
+  .line-numbers-wrap textarea {
+    border: none; flex: 1; border-radius: 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>API モックサーバー</h1>
+    <div class="subtitle">ブラウザ内 fetch インターセプト</div>
+  </div>
+
+  <div class="grid-2">
+    <!-- 左: モック定義 -->
+    <div>
+      <div class="section">
+        <h2>モックエンドポイント定義</h2>
+        <div class="form-row">
+          <div style="flex:0 0 120px;">
+            <label>メソッド</label>
+            <select id="mockMethod">
+              <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+            </select>
+          </div>
+          <div>
+            <label>パス</label>
+            <input type="text" id="mockPath" placeholder="/api/users">
+          </div>
+          <div style="flex:0 0 80px;">
+            <label>ステータス</label>
+            <input type="number" id="mockStatus" value="200" min="100" max="599">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>レスポンスボディ (JSON)</label>
+          <div class="line-numbers-wrap">
+            <div class="line-numbers" id="lineNumbers">1</div>
+            <textarea id="mockBody" rows="8" placeholder='{"message": "ok"}'></textarea>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>レスポンス遅延</label>
+          <div class="slider-row">
+            <input type="range" id="mockDelay" min="0" max="3000" step="100" value="0">
+            <div class="slider-value"><span id="delayValue">0</span>ms</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>カスタムヘッダー</label>
+          <div id="headerEntries">
+            <div class="header-entry">
+              <input type="text" placeholder="ヘッダー名" class="header-key">
+              <input type="text" placeholder="値" class="header-val">
+              <button class="btn-secondary btn" style="padding:8px;font-size:11px;" onclick="removeHeader(this)">x</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:4px;font-size:11px;" onclick="addHeaderEntry()">ヘッダー追加</button>
+        </div>
+
+        <button class="btn" onclick="registerMock()">モック登録</button>
+      </div>
+
+      <div class="section">
+        <h2>登録済みモック</h2>
+        <div class="mock-list" id="mockList">
+          <div class="empty-state">モックが登録されていません</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右: テストパネル -->
+    <div>
+      <div class="section">
+        <h2>テストリクエスト</h2>
+        <div class="form-row">
+          <div style="flex:0 0 120px;">
+            <label>メソッド</label>
+            <select id="testMethod">
+              <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+            </select>
+          </div>
+          <div>
+            <label>URL</label>
+            <input type="text" id="testUrl" placeholder="/api/users">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>リクエストボディ</label>
+          <textarea id="testBody" rows="4" placeholder='{"name": "test"}'></textarea>
+        </div>
+        <button class="btn" onclick="sendTestRequest()">送信</button>
+      </div>
+
+      <div class="section">
+        <h2>レスポンス</h2>
+        <div class="response-panel" id="responsePanel">
+          <div class="empty-state">リクエストを送信してください</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // モック格納
+  const mocks = [];
+
+  // 行番号の更新
+  const mockBodyEl = document.getElementById('mockBody');
+  const lineNumbersEl = document.getElementById('lineNumbers');
+
+  function updateLineNumbers() {
+    const lines = mockBodyEl.value.split('\n').length;
+    lineNumbersEl.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+  }
+  mockBodyEl.addEventListener('input', updateLineNumbers);
+  mockBodyEl.addEventListener('scroll', () => {
+    lineNumbersEl.scrollTop = mockBodyEl.scrollTop;
+  });
+
+  // 遅延スライダー
+  const delaySlider = document.getElementById('mockDelay');
+  const delayValue = document.getElementById('delayValue');
+  delaySlider.addEventListener('input', () => {
+    delayValue.textContent = delaySlider.value;
+  });
+
+  // ヘッダーエントリ追加/削除
+  function addHeaderEntry() {
+    const container = document.getElementById('headerEntries');
+    const div = document.createElement('div');
+    div.className = 'header-entry';
+    div.innerHTML = `
+      <input type="text" placeholder="ヘッダー名" class="header-key">
+      <input type="text" placeholder="値" class="header-val">
+      <button class="btn-secondary btn" style="padding:8px;font-size:11px;" onclick="removeHeader(this)">x</button>
+    `;
+    container.appendChild(div);
+  }
+
+  function removeHeader(btn) {
+    const entries = document.querySelectorAll('.header-entry');
+    if (entries.length > 1) {
+      btn.parentElement.remove();
+    }
+  }
+
+  // カスタムヘッダーを収集
+  function collectHeaders() {
+    const headers = {};
+    document.querySelectorAll('.header-entry').forEach(entry => {
+      const key = entry.querySelector('.header-key').value.trim();
+      const val = entry.querySelector('.header-val').value.trim();
+      if (key) headers[key] = val;
+    });
+    return headers;
+  }
+
+  // モック登録
+  function registerMock() {
+    const method = document.getElementById('mockMethod').value;
+    const path = document.getElementById('mockPath').value.trim();
+    const status = parseInt(document.getElementById('mockStatus').value) || 200;
+    const body = mockBodyEl.value;
+    const delay = parseInt(delaySlider.value) || 0;
+    const headers = collectHeaders();
+
+    if (!path) return;
+
+    mocks.push({ method, path, status, body, delay, headers });
+    renderMockList();
+
+    // フォームリセット
+    document.getElementById('mockPath').value = '';
+    mockBodyEl.value = '';
+    updateLineNumbers();
+  }
+
+  // モック一覧の描画
+  function renderMockList() {
+    const list = document.getElementById('mockList');
+    if (mocks.length === 0) {
+      list.innerHTML = '<div class="empty-state">モックが登録されていません</div>';
+      return;
+    }
+    list.innerHTML = mocks.map((m, i) => `
+      <div class="mock-item">
+        <div>
+          <span class="mock-method method-${m.method}">${m.method}</span>
+          <span class="mock-path">${escapeHtml(m.path)}</span>
+          <span class="mock-status">${m.status}</span>
+          ${m.delay > 0 ? `<span class="mock-status">${m.delay}ms</span>` : ''}
+        </div>
+        <button class="btn btn-danger" style="font-size:11px;padding:4px 10px;" onclick="deleteMock(${i})">削除</button>
+      </div>
+    `).join('');
+  }
+
+  function deleteMock(index) {
+    mocks.splice(index, 1);
+    renderMockList();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // テストリクエスト送信
+  async function sendTestRequest() {
+    const method = document.getElementById('testMethod').value;
+    const url = document.getElementById('testUrl').value.trim();
+    const body = document.getElementById('testBody').value.trim();
+    const panel = document.getElementById('responsePanel');
+
+    if (!url) return;
+
+    // モックを検索
+    const mock = mocks.find(m => m.method === method && m.path === url);
+
+    if (!mock) {
+      panel.innerHTML = `
+        <div class="response-header">
+          <span class="response-status status-4xx">404 Not Found</span>
+        </div>
+        <div class="response-body">一致するモックエンドポイントが見つかりませんでした。
+登録済みモック: ${mocks.length} 件</div>
+      `;
+      return;
+    }
+
+    // 遅延のシミュレーション
+    if (mock.delay > 0) {
+      panel.innerHTML = '<div class="empty-state">送信中...</div>';
+      await new Promise(r => setTimeout(r, mock.delay));
+    }
+
+    // ステータスコードに応じたクラス
+    let statusClass = 'status-2xx';
+    if (mock.status >= 400 && mock.status < 500) statusClass = 'status-4xx';
+    if (mock.status >= 500) statusClass = 'status-5xx';
+
+    // レスポンスヘッダーの構築
+    const responseHeaders = { 'Content-Type': 'application/json', ...mock.headers };
+    const headersHtml = Object.entries(responseHeaders)
+      .map(([k, v]) => `<div>${escapeHtml(k)}: ${escapeHtml(v)}</div>`).join('');
+
+    // レスポンスボディの整形
+    let formattedBody = mock.body;
+    try {
+      formattedBody = JSON.stringify(JSON.parse(mock.body), null, 2);
+    } catch (e) {
+      // JSONでなければそのまま
+    }
+
+    panel.innerHTML = `
+      <div class="response-header">
+        <span class="response-status ${statusClass}">${mock.status}</span>
+        <span style="font-size:11px;color:#9ca3af;">${mock.delay}ms delay</span>
+      </div>
+      <div class="response-headers-list">${headersHtml}</div>
+      <div class="response-body">${escapeHtml(formattedBody)}</div>
+    `;
+  }
+</script>
+</body>
+</html>

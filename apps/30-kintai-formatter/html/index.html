@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勤怠CSVフォーマッター</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], select {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: #1e3461; }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 28px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: #1e3461; color: #ffffff; }
+  .btn-primary:hover { background: #2e4f87; }
+  .btn-secondary { background: #f3f4f6; color: #1a1a2e; border: 1px solid #e5e7eb; }
+  .btn-secondary:hover { background: #e5e7eb; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-lg { padding: 10px 24px; font-size: 13px; }
+
+  /* ドラッグ&ドロップ */
+  .drop-zone {
+    border: 2px dashed #e5e7eb;
+    border-radius: 2px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 24px;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #1e3461;
+    background: #fafbfc;
+  }
+  .drop-zone-text { font-size: 12px; color: #9ca3af; }
+  .drop-zone-filename { font-size: 12px; color: #1e3461; font-weight: 500; margin-top: 8px; }
+  .drop-zone input[type="file"] { display: none; }
+
+  /* セクション */
+  .section {
+    margin-bottom: 28px;
+    display: none;
+  }
+  .section.visible { display: block; }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  /* テーブル */
+  .table-wrap {
+    overflow-x: auto;
+    margin-bottom: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  th {
+    text-align: left;
+    padding: 6px 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 1;
+  }
+  td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+  tr:hover { background: #fafbfc; }
+
+  /* マッピング */
+  .mapping-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .mapping-row {
+    display: grid;
+    grid-template-columns: 160px 24px 180px 140px 160px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    background: #fafbfc;
+  }
+
+  .mapping-arrow { text-align: center; color: #9ca3af; font-size: 14px; }
+
+  .mapping-source {
+    font-size: 12px;
+    font-weight: 500;
+    color: #1e3461;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ルール保存 */
+  .rule-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .rule-bar select { width: auto; min-width: 200px; }
+
+  /* アクション */
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* Before/After */
+  .preview-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .preview-panel {
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .preview-panel-title {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    background: #fafbfc;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    color: #9ca3af;
+    font-size: 12px;
+  }
+
+  .error-msg {
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 2px;
+    color: #dc2626;
+    font-size: 12px;
+    margin-bottom: 16px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">勤怠CSVフォーマッター</div>
+      <div class="header-subtitle">カラムマッピングと変換ルールでCSVを変換</div>
+    </div>
+  </div>
+
+  <!-- エラー -->
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- ファイルアップロード -->
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-zone-text">CSVファイルをドラッグ&ドロップ、またはクリックして選択</div>
+    <div class="drop-zone-filename" id="fileName"></div>
+    <input type="file" id="fileInput" accept=".csv">
+  </div>
+
+  <!-- 入力プレビュー -->
+  <div class="section" id="previewSection">
+    <div class="section-title">入力CSVプレビュー（先頭10行）</div>
+    <div class="table-wrap" id="inputPreview"></div>
+  </div>
+
+  <!-- カラムマッピング -->
+  <div class="section" id="mappingSection">
+    <div class="section-title">カラムマッピング</div>
+
+    <div class="rule-bar">
+      <select id="savedRules">
+        <option value="">ルールを選択...</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="loadRule()">読み込む</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveRule()">現在のルールを保存</button>
+      <button class="btn btn-secondary btn-sm" onclick="deleteRule()">削除</button>
+    </div>
+
+    <div class="mapping-list" id="mappingList"></div>
+
+    <div class="action-bar">
+      <button class="btn btn-primary btn-lg" onclick="executeTransform()">変換実行</button>
+    </div>
+  </div>
+
+  <!-- 変換結果 -->
+  <div class="section" id="resultSection">
+    <div class="section-title">変換結果</div>
+
+    <div class="preview-comparison">
+      <div class="preview-panel">
+        <div class="preview-panel-title">Before（入力）</div>
+        <div class="table-wrap" id="beforeTable"></div>
+      </div>
+      <div class="preview-panel">
+        <div class="preview-panel-title">After（出力）</div>
+        <div class="table-wrap" id="afterTable"></div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="downloadCsv()">CSVダウンロード</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RULES_STORAGE_KEY = 'kintai-formatter-rules';
+
+let parsedData = null;      // { headers: [], rows: [] }
+let transformedData = null; // { headers: [], rows: [] }
+
+// ドラッグ&ドロップ
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  if (!file.name.endsWith('.csv')) {
+    showError('CSVファイルを選択してください');
+    return;
+  }
+  hideError();
+  document.getElementById('fileName').textContent = file.name;
+
+  Papa.parse(file, {
+    encoding: 'UTF-8',
+    skipEmptyLines: true,
+    complete: function(results) {
+      if (results.data.length < 2) {
+        showError('CSVにデータがありません');
+        return;
+      }
+
+      parsedData = {
+        headers: results.data[0],
+        rows: results.data.slice(1)
+      };
+
+      renderInputPreview();
+      renderMappingUI();
+      loadSavedRulesList();
+
+      document.getElementById('previewSection').classList.add('visible');
+      document.getElementById('mappingSection').classList.add('visible');
+      document.getElementById('resultSection').classList.remove('visible');
+      transformedData = null;
+    },
+    error: function(err) {
+      showError('CSV解析エラー: ' + err.message);
+    }
+  });
+}
+
+function renderInputPreview() {
+  const maxRows = 10;
+  const rows = parsedData.rows.slice(0, maxRows);
+  document.getElementById('inputPreview').innerHTML = buildTable(parsedData.headers, rows);
+}
+
+function buildTable(headers, rows) {
+  let html = '<table><thead><tr>';
+  headers.forEach(h => { html += `<th>${escapeHtml(h)}</th>`; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    headers.forEach((_, i) => { html += `<td>${escapeHtml(row[i] || '')}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// カラムマッピングUI
+function renderMappingUI() {
+  const container = document.getElementById('mappingList');
+  container.innerHTML = parsedData.headers.map((header, i) => `
+    <div class="mapping-row" data-index="${i}">
+      <div class="mapping-source" title="${escapeHtml(header)}">${escapeHtml(header)}</div>
+      <div class="mapping-arrow">-></div>
+      <input type="text" class="output-name" value="${escapeHtml(header)}" placeholder="出力カラム名">
+      <select class="transform-type" onchange="onTransformChange(this, ${i})">
+        <option value="none">なし</option>
+        <option value="date">日付変換</option>
+        <option value="time">時刻変換</option>
+        <option value="fixed">固定値</option>
+      </select>
+      <div class="transform-options" id="transformOpts${i}"></div>
+    </div>
+  `).join('');
+}
+
+function onTransformChange(selectEl, index) {
+  const type = selectEl.value;
+  const container = document.getElementById(`transformOpts${index}`);
+
+  if (type === 'date') {
+    container.innerHTML = `
+      <select class="date-format">
+        <option value="YYYY/MM/DD">YYYY/MM/DD</option>
+        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+        <option value="YYYYMMDD">YYYYMMDD</option>
+      </select>`;
+  } else if (type === 'time') {
+    container.innerHTML = `
+      <select class="time-format">
+        <option value="HH:MM">HH:MM</option>
+        <option value="decimal">小数時間</option>
+        <option value="HHMM">HHMM</option>
+      </select>`;
+  } else if (type === 'fixed') {
+    container.innerHTML = `<input type="text" class="fixed-value" placeholder="固定値">`;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+// マッピング設定の取得
+function getMappingConfig() {
+  const rows = document.querySelectorAll('.mapping-row');
+  return Array.from(rows).map((row, i) => {
+    const outputName = row.querySelector('.output-name').value.trim();
+    const transformType = row.querySelector('.transform-type').value;
+    let formatOrValue = '';
+
+    if (transformType === 'date') {
+      const sel = row.querySelector('.date-format');
+      formatOrValue = sel ? sel.value : '';
+    } else if (transformType === 'time') {
+      const sel = row.querySelector('.time-format');
+      formatOrValue = sel ? sel.value : '';
+    } else if (transformType === 'fixed') {
+      const input = row.querySelector('.fixed-value');
+      formatOrValue = input ? input.value : '';
+    }
+
+    return {
+      sourceIndex: i,
+      sourceHeader: parsedData.headers[i],
+      outputName: outputName || parsedData.headers[i],
+      transformType,
+      formatOrValue
+    };
+  });
+}
+
+// マッピング設定の復元
+function applyMappingConfig(config) {
+  const rows = document.querySelectorAll('.mapping-row');
+  config.forEach(cfg => {
+    // sourceHeader名でマッチング
+    const matchIndex = parsedData.headers.indexOf(cfg.sourceHeader);
+    if (matchIndex === -1 || matchIndex >= rows.length) return;
+
+    const row = rows[matchIndex];
+    row.querySelector('.output-name').value = cfg.outputName;
+    const selectEl = row.querySelector('.transform-type');
+    selectEl.value = cfg.transformType;
+    onTransformChange(selectEl, matchIndex);
+
+    if (cfg.transformType === 'date') {
+      const sel = row.querySelector('.date-format');
+      if (sel) sel.value = cfg.formatOrValue;
+    } else if (cfg.transformType === 'time') {
+      const sel = row.querySelector('.time-format');
+      if (sel) sel.value = cfg.formatOrValue;
+    } else if (cfg.transformType === 'fixed') {
+      const input = row.querySelector('.fixed-value');
+      if (input) input.value = cfg.formatOrValue;
+    }
+  });
+}
+
+// 変換実行
+function executeTransform() {
+  if (!parsedData) return;
+  hideError();
+
+  const config = getMappingConfig();
+  const outputHeaders = config.map(c => c.outputName);
+  const outputRows = parsedData.rows.map(row => {
+    return config.map(cfg => {
+      const rawValue = row[cfg.sourceIndex] || '';
+
+      switch (cfg.transformType) {
+        case 'date':
+          return convertDate(rawValue, cfg.formatOrValue);
+        case 'time':
+          return convertTime(rawValue, cfg.formatOrValue);
+        case 'fixed':
+          return cfg.formatOrValue;
+        default:
+          return rawValue;
+      }
+    });
+  });
+
+  transformedData = { headers: outputHeaders, rows: outputRows };
+  renderComparison();
+  document.getElementById('resultSection').classList.add('visible');
+  document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function convertDate(value, format) {
+  if (!value.trim()) return '';
+
+  // 入力を解析: YYYY/MM/DD, YYYY-MM-DD, YYYYMMDD, MM/DD/YYYY 等
+  let y, m, d;
+  const cleaned = value.trim();
+
+  const slashMatch = cleaned.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  const noSepMatch = cleaned.match(/^(\d{4})(\d{2})(\d{2})$/);
+  const usMatch = cleaned.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+
+  if (slashMatch) {
+    y = slashMatch[1]; m = slashMatch[2]; d = slashMatch[3];
+  } else if (noSepMatch) {
+    y = noSepMatch[1]; m = noSepMatch[2]; d = noSepMatch[3];
+  } else if (usMatch) {
+    m = usMatch[1]; d = usMatch[2]; y = usMatch[3];
+  } else {
+    return value; // 解析不能ならそのまま返す
+  }
+
+  m = m.padStart(2, '0');
+  d = d.padStart(2, '0');
+
+  switch (format) {
+    case 'YYYY/MM/DD': return `${y}/${m}/${d}`;
+    case 'YYYY-MM-DD': return `${y}-${m}-${d}`;
+    case 'YYYYMMDD': return `${y}${m}${d}`;
+    default: return value;
+  }
+}
+
+function convertTime(value, format) {
+  if (!value.trim()) return '';
+
+  const cleaned = value.trim();
+  let hours, minutes;
+
+  // HH:MM, H:MM
+  const colonMatch = cleaned.match(/^(\d{1,2}):(\d{2})/);
+  // HHMM
+  const noSepMatch = cleaned.match(/^(\d{2})(\d{2})$/);
+  // 小数 (8.5 = 8時間30分)
+  const decimalMatch = cleaned.match(/^(\d+\.?\d*)$/);
+
+  if (colonMatch) {
+    hours = parseInt(colonMatch[1], 10);
+    minutes = parseInt(colonMatch[2], 10);
+  } else if (noSepMatch) {
+    hours = parseInt(noSepMatch[1], 10);
+    minutes = parseInt(noSepMatch[2], 10);
+  } else if (decimalMatch) {
+    const decimal = parseFloat(decimalMatch[1]);
+    hours = Math.floor(decimal);
+    minutes = Math.round((decimal - hours) * 60);
+  } else {
+    return value;
+  }
+
+  switch (format) {
+    case 'HH:MM':
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+    case 'decimal': {
+      const dec = hours + minutes / 60;
+      return dec.toFixed(2);
+    }
+    case 'HHMM':
+      return `${String(hours).padStart(2, '0')}${String(minutes).padStart(2, '0')}`;
+    default:
+      return value;
+  }
+}
+
+// Before/After表示
+function renderComparison() {
+  const maxRows = 10;
+  document.getElementById('beforeTable').innerHTML = buildTable(
+    parsedData.headers,
+    parsedData.rows.slice(0, maxRows)
+  );
+  document.getElementById('afterTable').innerHTML = buildTable(
+    transformedData.headers,
+    transformedData.rows.slice(0, maxRows)
+  );
+}
+
+// CSVダウンロード（BOM付きUTF-8）
+function downloadCsv() {
+  if (!transformedData) return;
+
+  const csvContent = Papa.unparse({
+    fields: transformedData.headers,
+    data: transformedData.rows
+  });
+
+  // BOM付きUTF-8
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kintai-converted-${formatDateFile(new Date())}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ルール保存・読み込み
+function getSavedRules() {
+  const stored = localStorage.getItem(RULES_STORAGE_KEY);
+  return stored ? JSON.parse(stored) : {};
+}
+
+function loadSavedRulesList() {
+  const rules = getSavedRules();
+  const select = document.getElementById('savedRules');
+  select.innerHTML = '<option value="">ルールを選択...</option>';
+  Object.keys(rules).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+}
+
+function saveRule() {
+  if (!parsedData) return;
+
+  const name = prompt('ルール名を入力してください:');
+  if (!name || !name.trim()) return;
+
+  const config = getMappingConfig();
+  const rules = getSavedRules();
+  rules[name.trim()] = config;
+  localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(rules));
+  loadSavedRulesList();
+  document.getElementById('savedRules').value = name.trim();
+}
+
+function loadRule() {
+  const name = document.getElementById('savedRules').value;
+  if (!name || !parsedData) return;
+
+  const rules = getSavedRules();
+  const config = rules[name];
+  if (!config) return;
+
+  applyMappingConfig(config);
+}
+
+function deleteRule() {
+  const name = document.getElementById('savedRules').value;
+  if (!name) return;
+  if (!confirm(`ルール「${name}」を削除しますか?`)) return;
+
+  const rules = getSavedRules();
+  delete rules[name];
+  localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(rules));
+  loadSavedRulesList();
+}
+
+// ユーティリティ
+function formatDateFile(date) {
+  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+</script>
+</body>
+</html>

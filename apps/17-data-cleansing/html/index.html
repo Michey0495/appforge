@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データクレンジングツール</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #ffffff; color: #1a1a2e;
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px; letter-spacing: -0.01em; line-height: 1.6;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px; }
+  .header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
+  }
+  .header h1 { font-size: 15px; font-weight: 600; }
+  .header .subtitle { font-size: 11px; color: #9ca3af; }
+  label {
+    display: block; font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"], select {
+    border: 1px solid #e5e7eb; padding: 8px 12px; font-size: 13px;
+    border-radius: 2px; width: 100%; font-family: inherit;
+    color: #1a1a2e; background: #ffffff; outline: none;
+  }
+  input:focus, select:focus { border-color: #1e3461; }
+  .btn {
+    background: #1e3461; color: #ffffff; padding: 8px 16px; font-size: 12px;
+    border-radius: 2px; border: none; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: #2e4f87; }
+  .btn-secondary {
+    background: #ffffff; border: 1px solid #e5e7eb; color: #6b7280;
+  }
+  .btn-secondary:hover { background: #f9fafb; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .section { margin-bottom: 28px; }
+  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+
+  /* ドロップゾーン */
+  .drop-zone {
+    border: 2px dashed #e5e7eb; border-radius: 2px;
+    padding: 40px; text-align: center; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #1e3461; background: #f8f9ff;
+  }
+  .drop-zone-text { color: #9ca3af; font-size: 12px; }
+  .drop-zone-text .label { color: #1e3461; font-weight: 500; cursor: pointer; }
+  .file-info {
+    margin-top: 12px; font-size: 12px; color: #6b7280;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* クレンジングパネル */
+  .ops-panel {
+    border: 1px solid #f3f4f6; border-radius: 2px;
+  }
+  .ops-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; border-bottom: 1px solid #f3f4f6;
+    font-size: 12px;
+  }
+  .ops-item:last-child { border-bottom: none; }
+  .ops-item label {
+    margin-bottom: 0; font-size: 12px; text-transform: none;
+    letter-spacing: normal; color: #1a1a2e; flex: 1;
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+  }
+  .ops-item .ops-desc { color: #9ca3af; font-size: 11px; }
+  .ops-item input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer; accent-color: #1e3461;
+  }
+  .ops-item input[type="text"] {
+    width: 120px; padding: 4px 8px; font-size: 11px;
+  }
+  .ops-sub { padding-left: 40px; padding-top: 0; }
+
+  /* テーブル */
+  .table-wrap {
+    border: 1px solid #f3f4f6; border-radius: 2px;
+    overflow: auto; max-height: 360px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th {
+    position: sticky; top: 0; z-index: 1;
+    text-align: left; padding: 8px 10px; background: #f9fafb;
+    font-size: 11px; font-weight: 600; color: #6b7280;
+    border-bottom: 1px solid #f3f4f6; white-space: nowrap;
+  }
+  td {
+    padding: 6px 10px; border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis;
+  }
+  tr:hover td { background: #fafafa; }
+
+  /* 比較ビュー */
+  .compare-view {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .compare-pane h3 {
+    font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #6b7280;
+  }
+
+  /* 統計パネル */
+  .stats-panel {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;
+  }
+  .stat-card {
+    border: 1px solid #f3f4f6; border-radius: 2px; padding: 16px;
+    text-align: center;
+  }
+  .stat-value { font-size: 24px; font-weight: 700; color: #1e3461; }
+  .stat-label { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+  /* アクションバー */
+  .actions-bar {
+    display: flex; gap: 8px; justify-content: flex-end;
+    padding-top: 16px; border-top: 1px solid #f3f4f6; margin-top: 24px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* 変更セルのハイライト */
+  .cell-changed { background: #eff6ff; }
+
+  .fill-defaults { margin-top: 8px; }
+  .fill-defaults-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px; margin-top: 8px; padding: 12px; background: #f9fafb;
+    border: 1px solid #f3f4f6; border-radius: 2px;
+  }
+  .fill-default-item { display: flex; flex-direction: column; gap: 4px; }
+  .fill-default-item label {
+    font-size: 10px; color: #6b7280; text-transform: none; letter-spacing: normal;
+  }
+  .fill-default-item input { padding: 4px 8px; font-size: 11px; }
+
+  .case-select { width: auto; padding: 4px 8px; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>データクレンジングツール</h1>
+    <span class="subtitle">CSV Data Cleansing</span>
+  </div>
+
+  <!-- ファイルアップロード -->
+  <div class="section" id="uploadSection">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="drop-zone-text">
+        CSVファイルをドロップ、または<span class="label">ファイルを選択</span>
+      </div>
+      <input type="file" id="fileInput" accept=".csv,.tsv,.txt" style="display:none;">
+    </div>
+    <div class="file-info hidden" id="fileInfo">
+      <span id="fileName"></span>
+      <span id="fileRows"></span>
+      <button class="btn btn-sm btn-secondary" onclick="resetAll()">別ファイル</button>
+    </div>
+  </div>
+
+  <!-- 元データプレビュー -->
+  <div class="section hidden" id="previewSection">
+    <h2>元データプレビュー</h2>
+    <div class="table-wrap" id="previewTableWrap"></div>
+  </div>
+
+  <!-- クレンジング操作パネル -->
+  <div class="section hidden" id="opsSection">
+    <h2>クレンジング操作</h2>
+    <div class="ops-panel">
+      <div class="ops-item">
+        <label>
+          <input type="checkbox" id="opDuplicate" checked>
+          重複行の削除
+        </label>
+        <span class="ops-desc">完全一致する行を除去</span>
+      </div>
+      <div class="ops-item">
+        <label>
+          <input type="checkbox" id="opTrim" checked>
+          空白トリム
+        </label>
+        <span class="ops-desc">前後の空白文字を除去</span>
+      </div>
+      <div class="ops-item">
+        <label>
+          <input type="checkbox" id="opZenToHan" checked>
+          全角 → 半角変換
+        </label>
+        <span class="ops-desc">英数字・記号を半角に変換</span>
+      </div>
+      <div class="ops-item">
+        <label>
+          <input type="checkbox" id="opHanKataToZen">
+          半角カタカナ → 全角カタカナ
+        </label>
+        <span class="ops-desc">半角カナを全角に統一</span>
+      </div>
+      <div class="ops-item">
+        <label>
+          <input type="checkbox" id="opFillEmpty">
+          空欄を指定値で補完
+        </label>
+        <span class="ops-desc">列ごとに既定値を設定</span>
+      </div>
+      <div class="fill-defaults hidden" id="fillDefaultsPanel">
+        <div class="fill-defaults-grid" id="fillDefaultsGrid">
+        </div>
+      </div>
+      <div class="ops-item">
+        <label>
+          <input type="checkbox" id="opCase">
+          大文字/小文字統一
+        </label>
+        <select class="case-select" id="caseMode">
+          <option value="lower">小文字に統一</option>
+          <option value="upper">大文字に統一</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:12px; text-align:right;">
+      <button class="btn" onclick="runCleansing()">クレンジング実行</button>
+    </div>
+  </div>
+
+  <!-- 統計 -->
+  <div class="section hidden" id="statsSection">
+    <h2>処理結果</h2>
+    <div class="stats-panel">
+      <div class="stat-card">
+        <div class="stat-value" id="statDeleted">0</div>
+        <div class="stat-label">削除した行数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statConverted">0</div>
+        <div class="stat-label">変換したセル数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statEmpty">0</div>
+        <div class="stat-label">残りの空欄数</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Before / After 比較ビュー -->
+  <div class="section hidden" id="compareSection">
+    <h2>Before / After</h2>
+    <div class="compare-view">
+      <div class="compare-pane">
+        <h3>Before ({beforeRows} 行)</h3>
+        <div class="table-wrap" id="beforeTableWrap"></div>
+      </div>
+      <div class="compare-pane">
+        <h3>After ({afterRows} 行)</h3>
+        <div class="table-wrap" id="afterTableWrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ダウンロード -->
+  <div class="actions-bar hidden" id="downloadSection">
+    <button class="btn btn-secondary" onclick="resetAll()">最初からやり直す</button>
+    <button class="btn" onclick="downloadCsv()">CSVダウンロード</button>
+  </div>
+</div>
+
+<script>
+  let rawData = null;      // パース済みの元データ { headers, rows }
+  let cleanedData = null;  // クレンジング後データ
+
+  // ドラッグ&ドロップ
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleFile(file);
+  });
+
+  // 空欄補完パネルの表示切り替え
+  document.getElementById('opFillEmpty').addEventListener('change', (e) => {
+    document.getElementById('fillDefaultsPanel').classList.toggle('hidden', !e.target.checked);
+  });
+
+  // ファイル読み込み
+  const handleFile = (file) => {
+    Papa.parse(file, {
+      header: false,
+      skipEmptyLines: false,
+      complete: (result) => {
+        if (result.data.length < 2) {
+          alert('データが不足しています。ヘッダー行と1行以上のデータが必要です。');
+          return;
+        }
+        const headers = result.data[0];
+        const rows = result.data.slice(1).filter(r => r.some(c => c.trim() !== ''));
+
+        rawData = { headers, rows };
+
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileRows').textContent = `${rows.length} 行 x ${headers.length} 列`;
+        document.getElementById('fileInfo').classList.remove('hidden');
+        dropZone.classList.add('hidden');
+
+        renderTable('previewTableWrap', headers, rows);
+        document.getElementById('previewSection').classList.remove('hidden');
+        document.getElementById('opsSection').classList.remove('hidden');
+
+        buildFillDefaultsPanel(headers);
+
+        // 結果セクションは非表示にリセット
+        document.getElementById('statsSection').classList.add('hidden');
+        document.getElementById('compareSection').classList.add('hidden');
+        document.getElementById('downloadSection').classList.add('hidden');
+      },
+      error: () => {
+        alert('CSVの読み込みに失敗しました。');
+      }
+    });
+  };
+
+  // テーブル描画
+  const renderTable = (containerId, headers, rows, changedCells) => {
+    const wrap = document.getElementById(containerId);
+    const maxRows = 200;
+    const displayRows = rows.slice(0, maxRows);
+    let html = '<table><thead><tr>';
+    html += '<th style="width:40px;">#</th>';
+    headers.forEach(h => { html += `<th>${escapeHtml(h)}</th>`; });
+    html += '</tr></thead><tbody>';
+    displayRows.forEach((row, ri) => {
+      html += '<tr>';
+      html += `<td style="color:#9ca3af;font-size:10px;">${ri + 1}</td>`;
+      row.forEach((cell, ci) => {
+        const changed = changedCells && changedCells.has(`${ri},${ci}`);
+        html += `<td${changed ? ' class="cell-changed"' : ''}>${escapeHtml(cell)}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    if (rows.length > maxRows) {
+      html += `<div style="padding:8px;text-align:center;color:#9ca3af;font-size:11px;">他 ${rows.length - maxRows} 行（表示上限 ${maxRows} 行）</div>`;
+    }
+    wrap.innerHTML = html;
+  };
+
+  // 空欄補完のデフォルト値入力パネル構築
+  const buildFillDefaultsPanel = (headers) => {
+    const grid = document.getElementById('fillDefaultsGrid');
+    grid.innerHTML = headers.map((h, i) => `
+      <div class="fill-default-item">
+        <label>${escapeHtml(h)}</label>
+        <input type="text" id="fillVal_${i}" placeholder="既定値">
+      </div>
+    `).join('');
+  };
+
+  // クレンジング実行
+  const runCleansing = () => {
+    if (!rawData) return;
+
+    const ops = {
+      duplicate: document.getElementById('opDuplicate').checked,
+      trim: document.getElementById('opTrim').checked,
+      zenToHan: document.getElementById('opZenToHan').checked,
+      hanKataToZen: document.getElementById('opHanKataToZen').checked,
+      fillEmpty: document.getElementById('opFillEmpty').checked,
+      caseNorm: document.getElementById('opCase').checked,
+      caseMode: document.getElementById('caseMode').value,
+    };
+
+    // 列ごとの既定値
+    const fillDefaults = rawData.headers.map((_, i) => {
+      const el = document.getElementById(`fillVal_${i}`);
+      return el ? el.value : '';
+    });
+
+    let rows = rawData.rows.map(r => [...r]);
+    let deletedCount = 0;
+    let convertedCount = 0;
+    const changedCells = new Set();
+
+    // 1. 重複行の削除
+    if (ops.duplicate) {
+      const seen = new Set();
+      const unique = [];
+      rows.forEach(row => {
+        const key = row.join('\t');
+        if (seen.has(key)) {
+          deletedCount++;
+        } else {
+          seen.add(key);
+          unique.push(row);
+        }
+      });
+      rows = unique;
+    }
+
+    // 2-6. セル単位の変換
+    rows.forEach((row, ri) => {
+      row.forEach((cell, ci) => {
+        let val = cell;
+        const original = val;
+
+        // 空白トリム
+        if (ops.trim) {
+          val = val.replace(/^[\s\u3000]+|[\s\u3000]+$/g, '');
+        }
+
+        // 全角→半角（英数字・記号）
+        if (ops.zenToHan) {
+          val = zenToHan(val);
+        }
+
+        // 半角カタカナ→全角カタカナ
+        if (ops.hanKataToZen) {
+          val = hanKataToZenKata(val);
+        }
+
+        // 空欄補完
+        if (ops.fillEmpty && val.trim() === '' && fillDefaults[ci]) {
+          val = fillDefaults[ci];
+        }
+
+        // 大文字/小文字統一
+        if (ops.caseNorm) {
+          val = ops.caseMode === 'upper' ? val.toUpperCase() : val.toLowerCase();
+        }
+
+        if (val !== original) {
+          convertedCount++;
+          changedCells.add(`${ri},${ci}`);
+        }
+        row[ci] = val;
+      });
+    });
+
+    // 残りの空欄数
+    let emptyCount = 0;
+    rows.forEach(row => {
+      row.forEach(cell => {
+        if (cell.trim() === '') emptyCount++;
+      });
+    });
+
+    cleanedData = { headers: rawData.headers, rows };
+
+    // 統計表示
+    document.getElementById('statDeleted').textContent = deletedCount;
+    document.getElementById('statConverted').textContent = convertedCount;
+    document.getElementById('statEmpty').textContent = emptyCount;
+    document.getElementById('statsSection').classList.remove('hidden');
+
+    // Before/After比較
+    const compareSection = document.getElementById('compareSection');
+    compareSection.classList.remove('hidden');
+    const beforeLabel = compareSection.querySelector('.compare-pane:first-child h3');
+    const afterLabel = compareSection.querySelector('.compare-pane:last-child h3');
+    beforeLabel.textContent = `Before (${rawData.rows.length} 行)`;
+    afterLabel.textContent = `After (${rows.length} 行)`;
+
+    renderTable('beforeTableWrap', rawData.headers, rawData.rows);
+    renderTable('afterTableWrap', rawData.headers, rows, changedCells);
+
+    document.getElementById('downloadSection').classList.remove('hidden');
+  };
+
+  // 全角→半角変換
+  const zenToHan = (str) => {
+    return str.replace(/[\uFF01-\uFF5E]/g, (ch) => {
+      return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0);
+    }).replace(/\u3000/g, ' ');
+  };
+
+  // 半角カタカナ→全角カタカナ変換
+  const hanKataToZenKata = (str) => {
+    const map = {
+      '\uFF66': '\u30F2', '\uFF67': '\u30A1', '\uFF68': '\u30A3',
+      '\uFF69': '\u30A5', '\uFF6A': '\u30A7', '\uFF6B': '\u30A9',
+      '\uFF6C': '\u30E3', '\uFF6D': '\u30E5', '\uFF6E': '\u30E7',
+      '\uFF6F': '\u30C3', '\uFF70': '\u30FC',
+      '\uFF71': '\u30A2', '\uFF72': '\u30A4', '\uFF73': '\u30A6',
+      '\uFF74': '\u30A8', '\uFF75': '\u30AA', '\uFF76': '\u30AB',
+      '\uFF77': '\u30AD', '\uFF78': '\u30AF', '\uFF79': '\u30B1',
+      '\uFF7A': '\u30B3', '\uFF7B': '\u30B5', '\uFF7C': '\u30B7',
+      '\uFF7D': '\u30B9', '\uFF7E': '\u30BB', '\uFF7F': '\u30BD',
+      '\uFF80': '\u30BF', '\uFF81': '\u30C1', '\uFF82': '\u30C4',
+      '\uFF83': '\u30C6', '\uFF84': '\u30C8', '\uFF85': '\u30CA',
+      '\uFF86': '\u30CB', '\uFF87': '\u30CC', '\uFF88': '\u30CD',
+      '\uFF89': '\u30CE', '\uFF8A': '\u30CF', '\uFF8B': '\u30D2',
+      '\uFF8C': '\u30D5', '\uFF8D': '\u30D8', '\uFF8E': '\u30DB',
+      '\uFF8F': '\u30DE', '\uFF90': '\u30DF', '\uFF91': '\u30E0',
+      '\uFF92': '\u30E1', '\uFF93': '\u30E2', '\uFF94': '\u30E4',
+      '\uFF95': '\u30E6', '\uFF96': '\u30E8', '\uFF97': '\u30E9',
+      '\uFF98': '\u30EA', '\uFF99': '\u30EB', '\uFF9A': '\u30EC',
+      '\uFF9B': '\u30ED', '\uFF9C': '\u30EF', '\uFF9D': '\u30F3',
+    };
+    // 濁点・半濁点の結合
+    const dakuten = '\uFF9E';
+    const handakuten = '\uFF9F';
+    const dakutenMap = {
+      '\u30AB': '\u30AC', '\u30AD': '\u30AE', '\u30AF': '\u30B0', '\u30B1': '\u30B2', '\u30B3': '\u30B4',
+      '\u30B5': '\u30B6', '\u30B7': '\u30B8', '\u30B9': '\u30BA', '\u30BB': '\u30BC', '\u30BD': '\u30BE',
+      '\u30BF': '\u30C0', '\u30C1': '\u30C2', '\u30C4': '\u30C5', '\u30C6': '\u30C7', '\u30C8': '\u30C9',
+      '\u30CF': '\u30D0', '\u30D2': '\u30D3', '\u30D5': '\u30D6', '\u30D8': '\u30D9', '\u30DB': '\u30DC',
+      '\u30A6': '\u30F4',
+    };
+    const handakutenMap = {
+      '\u30CF': '\u30D1', '\u30D2': '\u30D4', '\u30D5': '\u30D7', '\u30D8': '\u30DA', '\u30DB': '\u30DD',
+    };
+
+    let result = '';
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      const next = str[i + 1];
+      if (map[ch]) {
+        let zen = map[ch];
+        if (next === dakuten && dakutenMap[zen]) {
+          zen = dakutenMap[zen];
+          i++;
+        } else if (next === handakuten && handakutenMap[zen]) {
+          zen = handakutenMap[zen];
+          i++;
+        }
+        result += zen;
+      } else {
+        result += ch;
+      }
+    }
+    return result;
+  };
+
+  // CSVダウンロード
+  const downloadCsv = () => {
+    if (!cleanedData) return;
+    const csv = Papa.unparse({
+      fields: cleanedData.headers,
+      data: cleanedData.rows,
+    });
+    const bom = '\uFEFF';
+    const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cleaned_data.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // リセット
+  const resetAll = () => {
+    rawData = null;
+    cleanedData = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('dropZone').classList.remove('hidden');
+    document.getElementById('fileInfo').classList.add('hidden');
+    document.getElementById('previewSection').classList.add('hidden');
+    document.getElementById('opsSection').classList.add('hidden');
+    document.getElementById('statsSection').classList.add('hidden');
+    document.getElementById('compareSection').classList.add('hidden');
+    document.getElementById('downloadSection').classList.add('hidden');
+  };
+
+  // HTMLエスケープ
+  const escapeHtml = (str) => {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str || ''));
+    return div.innerHTML;
+  };
+</script>
+</body>
+</html>

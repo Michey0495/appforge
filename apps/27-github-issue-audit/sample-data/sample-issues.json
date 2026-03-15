@@ -1,0 +1,222 @@
+[
+  {
+    "number": 142,
+    "title": "ログインページでパスワードリセットリンクが表示されない",
+    "state": "open",
+    "labels": [{"name": "bug"}, {"name": "priority: high"}],
+    "assignee": {"login": "tanaka"},
+    "created_at": "2026-03-10T09:15:00Z",
+    "updated_at": "2026-03-14T11:30:00Z",
+    "comments": 5,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/142"
+  },
+  {
+    "number": 141,
+    "title": "ダッシュボードにCSVエクスポート機能を追加",
+    "state": "open",
+    "labels": [{"name": "feature"}, {"name": "priority: medium"}],
+    "assignee": {"login": "suzuki"},
+    "created_at": "2026-03-08T14:20:00Z",
+    "updated_at": "2026-03-12T16:45:00Z",
+    "comments": 8,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/141"
+  },
+  {
+    "number": 138,
+    "title": "通知メールの件名が文字化けする(UTF-8エンコーディング)",
+    "state": "open",
+    "labels": [{"name": "bug"}],
+    "assignee": {"login": "watanabe"},
+    "created_at": "2026-03-01T10:00:00Z",
+    "updated_at": "2026-03-05T09:00:00Z",
+    "comments": 3,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/138"
+  },
+  {
+    "number": 135,
+    "title": "APIドキュメントをOpenAPI 3.1に更新する",
+    "state": "open",
+    "labels": [{"name": "documentation"}],
+    "assignee": null,
+    "created_at": "2026-02-20T13:30:00Z",
+    "updated_at": "2026-02-22T10:00:00Z",
+    "comments": 1,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/135"
+  },
+  {
+    "number": 130,
+    "title": "ユーザー一覧ページで100件以上のデータがあるとページネーションが壊れる",
+    "state": "open",
+    "labels": [{"name": "bug"}, {"name": "priority: high"}],
+    "assignee": {"login": "tanaka"},
+    "created_at": "2026-02-10T08:45:00Z",
+    "updated_at": "2026-03-13T14:20:00Z",
+    "comments": 12,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/130"
+  },
+  {
+    "number": 127,
+    "title": "多言語対応: 英語ロケールの追加",
+    "state": "open",
+    "labels": [{"name": "feature"}, {"name": "i18n"}],
+    "assignee": null,
+    "created_at": "2026-01-28T11:00:00Z",
+    "updated_at": "2026-02-03T09:15:00Z",
+    "comments": 4,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/127"
+  },
+  {
+    "number": 122,
+    "title": "管理画面のレスポンスが遅い(3秒以上かかる)",
+    "state": "open",
+    "labels": [{"name": "bug"}, {"name": "performance"}],
+    "assignee": {"login": "ito"},
+    "created_at": "2026-01-15T16:30:00Z",
+    "updated_at": "2026-01-20T10:00:00Z",
+    "comments": 6,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/122"
+  },
+  {
+    "number": 118,
+    "title": "Dockerfileをマルチステージビルドに変更してイメージサイズを削減",
+    "state": "open",
+    "labels": [{"name": "enhancement"}, {"name": "infra"}],
+    "assignee": {"login": "yamamoto"},
+    "created_at": "2026-01-05T09:00:00Z",
+    "updated_at": "2026-01-10T15:30:00Z",
+    "comments": 2,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/118"
+  },
+  {
+    "number": 112,
+    "title": "ファイルアップロード時のバリデーションエラーメッセージが不明瞭",
+    "state": "open",
+    "labels": [{"name": "bug"}, {"name": "UX"}],
+    "assignee": null,
+    "created_at": "2025-12-18T14:00:00Z",
+    "updated_at": "2025-12-20T11:00:00Z",
+    "comments": 2,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/112"
+  },
+  {
+    "number": 108,
+    "title": "ユーザー権限管理のRBACモデルを導入する",
+    "state": "open",
+    "labels": [{"name": "feature"}, {"name": "priority: high"}, {"name": "security"}],
+    "assignee": {"login": "suzuki"},
+    "created_at": "2025-12-01T10:30:00Z",
+    "updated_at": "2026-03-11T09:45:00Z",
+    "comments": 15,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/108"
+  },
+  {
+    "number": 105,
+    "title": "E2Eテストの追加: ユーザー登録フロー",
+    "state": "open",
+    "labels": [{"name": "testing"}],
+    "assignee": null,
+    "created_at": "2025-11-20T13:00:00Z",
+    "updated_at": "2025-11-25T08:30:00Z",
+    "comments": 0,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/105"
+  },
+  {
+    "number": 101,
+    "title": "請求書PDFの生成でフォントが埋め込まれない",
+    "state": "open",
+    "labels": [{"name": "bug"}],
+    "assignee": null,
+    "created_at": "2025-11-05T09:45:00Z",
+    "updated_at": "2025-11-10T14:00:00Z",
+    "comments": 3,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/101"
+  },
+  {
+    "number": 98,
+    "title": "Slack通知連携の実装",
+    "state": "open",
+    "labels": [{"name": "feature"}],
+    "assignee": {"login": "nakamura"},
+    "created_at": "2025-10-22T11:15:00Z",
+    "updated_at": "2025-11-01T16:00:00Z",
+    "comments": 7,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/98"
+  },
+  {
+    "number": 95,
+    "title": "README.mdの環境構築手順が古い",
+    "state": "open",
+    "labels": [{"name": "documentation"}],
+    "assignee": null,
+    "created_at": "2025-10-10T08:00:00Z",
+    "updated_at": "2025-10-10T08:00:00Z",
+    "comments": 0,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/95"
+  },
+  {
+    "number": 90,
+    "title": "iOS Safariでモーダルの背景スクロールが止まらない",
+    "state": "open",
+    "labels": [{"name": "bug"}, {"name": "mobile"}],
+    "assignee": null,
+    "created_at": "2025-09-15T15:30:00Z",
+    "updated_at": "2025-09-18T09:00:00Z",
+    "comments": 4,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/90"
+  },
+  {
+    "number": 85,
+    "title": "監査ログのエクスポート機能",
+    "state": "closed",
+    "labels": [{"name": "feature"}, {"name": "security"}],
+    "assignee": {"login": "watanabe"},
+    "created_at": "2025-09-01T10:00:00Z",
+    "updated_at": "2026-02-28T17:00:00Z",
+    "comments": 9,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/85"
+  },
+  {
+    "number": 80,
+    "title": "二要素認証(TOTP)の対応",
+    "state": "closed",
+    "labels": [{"name": "feature"}, {"name": "security"}, {"name": "priority: high"}],
+    "assignee": {"login": "suzuki"},
+    "created_at": "2025-08-20T09:30:00Z",
+    "updated_at": "2026-01-15T11:00:00Z",
+    "comments": 18,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/80"
+  },
+  {
+    "number": 75,
+    "title": "本番環境のNode.jsを20.xに更新する",
+    "state": "closed",
+    "labels": [{"name": "enhancement"}, {"name": "infra"}],
+    "assignee": {"login": "yamamoto"},
+    "created_at": "2025-08-10T14:00:00Z",
+    "updated_at": "2025-09-05T10:30:00Z",
+    "comments": 4,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/75"
+  },
+  {
+    "number": 70,
+    "title": "検索機能がSQLインジェクションに対して脆弱",
+    "state": "closed",
+    "labels": [{"name": "bug"}, {"name": "security"}, {"name": "priority: critical"}],
+    "assignee": {"login": "tanaka"},
+    "created_at": "2025-07-25T08:00:00Z",
+    "updated_at": "2025-07-26T22:00:00Z",
+    "comments": 6,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/70"
+  },
+  {
+    "number": 62,
+    "title": "React 18へのメジャーアップグレード",
+    "state": "closed",
+    "labels": [{"name": "enhancement"}, {"name": "priority: medium"}],
+    "assignee": {"login": "ito"},
+    "created_at": "2025-07-01T10:00:00Z",
+    "updated_at": "2025-08-15T16:00:00Z",
+    "comments": 11,
+    "html_url": "https://github.com/nexbridge-tech/customer-portal/issues/62"
+  }
+]

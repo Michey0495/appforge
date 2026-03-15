@@ -1,0 +1,9 @@
+{
+  "id": "10-color-palette",
+  "name": "カラーパレット生成",
+  "category": "design",
+  "description": "ベースカラーから配色パターンを自動生成。WCAGコントラストチェック付き。",
+  "usesAI": false,
+  "libraries": [],
+  "author": "AI駆動開発デモ"
+}

@@ -1,0 +1,253 @@
+{
+  "status": "success",
+  "summary": {
+    "total_orders": 5,
+    "total_amount": 89740,
+    "currency": "JPY",
+    "period": {
+      "from": "2026-03-01",
+      "to": "2026-03-15"
+    }
+  },
+  "orders": [
+    {
+      "order_id": "ORD-20260301-0001",
+      "customer_id": "cust_8a3f2b",
+      "customer_name": "田中 一郎",
+      "status": "delivered",
+      "ordered_at": "2026-03-01T14:23:45+09:00",
+      "items": [
+        {
+          "product_id": "PRD-1001",
+          "name": "ワイヤレスノイズキャンセリングヘッドホン WH-1000XM6",
+          "category": "家電・オーディオ",
+          "quantity": 1,
+          "unit_price": 44800,
+          "tax_rate": 0.10,
+          "subtotal": 49280
+        },
+        {
+          "product_id": "PRD-2015",
+          "name": "ヘッドホンスタンド アルミ製",
+          "category": "アクセサリー",
+          "quantity": 1,
+          "unit_price": 2980,
+          "tax_rate": 0.10,
+          "subtotal": 3278
+        }
+      ],
+      "shipping": {
+        "method": "通常配送",
+        "address": {
+          "postal_code": "166-0003",
+          "prefecture": "東京都",
+          "city": "杉並区",
+          "street": "高円寺南2-5-8",
+          "building": "コーポ高円寺 301"
+        },
+        "tracking_number": "1234-5678-9012",
+        "carrier": "ヤマト運輸",
+        "shipped_at": "2026-03-02T09:00:00+09:00",
+        "delivered_at": "2026-03-03T14:32:00+09:00"
+      },
+      "payment": {
+        "method": "credit_card",
+        "card_last4": "4242",
+        "card_brand": "VISA",
+        "amount": 52558,
+        "paid_at": "2026-03-01T14:24:02+09:00"
+      }
+    },
+    {
+      "order_id": "ORD-20260303-0015",
+      "customer_id": "cust_2c7d4e",
+      "customer_name": "山本 幸子",
+      "status": "shipped",
+      "ordered_at": "2026-03-03T20:11:30+09:00",
+      "items": [
+        {
+          "product_id": "PRD-3042",
+          "name": "有機抹茶パウダー 100g",
+          "category": "食品・飲料",
+          "quantity": 3,
+          "unit_price": 1280,
+          "tax_rate": 0.08,
+          "subtotal": 4147
+        }
+      ],
+      "shipping": {
+        "method": "お急ぎ便",
+        "address": {
+          "postal_code": "604-8001",
+          "prefecture": "京都府",
+          "city": "京都市中京区",
+          "street": "烏丸通三条上ル場之町596",
+          "building": null
+        },
+        "tracking_number": "5678-9012-3456",
+        "carrier": "佐川急便",
+        "shipped_at": "2026-03-04T08:30:00+09:00",
+        "delivered_at": null
+      },
+      "payment": {
+        "method": "convenience_store",
+        "store_name": "セブン-イレブン",
+        "receipt_number": "CVS-98765432",
+        "amount": 4647,
+        "paid_at": "2026-03-03T22:45:00+09:00"
+      }
+    },
+    {
+      "order_id": "ORD-20260305-0008",
+      "customer_id": "cust_9f1e3a",
+      "customer_name": "中村 大輔",
+      "status": "processing",
+      "ordered_at": "2026-03-05T09:45:12+09:00",
+      "items": [
+        {
+          "product_id": "PRD-4078",
+          "name": "エルゴノミクスオフィスチェア Pro",
+          "category": "家具・インテリア",
+          "quantity": 1,
+          "unit_price": 68000,
+          "tax_rate": 0.10,
+          "subtotal": 74800
+        },
+        {
+          "product_id": "PRD-4082",
+          "name": "デスク用モニターアーム デュアル",
+          "category": "家具・インテリア",
+          "quantity": 1,
+          "unit_price": 8900,
+          "tax_rate": 0.10,
+          "subtotal": 9790
+        }
+      ],
+      "shipping": {
+        "method": "大型商品配送",
+        "address": {
+          "postal_code": "812-0011",
+          "prefecture": "福岡県",
+          "city": "福岡市博多区",
+          "street": "博多駅前3-25-21",
+          "building": "博多プレステージ 1502"
+        },
+        "tracking_number": null,
+        "carrier": "西濃運輸",
+        "shipped_at": null,
+        "delivered_at": null
+      },
+      "payment": {
+        "method": "bank_transfer",
+        "bank_name": "三菱UFJ銀行",
+        "amount": 84590,
+        "paid_at": null
+      }
+    },
+    {
+      "order_id": "ORD-20260310-0023",
+      "customer_id": "cust_5b8c1d",
+      "customer_name": "小林 さくら",
+      "status": "cancelled",
+      "ordered_at": "2026-03-10T16:30:00+09:00",
+      "items": [
+        {
+          "product_id": "PRD-5023",
+          "name": "ランニングシューズ GEL-KAYANO 34",
+          "category": "スポーツ・アウトドア",
+          "quantity": 1,
+          "unit_price": 18700,
+          "tax_rate": 0.10,
+          "subtotal": 20570
+        }
+      ],
+      "shipping": {
+        "method": "通常配送",
+        "address": {
+          "postal_code": "980-0021",
+          "prefecture": "宮城県",
+          "city": "仙台市青葉区",
+          "street": "中央2-8-13",
+          "building": null
+        },
+        "tracking_number": null,
+        "carrier": null,
+        "shipped_at": null,
+        "delivered_at": null
+      },
+      "payment": {
+        "method": "credit_card",
+        "card_last4": "1881",
+        "card_brand": "Mastercard",
+        "amount": 20570,
+        "paid_at": "2026-03-10T16:30:15+09:00",
+        "refunded_at": "2026-03-11T10:00:00+09:00"
+      },
+      "cancellation": {
+        "reason": "サイズ間違い",
+        "cancelled_at": "2026-03-11T09:55:00+09:00",
+        "cancelled_by": "customer"
+      }
+    },
+    {
+      "order_id": "ORD-20260314-0041",
+      "customer_id": "cust_3e6f9g",
+      "customer_name": "渡辺 健",
+      "status": "pending_payment",
+      "ordered_at": "2026-03-14T22:05:33+09:00",
+      "items": [
+        {
+          "product_id": "PRD-1055",
+          "name": "4Kウェブカメラ オートフォーカス",
+          "category": "家電・PC周辺機器",
+          "quantity": 2,
+          "unit_price": 12800,
+          "tax_rate": 0.10,
+          "subtotal": 28160
+        },
+        {
+          "product_id": "PRD-1060",
+          "name": "USBコンデンサーマイク",
+          "category": "家電・PC周辺機器",
+          "quantity": 1,
+          "unit_price": 7500,
+          "tax_rate": 0.10,
+          "subtotal": 8250
+        },
+        {
+          "product_id": "PRD-2098",
+          "name": "デスクLEDライト 調光機能付き",
+          "category": "照明",
+          "quantity": 1,
+          "unit_price": 4980,
+          "tax_rate": 0.10,
+          "subtotal": 5478
+        }
+      ],
+      "shipping": {
+        "method": "通常配送",
+        "address": {
+          "postal_code": "060-0042",
+          "prefecture": "北海道",
+          "city": "札幌市中央区",
+          "street": "大通西5-8",
+          "building": "大通ビッセ 904"
+        },
+        "tracking_number": null,
+        "carrier": null,
+        "shipped_at": null,
+        "delivered_at": null
+      },
+      "payment": {
+        "method": "convenience_store",
+        "store_name": "ファミリーマート",
+        "receipt_number": null,
+        "amount": 41888,
+        "paid_at": null,
+        "payment_deadline": "2026-03-17T23:59:59+09:00"
+      }
+    }
+  ],
+  "request_id": "req_4e5f6a7b8c9d",
+  "timestamp": "2026-03-15T10:30:00+09:00"
+}

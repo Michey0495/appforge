@@ -1,0 +1,82 @@
+[
+  {
+    "id": 1,
+    "name": "佐藤 太郎",
+    "email": "t.sato@example.co.jp",
+    "department": "営業部",
+    "joinDate": "2019-04-01",
+    "role": "主任"
+  },
+  {
+    "id": 2,
+    "name": "田中 花子",
+    "email": "h.tanaka@example.co.jp",
+    "department": "人事部",
+    "joinDate": "2020-04-01",
+    "role": "一般"
+  },
+  {
+    "id": 3,
+    "name": "鈴木 健一",
+    "email": "k.suzuki@example.co.jp",
+    "department": "開発部",
+    "joinDate": "2018-10-01",
+    "role": "課長"
+  },
+  {
+    "id": 4,
+    "name": "高橋 美咲",
+    "email": "m.takahashi@example.co.jp",
+    "department": "マーケティング部",
+    "joinDate": "2021-04-01",
+    "role": "一般"
+  },
+  {
+    "id": 5,
+    "name": "伊藤 誠",
+    "email": "m.ito@example.co.jp",
+    "department": "経理部",
+    "joinDate": "2017-04-01",
+    "role": "部長"
+  },
+  {
+    "id": 6,
+    "name": "渡辺 愛",
+    "email": "a.watanabe@example.co.jp",
+    "department": "開発部",
+    "joinDate": "2022-04-01",
+    "role": "一般"
+  },
+  {
+    "id": 7,
+    "name": "山本 大輝",
+    "email": "d.yamamoto@example.co.jp",
+    "department": "情報システム部",
+    "joinDate": "2016-07-01",
+    "role": "課長"
+  },
+  {
+    "id": 8,
+    "name": "中村 さくら",
+    "email": "s.nakamura@example.co.jp",
+    "department": "総務部",
+    "joinDate": "2023-04-01",
+    "role": "一般"
+  },
+  {
+    "id": 9,
+    "name": "小林 拓海",
+    "email": "t.kobayashi@example.co.jp",
+    "department": "開発部",
+    "joinDate": "2020-10-01",
+    "role": "主任"
+  },
+  {
+    "id": 10,
+    "name": "加藤 真理",
+    "email": "m.kato@example.co.jp",
+    "department": "営業部",
+    "joinDate": "2021-07-01",
+    "role": "一般"
+  }
+]

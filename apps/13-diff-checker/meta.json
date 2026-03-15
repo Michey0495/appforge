@@ -1,0 +1,9 @@
+{
+  "id": "13-diff-checker",
+  "name": "テキスト差分チェッカー",
+  "category": "dev-tool",
+  "description": "2つのテキストを行単位で比較し、追加・削除・変更を色分けで表示。統合ビューと分割ビューに対応。",
+  "usesAI": false,
+  "libraries": ["diff.js (CDN)"],
+  "author": "AI駆動開発デモ"
+}

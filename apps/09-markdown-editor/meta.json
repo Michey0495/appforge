@@ -1,0 +1,9 @@
+{
+  "id": "09-markdown-editor",
+  "name": "Markdownライブプレビュー",
+  "category": "dev-tools",
+  "description": "Markdownをリアルタイムプレビューしながら編集。コードハイライト・ダークモード対応。",
+  "usesAI": false,
+  "libraries": ["marked", "highlight.js"],
+  "author": "AI駆動開発デモ"
+}

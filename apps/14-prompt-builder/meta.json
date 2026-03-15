@@ -1,0 +1,9 @@
+{
+  "id": "14-prompt-builder",
+  "name": "プロンプトビルダー",
+  "category": "ai-tool",
+  "description": "ブロック構成でAIプロンプトを組み立てるツール。テンプレートプリセット、XMLタグプレビュー、トークン数推定機能付き。",
+  "usesAI": false,
+  "libraries": ["Vanilla JS"],
+  "author": "AI駆動開発デモ"
+}

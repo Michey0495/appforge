@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Meet議事録タイムスタンプ",
+  "version": "1.0.0",
+  "description": "Google Meet上にフローティングメモ帳を表示し、ワンクリックでタイムスタンプを挿入する拡張機能",
+  "permissions": ["activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["https://meet.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Meet議事録タイムスタンプ"
+  },
+  "icons": {}
+}

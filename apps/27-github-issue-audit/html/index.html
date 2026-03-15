@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHubイシュー棚卸し</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="password"], textarea, select {
+    width: 100%;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    border-radius: 2px;
+    color: #1a1a2e;
+    background: #ffffff;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus { border-color: #1e3461; }
+  textarea { min-height: 200px; resize: vertical; font-family: 'SF Mono', 'Consolas', monospace; font-size: 12px; line-height: 1.5; }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: #1e3461; color: #ffffff; }
+  .btn-primary:hover { background: #2e4f87; }
+  .btn-secondary { background: #f3f4f6; color: #1a1a2e; border: 1px solid #e5e7eb; }
+  .btn-secondary:hover { background: #e5e7eb; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* タブ */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid #f3f4f6;
+    margin-bottom: 20px;
+  }
+  .tab {
+    padding: 8px 20px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    border: none;
+    background: none;
+    color: #9ca3af;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: #1a1a2e; }
+  .tab.active { color: #1e3461; border-bottom-color: #1e3461; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* 入力セクション */
+  .input-section { margin-bottom: 24px; }
+  .input-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 12px;
+  }
+  .input-row > div { flex: 1; }
+
+  /* 統計 */
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    padding: 16px 20px;
+    background: #fafbfc;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 18px; font-weight: 600; color: #1e3461; }
+  .stat-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* フィルタ */
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-bar select { width: auto; min-width: 140px; }
+
+  /* テーブル */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+  tr:hover { background: #fafbfc; }
+
+  .issue-title {
+    font-weight: 500;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .issue-title a { color: #1a1a2e; text-decoration: none; }
+  .issue-title a:hover { color: #1e3461; }
+
+  .label-tag {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 10px;
+    border-radius: 2px;
+    margin: 1px 2px;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+  }
+
+  .score-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .score-high { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .score-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .score-low { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+  /* レポート */
+  .report-output {
+    display: none;
+    margin-top: 24px;
+  }
+  .report-output.visible { display: block; }
+  .report-content {
+    background: #fafbfc;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    padding: 20px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: #9ca3af;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 32px;
+    color: #9ca3af;
+  }
+
+  .error-msg {
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 2px;
+    color: #dc2626;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .actions-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-title">GitHubイシュー棚卸し</div>
+      <div class="header-subtitle">放置イシューの可視化とレポート生成</div>
+    </div>
+  </div>
+
+  <!-- モード切替タブ -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('api')">GitHubトークンで取得</button>
+    <button class="tab" onclick="switchTab('paste')">JSONデータを貼り付け</button>
+  </div>
+
+  <!-- モード1: GitHub API -->
+  <div class="tab-content active" id="tabApi">
+    <div class="input-section">
+      <div class="input-row">
+        <div>
+          <label>GitHubトークン</label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <div>
+          <label>リポジトリ (owner/name)</label>
+          <input type="text" id="ghRepo" placeholder="例: facebook/react">
+        </div>
+        <div style="flex: 0 0 auto;">
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" id="fetchBtn" onclick="fetchIssues()">取得</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- モード2: JSON貼り付け -->
+  <div class="tab-content" id="tabPaste">
+    <div class="input-section">
+      <label>GitHub API レスポンス JSON</label>
+      <textarea id="jsonInput" placeholder="GitHub APIのレスポンスJSONを貼り付け..."></textarea>
+      <div style="margin-top: 8px;">
+        <button class="btn btn-primary" onclick="parseJsonInput()">解析</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- エラー表示 -->
+  <div id="errorMsg" class="error-msg" style="display:none;"></div>
+
+  <!-- 結果セクション -->
+  <div id="resultsSection" style="display:none;">
+    <!-- 統計 -->
+    <div class="stats-bar" id="statsBar"></div>
+
+    <!-- アクション -->
+    <div class="actions-bar">
+      <button class="btn btn-secondary" onclick="generateReport()">レポート出力</button>
+      <button class="btn btn-secondary" onclick="exportIssueCsv()">CSVエクスポート</button>
+    </div>
+
+    <!-- フィルタ -->
+    <div class="filter-bar">
+      <select id="filterScore" onchange="renderTable()">
+        <option value="">スコア: すべて</option>
+        <option value="high">高（90日以上）</option>
+        <option value="medium">中（30-90日）</option>
+        <option value="low">低（30日未満）</option>
+      </select>
+      <select id="filterAssignee" onchange="renderTable()">
+        <option value="">アサイン: すべて</option>
+        <option value="assigned">アサインあり</option>
+        <option value="unassigned">未アサイン</option>
+      </select>
+      <select id="filterLabel" onchange="renderTable()">
+        <option value="">ラベル: すべて</option>
+      </select>
+    </div>
+
+    <!-- テーブル -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>番号</th>
+            <th>タイトル</th>
+            <th>ラベル</th>
+            <th>アサイン</th>
+            <th>最終更新</th>
+            <th>放置日数</th>
+            <th>スコア</th>
+          </tr>
+        </thead>
+        <tbody id="issueTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- レポート出力 -->
+    <div class="report-output" id="reportOutput">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-weight: 600; font-size: 13px;">棚卸しレポート</span>
+        <button class="btn btn-secondary" onclick="copyReport()">コピー</button>
+      </div>
+      <div class="report-content" id="reportContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let issues = [];
+let processedIssues = [];
+
+function switchTab(mode) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+  if (mode === 'api') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
+    document.getElementById('tabApi').classList.add('active');
+  } else {
+    document.querySelectorAll('.tab')[1].classList.add('active');
+    document.getElementById('tabPaste').classList.add('active');
+  }
+}
+
+async function fetchIssues() {
+  const token = document.getElementById('ghToken').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  hideError();
+
+  if (!token || !repo) {
+    showError('トークンとリポジトリを入力してください');
+    return;
+  }
+
+  if (!repo.includes('/')) {
+    showError('リポジトリは owner/name 形式で入力してください');
+    return;
+  }
+
+  const btn = document.getElementById('fetchBtn');
+  btn.disabled = true;
+  btn.textContent = '取得中...';
+
+  try {
+    let allIssues = [];
+    let page = 1;
+    const perPage = 100;
+
+    while (true) {
+      const response = await fetch(
+        `https://api.github.com/repos/${repo}/issues?state=open&per_page=${perPage}&page=${page}`,
+        {
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`GitHub API エラー: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data.length === 0) break;
+
+      // PRを除外（pull_requestフィールドがあるものはPR）
+      const issuesOnly = data.filter(item => !item.pull_request);
+      allIssues = [...allIssues, ...issuesOnly];
+
+      if (data.length < perPage) break;
+      page++;
+    }
+
+    issues = allIssues;
+    processIssues();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '取得';
+  }
+}
+
+function parseJsonInput() {
+  const text = document.getElementById('jsonInput').value.trim();
+  hideError();
+
+  if (!text) {
+    showError('JSONデータを入力してください');
+    return;
+  }
+
+  try {
+    const data = JSON.parse(text);
+    const arr = Array.isArray(data) ? data : [data];
+    issues = arr.filter(item => !item.pull_request);
+
+    if (issues.length === 0) {
+      showError('イシューデータが見つかりません');
+      return;
+    }
+
+    processIssues();
+  } catch (err) {
+    showError('JSONの解析に失敗しました: ' + err.message);
+  }
+}
+
+function processIssues() {
+  const now = new Date();
+
+  processedIssues = issues.map(issue => {
+    const updatedAt = new Date(issue.updated_at);
+    const daysSinceUpdate = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24));
+
+    let scoreLevel, scoreLabel;
+    if (daysSinceUpdate > 90) {
+      scoreLevel = 'high';
+      scoreLabel = '高';
+    } else if (daysSinceUpdate > 30) {
+      scoreLevel = 'medium';
+      scoreLabel = '中';
+    } else {
+      scoreLevel = 'low';
+      scoreLabel = '低';
+    }
+
+    return {
+      number: issue.number,
+      title: issue.title,
+      url: issue.html_url,
+      labels: (issue.labels || []).map(l => typeof l === 'string' ? l : l.name),
+      assignees: (issue.assignees || []).map(a => a.login),
+      assignee: issue.assignee ? issue.assignee.login : null,
+      updatedAt: updatedAt,
+      daysSinceUpdate: daysSinceUpdate,
+      scoreLevel: scoreLevel,
+      scoreLabel: scoreLabel
+    };
+  });
+
+  processedIssues.sort((a, b) => b.daysSinceUpdate - a.daysSinceUpdate);
+
+  updateLabelFilter();
+  updateStats();
+  renderTable();
+  document.getElementById('resultsSection').style.display = 'block';
+}
+
+function updateStats() {
+  const total = processedIssues.length;
+  const avgAge = total > 0
+    ? Math.round(processedIssues.reduce((sum, i) => sum + i.daysSinceUpdate, 0) / total)
+    : 0;
+  const unassigned = processedIssues.filter(i => !i.assignee && i.assignees.length === 0).length;
+  const highCount = processedIssues.filter(i => i.scoreLevel === 'high').length;
+  const medCount = processedIssues.filter(i => i.scoreLevel === 'medium').length;
+
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-item"><span class="stat-value">${total}</span><span class="stat-label">オープンイシュー</span></div>
+    <div class="stat-item"><span class="stat-value">${avgAge}日</span><span class="stat-label">平均経過日数</span></div>
+    <div class="stat-item"><span class="stat-value">${unassigned}</span><span class="stat-label">未アサイン</span></div>
+    <div class="stat-item"><span class="stat-value">${highCount}</span><span class="stat-label">スコア: 高</span></div>
+    <div class="stat-item"><span class="stat-value">${medCount}</span><span class="stat-label">スコア: 中</span></div>
+  `;
+}
+
+function updateLabelFilter() {
+  const labels = [...new Set(processedIssues.flatMap(i => i.labels))].sort();
+  const select = document.getElementById('filterLabel');
+  select.innerHTML = '<option value="">ラベル: すべて</option>';
+  labels.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l;
+    opt.textContent = l;
+    select.appendChild(opt);
+  });
+}
+
+function renderTable() {
+  const scoreFilter = document.getElementById('filterScore').value;
+  const assigneeFilter = document.getElementById('filterAssignee').value;
+  const labelFilter = document.getElementById('filterLabel').value;
+
+  let filtered = processedIssues.filter(issue => {
+    if (scoreFilter && issue.scoreLevel !== scoreFilter) return false;
+    if (assigneeFilter === 'assigned' && !issue.assignee && issue.assignees.length === 0) return false;
+    if (assigneeFilter === 'unassigned' && (issue.assignee || issue.assignees.length > 0)) return false;
+    if (labelFilter && !issue.labels.includes(labelFilter)) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('issueTableBody');
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">該当するイシューがありません</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(issue => {
+    const labelsHtml = issue.labels.map(l =>
+      `<span class="label-tag">${escapeHtml(l)}</span>`
+    ).join('');
+
+    const assigneesStr = issue.assignees.length > 0
+      ? issue.assignees.join(', ')
+      : '-';
+
+    const dateStr = formatDate(issue.updatedAt);
+
+    return `<tr>
+      <td>#${issue.number}</td>
+      <td class="issue-title">${issue.url ? `<a href="${issue.url}" target="_blank" rel="noopener">${escapeHtml(issue.title)}</a>` : escapeHtml(issue.title)}</td>
+      <td>${labelsHtml || '-'}</td>
+      <td>${escapeHtml(assigneesStr)}</td>
+      <td>${dateStr}</td>
+      <td>${issue.daysSinceUpdate}日</td>
+      <td><span class="score-badge score-${issue.scoreLevel}">${issue.scoreLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function generateReport() {
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+
+  const high = processedIssues.filter(i => i.scoreLevel === 'high');
+  const medium = processedIssues.filter(i => i.scoreLevel === 'medium');
+  const low = processedIssues.filter(i => i.scoreLevel === 'low');
+
+  let report = `# GitHubイシュー棚卸しレポート\n`;
+  report += `生成日: ${dateStr}\n`;
+  report += `対象イシュー数: ${processedIssues.length}件\n\n`;
+
+  report += `## サマリー\n`;
+  report += `- オープンイシュー: ${processedIssues.length}件\n`;
+  report += `- 対応必須（90日以上放置）: ${high.length}件\n`;
+  report += `- 要確認（30-90日放置）: ${medium.length}件\n`;
+  report += `- 直近更新あり（30日未満）: ${low.length}件\n`;
+
+  const unassigned = processedIssues.filter(i => !i.assignee && i.assignees.length === 0);
+  report += `- 未アサイン: ${unassigned.length}件\n\n`;
+
+  if (high.length > 0) {
+    report += `## 対応必須（スコア: 高）\n`;
+    high.forEach(i => {
+      report += `- #${i.number} ${i.title} （${i.daysSinceUpdate}日放置, アサイン: ${i.assignees.length > 0 ? i.assignees.join('/') : 'なし'}）\n`;
+    });
+    report += '\n';
+  }
+
+  if (medium.length > 0) {
+    report += `## 要確認（スコア: 中）\n`;
+    medium.forEach(i => {
+      report += `- #${i.number} ${i.title} （${i.daysSinceUpdate}日放置, アサイン: ${i.assignees.length > 0 ? i.assignees.join('/') : 'なし'}）\n`;
+    });
+    report += '\n';
+  }
+
+  if (low.length > 0) {
+    report += `## 直近更新あり（スコア: 低）\n`;
+    low.forEach(i => {
+      report += `- #${i.number} ${i.title} （${i.daysSinceUpdate}日前更新）\n`;
+    });
+    report += '\n';
+  }
+
+  document.getElementById('reportContent').textContent = report;
+  document.getElementById('reportOutput').classList.add('visible');
+}
+
+function copyReport() {
+  const text = document.getElementById('reportContent').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = 'コピーしました';
+    setTimeout(() => { btn.textContent = 'コピー'; }, 1500);
+  });
+}
+
+function exportIssueCsv() {
+  if (processedIssues.length === 0) return;
+
+  const bom = '\uFEFF';
+  let csv = bom + '番号,タイトル,ラベル,アサイン,最終更新,放置日数,スコア\n';
+
+  processedIssues.forEach(i => {
+    csv += [
+      i.number,
+      quoteCsv(i.title),
+      quoteCsv(i.labels.join('; ')),
+      quoteCsv(i.assignees.join('; ') || 'なし'),
+      formatDate(i.updatedAt),
+      i.daysSinceUpdate,
+      i.scoreLabel
+    ].join(',') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `issue-audit-${formatDateFile(new Date())}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function quoteCsv(val) {
+  const s = String(val);
+  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function formatDate(date) {
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function formatDateFile(date) {
+  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+</script>
+</body>
+</html>

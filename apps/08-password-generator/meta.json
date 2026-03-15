@@ -1,0 +1,9 @@
+{
+  "id": "08-password-generator",
+  "name": "パスワード生成・強度チェック",
+  "category": "security",
+  "description": "zxcvbnによるリアルタイム強度判定とカスタマイズ可能なパスワード生成。",
+  "usesAI": false,
+  "libraries": ["zxcvbn"],
+  "author": "AI駆動開発デモ"
+}

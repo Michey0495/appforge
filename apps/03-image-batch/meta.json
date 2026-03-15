@@ -1,0 +1,9 @@
+{
+  "id": "03-image-batch",
+  "name": "画像一括変換ツール",
+  "category": "image",
+  "description": "複数画像をドラッグ&ドロップで一括リサイズ、フォーマット変換、圧縮。ブラウザ内で完結する。",
+  "usesAI": false,
+  "libraries": ["Canvas API"],
+  "author": "AI駆動開発デモ"
+}

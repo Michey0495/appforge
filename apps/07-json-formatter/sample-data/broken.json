@@ -1,0 +1,26 @@
+// このJSONには3つの構文エラーが含まれています（テスト用）
+// エラー1: 5行目 - "email" の後にカンマが欠落
+// エラー2: 15行目 - 配列の閉じ括弧 ] が欠落
+// エラー3: 20行目 - 末尾カンマ（trailing comma）
+{
+  "user": {
+    "name": "テスト太郎",
+    "age": 30
+    "email": "test@example.co.jp",
+    "department": "開発部"
+  },
+  "settings": {
+    "theme": "dark",
+    "notifications": [
+      "email",
+      "slack",
+      "sms"
+    ,
+    "language": "ja",
+    "timezone": "Asia/Tokyo",
+    "features": {
+      "beta": true,
+      "experimental": false,
+    }
+  }
+}
