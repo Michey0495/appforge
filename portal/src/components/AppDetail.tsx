@@ -92,6 +92,15 @@ export function AppDetail({ app }: AppDetailProps) {
         </a>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <InfoBlock label="対象ユーザー">
+          <span className="text-[13px] text-gray-600">{app.targetAudience}</span>
+        </InfoBlock>
+        <InfoBlock label="効率化見込み">
+          <span className="text-[13px] text-gray-600">{app.timeSaved}</span>
+        </InfoBlock>
+      </div>
+
       <div className="grid grid-cols-3 gap-3 mb-10">
         <InfoBlock label="Libraries">
           <div className="flex flex-wrap gap-1">

@@ -25,6 +25,8 @@ export interface AppInfo {
   techLibraries: string[]
   stacks: TechStack[]
   folderName: string
+  targetAudience: string
+  timeSaved: string
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {
@@ -68,6 +70,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['pdf.js', 'Anthropic API'],
     stacks: ['nextjs', 'html', 'react-vite'],
     folderName: '01-pdf-compare',
+    targetAudience: '契約書・規約の改訂を扱う法務・総務担当',
+    timeSaved: '目視比較 約2時間 → 数分に短縮',
   },
   {
     id: '02-csv-visualizer',
@@ -86,6 +90,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['PapaParse', 'Chart.js'],
     stacks: ['nextjs', 'html', 'react-vite'],
     folderName: '02-csv-visualizer',
+    targetAudience: '売上・在庫データを扱う営業企画・経営管理',
+    timeSaved: 'Excel手作業グラフ 約1時間 → 5分に短縮',
   },
   {
     id: '03-image-batch',
@@ -104,6 +110,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Canvas API', 'JSZip'],
     stacks: ['nextjs', 'html', 'react-vite'],
     folderName: '03-image-batch',
+    targetAudience: 'ECサイト運営・Web更新担当・広報',
+    timeSaved: '画像100枚の手動変換 約3時間 → 3分に短縮',
   },
   {
     id: '04-text-summarizer',
@@ -122,6 +130,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API'],
     stacks: ['nextjs', 'html', 'react-vite'],
     folderName: '04-text-summarizer',
+    targetAudience: '長文レポートを読む管理職・リサーチャー',
+    timeSaved: '10ページの報告書読解 約40分 → 3分に短縮',
   },
   {
     id: '05-qr-generator',
@@ -140,6 +150,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['qrcode.js', 'JSZip'],
     stacks: ['nextjs', 'html', 'react-vite'],
     folderName: '05-qr-generator',
+    targetAudience: 'イベント運営・マーケティング・店舗スタッフ',
+    timeSaved: 'URL50件分のQR作成 約1時間 → 2分に短縮',
   },
 
   // --- 新規10アプリ（企業ニーズ特化） ---
@@ -160,6 +172,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API'],
     stacks: ['html'],
     folderName: '06-meeting-minutes',
+    targetAudience: '会議が多い中間管理職・PMO・秘書',
+    timeSaved: '議事録整形 約30分/件 → 2分に短縮',
   },
   {
     id: '07-json-formatter',
@@ -178,6 +192,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Vanilla JS'],
     stacks: ['html'],
     folderName: '07-json-formatter',
+    targetAudience: 'API開発者・QAエンジニア・バックエンド担当',
+    timeSaved: 'JSONデバッグ 約15分/回 → 1分に短縮',
   },
   {
     id: '08-password-generator',
@@ -196,6 +212,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['zxcvbn (CDN)'],
     stacks: ['html'],
     folderName: '08-password-generator',
+    targetAudience: '情報システム部・セキュリティ研修の受講者',
+    timeSaved: 'パスワード評価・生成 約10分 → 30秒に短縮',
   },
   {
     id: '09-markdown-editor',
@@ -214,6 +232,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['marked', 'highlight.js'],
     stacks: ['html'],
     folderName: '09-markdown-editor',
+    targetAudience: 'ドキュメントを書く開発者・テクニカルライター',
+    timeSaved: 'Markdown確認サイクル 約20分 → リアルタイム化',
   },
   {
     id: '10-color-palette',
@@ -232,6 +252,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Canvas API'],
     stacks: ['html'],
     folderName: '10-color-palette',
+    targetAudience: 'UIデザイナー・プレゼン資料を作る企画担当',
+    timeSaved: '配色検討 約30分 → 5分に短縮',
   },
   {
     id: '11-regex-tester',
@@ -250,6 +272,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Vanilla JS'],
     stacks: ['html'],
     folderName: '11-regex-tester',
+    targetAudience: 'データ抽出・バリデーション実装をする開発者',
+    timeSaved: '正規表現の試行錯誤 約20分 → 3分に短縮',
   },
   {
     id: '12-api-mock',
@@ -268,6 +292,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Service Worker API'],
     stacks: ['html'],
     folderName: '12-api-mock',
+    targetAudience: 'フロントエンド開発者・モバイルアプリ開発者',
+    timeSaved: 'バックエンド待ち 数時間〜数日 → 即座にゼロ化',
   },
   {
     id: '13-diff-checker',
@@ -286,6 +312,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['diff (CDN)'],
     stacks: ['html'],
     folderName: '13-diff-checker',
+    targetAudience: '仕様書・契約書の変更を確認する法務・品質管理',
+    timeSaved: '目視差分チェック 約1時間 → 数秒に短縮',
   },
   {
     id: '14-prompt-builder',
@@ -304,6 +332,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Vanilla JS'],
     stacks: ['html'],
     folderName: '14-prompt-builder',
+    targetAudience: '生成AI活用を始めた全社員・AI推進担当',
+    timeSaved: 'プロンプト試行錯誤 約20分 → 5分に短縮',
   },
   {
     id: '15-gantt-chart',
@@ -322,6 +352,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Canvas API'],
     stacks: ['html'],
     folderName: '15-gantt-chart',
+    targetAudience: 'プロジェクトマネージャー・チームリーダー',
+    timeSaved: 'ガントチャート作成 約1時間 → 10分に短縮',
   },
 
   // --- 追加5アプリ ---
@@ -342,6 +374,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Vanilla JS', 'CSS Print'],
     stacks: ['html'],
     folderName: '16-invoice-generator',
+    targetAudience: 'フリーランス・小規模事業の経理担当',
+    timeSaved: '見積書作成 約30分/件 → 5分に短縮',
   },
   {
     id: '17-data-cleansing',
@@ -360,6 +394,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['PapaParse'],
     stacks: ['html'],
     folderName: '17-data-cleansing',
+    targetAudience: 'データ分析の前処理を行うアナリスト・DX推進',
+    timeSaved: 'CSV手動クレンジング 約2時間 → 10分に短縮',
   },
   {
     id: '18-cron-builder',
@@ -378,6 +414,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Vanilla JS'],
     stacks: ['html'],
     folderName: '18-cron-builder',
+    targetAudience: 'バッチ処理を設定するインフラ・SRE担当',
+    timeSaved: 'Cron式の調査・検証 約15分 → 1分に短縮',
   },
   {
     id: '19-format-converter',
@@ -396,6 +434,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['js-yaml (CDN)', 'PapaParse'],
     stacks: ['html'],
     folderName: '19-format-converter',
+    targetAudience: '異なるシステム間のデータ連携を行う担当者',
+    timeSaved: '手動フォーマット変換 約20分 → 1分に短縮',
   },
   {
     id: '20-daily-report',
@@ -414,6 +454,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API'],
     stacks: ['html'],
     folderName: '20-daily-report',
+    targetAudience: '日報提出が義務の営業職・現場作業員',
+    timeSaved: '日報作成 約20分/日 → 3分に短縮',
   },
 
   // --- ニッチ特化 + Chrome拡張 + スクリプト ---
@@ -434,6 +476,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API (Vision)'],
     stacks: ['html', 'chrome-ext'],
     folderName: '21-namecard-ocr',
+    targetAudience: '展示会・セミナーで名刺を大量に受け取る営業',
+    timeSaved: '名刺100枚の手入力 約3時間 → 10分に短縮',
   },
   {
     id: '22-slack-emoji-stats',
@@ -452,6 +496,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Slack API', 'Node.js'],
     stacks: ['html', 'script'],
     folderName: '22-slack-emoji-stats',
+    targetAudience: 'Slackワークスペースの管理者・組織文化担当',
+    timeSaved: 'リアクション手動集計 約1時間 → 1分に短縮',
   },
   {
     id: '23-meet-timestamp',
@@ -470,6 +516,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Chrome Extension API', 'Content Script'],
     stacks: ['chrome-ext'],
     folderName: '23-meet-timestamp',
+    targetAudience: 'オンライン会議の議事録を取る書記・アシスタント',
+    timeSaved: 'タイムスタンプ手動記録 → 完全自動化',
   },
   {
     id: '24-receipt-reader',
@@ -488,6 +536,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API (Vision)'],
     stacks: ['html'],
     folderName: '24-receipt-reader',
+    targetAudience: '経費精算が毎月ある外回り営業・出張の多い社員',
+    timeSaved: 'レシート30枚の手入力 約1.5時間 → 10分に短縮',
   },
   {
     id: '25-interview-questions',
@@ -506,6 +556,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API'],
     stacks: ['html'],
     folderName: '25-interview-questions',
+    targetAudience: '採用面接を担当する人事・部門マネージャー',
+    timeSaved: '面接質問の準備 約1時間 → 5分に短縮',
   },
   {
     id: '26-glossary-builder',
@@ -524,6 +576,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Vanilla JS'],
     stacks: ['html'],
     folderName: '26-glossary-builder',
+    targetAudience: '新入社員教育を行う人事・部門トレーナー',
+    timeSaved: '用語集Excel管理 → 検索・共有が即時化',
   },
   {
     id: '27-github-issue-audit',
@@ -542,6 +596,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['GitHub API', 'Node.js'],
     stacks: ['html', 'script'],
     folderName: '27-github-issue-audit',
+    targetAudience: 'OSSメンテナー・開発チームのスクラムマスター',
+    timeSaved: 'イシュー棚卸し 約2時間/月 → 5分に短縮',
   },
   {
     id: '28-ringi-draft',
@@ -560,6 +616,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Anthropic API'],
     stacks: ['html'],
     folderName: '28-ringi-draft',
+    targetAudience: '購買・設備投資の稟議を起案する部門担当',
+    timeSaved: '稟議書ドラフト作成 約1時間 → 5分に短縮',
   },
   {
     id: '29-perf-checker',
@@ -578,6 +636,8 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['Performance API', 'Chrome Extension API'],
     stacks: ['chrome-ext'],
     folderName: '29-perf-checker',
+    targetAudience: 'Webパフォーマンス改善を担当するフロントエンド開発者',
+    timeSaved: 'Lighthouse手動実行+分析 約15分 → 即時化',
   },
   {
     id: '30-kintai-formatter',
@@ -596,5 +656,7 @@ export const apps: readonly AppInfo[] = [
     techLibraries: ['PapaParse'],
     stacks: ['html'],
     folderName: '30-kintai-formatter',
+    targetAudience: '勤怠データを毎月変換する人事・労務担当',
+    timeSaved: '月次CSV手動変換 約1時間 → 1クリックに短縮',
   },
 ] as const
