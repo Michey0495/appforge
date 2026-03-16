@@ -32,7 +32,7 @@ export function Home() {
       </div>
 
       {filtered.length === 0 && (
-        <p className="text-center text-gray-300 py-20 text-sm">
+        <p className="text-center text-gray-400 py-20 text-sm">
           該当するアプリがありません
         </p>
       )}

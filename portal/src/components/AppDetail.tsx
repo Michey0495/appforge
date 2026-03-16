@@ -59,21 +59,21 @@ export function AppDetail({ app }: AppDetailProps) {
     <div className="max-w-3xl mx-auto">
       <Link
         to="/"
-        className="inline-block text-[12px] text-gray-300 hover:text-navy-600 transition-colors mb-10"
+        className="inline-block text-[12px] text-gray-400 hover:text-gray-600 transition-colors mb-10"
       >
         Back
       </Link>
 
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-[13px] font-mono text-gray-300 tabular-nums">
+          <span className="text-[13px] font-mono text-gray-400 tabular-nums">
             {String(app.number).padStart(2, '0')}
           </span>
-          <span className="text-[10px] font-medium text-gray-300 tracking-wider uppercase">
+          <span className="text-[10px] font-medium text-gray-400 tracking-wider uppercase">
             {app.categoryLabel}
           </span>
           {app.usesAI && (
-            <span className="text-[10px] font-medium px-1.5 py-0.5 bg-navy-50 text-navy-600 rounded-sm">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-sm">
               AI
             </span>
           )}
@@ -86,7 +86,7 @@ export function AppDetail({ app }: AppDetailProps) {
           href={`/apps/${app.folderName}/html/index.html`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block px-5 py-2.5 text-[13px] font-medium bg-navy-800 text-white rounded-sm hover:bg-navy-600 transition-colors"
+          className="inline-block px-5 py-2.5 text-[13px] font-medium bg-gray-800 text-white rounded-sm hover:bg-navy-600 transition-colors"
         >
           アプリを開く
         </a>
@@ -122,7 +122,7 @@ export function AppDetail({ app }: AppDetailProps) {
         <ul className="space-y-1.5">
           {app.features.map((feat) => (
             <li key={feat} className="text-[13px] text-gray-500 flex items-start gap-2">
-              <span className="text-gray-300 mt-px">-</span>
+              <span className="text-gray-400 mt-px">-</span>
               {feat}
             </li>
           ))}
@@ -146,7 +146,7 @@ export function AppDetail({ app }: AppDetailProps) {
             <span className="text-[13px] font-medium text-gray-700">
               {STACK_LABELS[activeStack]}
             </span>
-            <code className="text-[11px] text-gray-300 font-mono">
+            <code className="text-[11px] text-gray-400 font-mono">
               apps/{app.folderName}/{activeStack}/
             </code>
           </div>
@@ -173,7 +173,7 @@ export function AppDetail({ app }: AppDetailProps) {
                 <a
                   href={`/apps/${app.folderName}/sample-data/${file.name}`}
                   download={file.name}
-                  className="flex-shrink-0 px-3 py-1.5 text-[11px] font-medium text-navy-600 border border-navy-200 rounded-sm hover:bg-navy-50 transition-colors"
+                  className="flex-shrink-0 px-3 py-1.5 text-[11px] font-medium text-gray-600 border border-gray-200 rounded-sm hover:bg-gray-50 transition-colors"
                 >
                   DL
                 </a>
@@ -226,7 +226,7 @@ export function AppDetail({ app }: AppDetailProps) {
           <SectionLabel>Prompt</SectionLabel>
           <button
             onClick={handleCopy}
-            className="text-[11px] text-gray-300 hover:text-navy-600 transition-colors"
+            className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
           >
             {copied ? 'Copied' : 'Copy'}
           </button>
@@ -247,7 +247,7 @@ export function AppDetail({ app }: AppDetailProps) {
                   className={[
                     'px-3 py-1.5 text-[11px] font-medium rounded-sm border transition-all',
                     active
-                      ? 'bg-navy-800 text-white border-navy-800'
+                      ? 'bg-gray-800 text-white border-gray-800'
                       : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-500',
                   ].join(' ')}
                 >
@@ -268,7 +268,7 @@ export function AppDetail({ app }: AppDetailProps) {
 
 function StepNumber({ n }: { n: number }) {
   return (
-    <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-[11px] font-medium text-navy-600 bg-navy-50 rounded-sm">
+    <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center text-[11px] font-medium text-gray-600 bg-gray-100 rounded-sm">
       {n}
     </span>
   )
@@ -277,7 +277,7 @@ function StepNumber({ n }: { n: number }) {
 function InfoBlock({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="border border-gray-100 rounded-sm p-4">
-      <span className="block text-[10px] font-medium text-gray-300 tracking-wider uppercase mb-2">
+      <span className="block text-[10px] font-medium text-gray-400 tracking-wider uppercase mb-2">
         {label}
       </span>
       {children}
@@ -287,7 +287,7 @@ function InfoBlock({ label, children }: { label: string; children: React.ReactNo
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[11px] font-medium text-gray-300 tracking-wider uppercase mb-3">
+    <h2 className="text-[11px] font-medium text-gray-400 tracking-wider uppercase mb-3">
       {children}
     </h2>
   )
