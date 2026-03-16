@@ -94,6 +94,7 @@
     justify-content: center;
   }
 
+  /* デモパネル */
   .demo-panel {
     border: 1px solid #e5e7eb;
     border-radius: 2px;
@@ -106,17 +107,33 @@
     padding: 8px 12px;
     border-bottom: 1px solid #f3f4f6;
     background: #f8f9fb;
+    gap: 8px;
   }
   .demo-title {
     font-weight: 600;
     font-size: 12px;
-    flex: 1;
   }
+  .demo-title-input {
+    font-weight: 600;
+    font-size: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: inherit;
+    color: #1a1a2e;
+    outline: none;
+    width: 140px;
+  }
+  .demo-title-input:hover { border-color: #e5e7eb; }
+  .demo-title-input:focus { border-color: #1e3461; background: #ffffff; }
+  .demo-spacer { flex: 1; }
   .demo-elapsed {
-    font-size: 10px;
-    color: #9ca3af;
-    margin-right: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e3461;
     font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
   }
   .demo-collapse {
     background: none;
@@ -134,23 +151,32 @@
   .demo-body { padding: 8px; }
   .demo-textarea {
     width: 100%;
-    height: 180px;
+    height: 280px;
     border: 1px solid #e5e7eb;
     border-radius: 2px;
-    padding: 8px;
+    padding: 10px 12px;
     font-family: inherit;
-    font-size: 12px;
-    line-height: 1.7;
+    font-size: 13px;
+    line-height: 1.8;
     color: #1a1a2e;
     resize: vertical;
     outline: none;
   }
   .demo-textarea:focus { border-color: #1e3461; }
+
   .demo-toolbar {
     display: flex;
     gap: 4px;
     margin-top: 6px;
     flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: #e5e7eb;
+    margin: 0 4px;
   }
 
   .btn {
@@ -166,6 +192,7 @@
     white-space: nowrap;
   }
   .btn:hover { background: #2e4f87; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .btn-outline {
     background: transparent;
@@ -174,6 +201,20 @@
   }
   .btn-outline:hover { background: #f3f4f6; }
 
+  .btn-danger {
+    background: transparent;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+  .btn-danger:hover { background: #fef2f2; }
+
+  .btn-active {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
+  }
+  .btn-active:hover { background: #047857; }
+
   .code-inline {
     background: #f3f4f6;
     padding: 2px 6px;
@@ -181,13 +222,47 @@
     font-family: 'SF Mono', 'Consolas', monospace;
     font-size: 11px;
   }
+
+  /* 通知トースト */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* 保存状態 */
+  .save-indicator {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-left: 4px;
+  }
+
+  .shortcut-hint {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
     <div class="header-title">Meet議事録タイムスタンプ</div>
-    <div class="header-subtitle">Chrome拡張 - Google Meet画面上にフローティングメモ帳を表示</div>
+    <div class="header-subtitle">Chrome拡張 / スタンドアロンメモ帳 - タイマー付き議事録ツール</div>
   </div>
 
   <div class="section">
@@ -195,7 +270,7 @@
     <div class="feature-grid">
       <div class="feature-card">
         <div class="feature-card-title">タイムスタンプ挿入</div>
-        <div class="feature-card-desc">ワンクリックで [HH:MM:SS] 形式のタイムスタンプをカーソル位置に挿入。会議開始からの経過時間を自動計算する。</div>
+        <div class="feature-card-desc">ワンクリックまたはショートカットキーで [HH:MM:SS] 形式のタイムスタンプをカーソル位置に挿入。経過時間を自動計算する。</div>
       </div>
       <div class="feature-card">
         <div class="feature-card-title">自動保存</div>
@@ -206,14 +281,14 @@
         <div class="feature-card-desc">タイムスタンプをボールド表記したMarkdownリスト形式でクリップボードにコピーできる。</div>
       </div>
       <div class="feature-card">
-        <div class="feature-card-title">ドラッグ移動</div>
-        <div class="feature-card-desc">ヘッダー部分をドラッグして画面上の任意の位置に配置。折りたたみにも対応。</div>
+        <div class="feature-card-title">タイマー制御</div>
+        <div class="feature-card-desc">開始/一時停止/リセットの操作が可能。会議の中断にも対応できる。</div>
       </div>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">インストール手順</div>
+    <div class="section-title">Chrome拡張としてのインストール手順</div>
     <ol class="install-steps">
       <li><span class="code-inline">chrome-ext</span> フォルダをダウンロードする</li>
       <li>Chromeで <span class="code-inline">chrome://extensions</span> を開く</li>
@@ -225,69 +300,210 @@
   </div>
 
   <div class="section">
-    <div class="section-title">動作デモ</div>
-    <p>以下は拡張機能と同等のメモ帳UIです。実際の操作感を確認できます。</p>
+    <div class="section-title">スタンドアロン議事録メモ帳</div>
+    <p>以下は拡張機能と同等のメモ帳UIです。このページ単独でも議事録ツールとして使えます。</p>
     <div class="demo-panel">
       <div class="demo-header">
-        <span class="demo-title">議事録</span>
+        <input class="demo-title-input" id="demoTitleInput" value="議事録" />
+        <span class="save-indicator" id="saveIndicator"></span>
+        <span class="demo-spacer"></span>
         <span class="demo-elapsed" id="demoElapsed">00:00:00</span>
-        <button class="demo-collapse" id="demoCollapse">-</button>
+        <button class="demo-collapse" id="demoCollapse" title="折りたたみ">-</button>
       </div>
       <div class="demo-body" id="demoBody">
-        <textarea class="demo-textarea" id="demoTextarea" placeholder="ここにメモを入力..."></textarea>
+        <textarea class="demo-textarea" id="demoTextarea" placeholder="ここにメモを入力...&#10;&#10;Ctrl+Shift+T でタイムスタンプを挿入"></textarea>
         <div class="demo-toolbar">
-          <button class="btn" id="demoStamp">タイムスタンプ</button>
-          <button class="btn btn-outline" id="demoCopy">コピー</button>
-          <button class="btn btn-outline" id="demoMd">Markdownでコピー</button>
+          <button class="btn btn-active" id="btnStartPause">開始</button>
+          <button class="btn btn-outline" id="btnReset">リセット</button>
+          <span class="toolbar-divider"></span>
+          <button class="btn" id="demoStamp" disabled>タイムスタンプ挿入</button>
+          <span class="toolbar-divider"></span>
+          <button class="btn btn-outline" id="demoCopy">テキストコピー</button>
+          <button class="btn btn-outline" id="demoMd">Markdownコピー</button>
+          <span class="toolbar-divider"></span>
+          <button class="btn btn-danger" id="demoClear">クリア</button>
         </div>
+        <div class="shortcut-hint">ショートカット: Ctrl+Shift+T = タイムスタンプ挿入 / Ctrl+Shift+S = テキストコピー</div>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-  const demoStart = Date.now();
-  const textarea = document.getElementById('demoTextarea');
+<!-- トースト通知 -->
+<div class="toast" id="toast"></div>
 
-  // 経過時間
-  setInterval(() => {
-    const diff = Date.now() - demoStart;
-    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
-    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-    document.getElementById('demoElapsed').textContent = `${h}:${m}:${s}`;
-  }, 1000);
+<script>
+  // 状態管理
+  let timerRunning = false;
+  let elapsedMs = 0;
+  let timerStartedAt = null;
+  let timerInterval = null;
+  let saveTimeout = null;
+
+  // DOM要素
+  const textarea = document.getElementById('demoTextarea');
+  const elapsedEl = document.getElementById('demoElapsed');
+  const btnStartPause = document.getElementById('btnStartPause');
+  const btnReset = document.getElementById('btnReset');
+  const stampBtn = document.getElementById('demoStamp');
+  const titleInput = document.getElementById('demoTitleInput');
+  const saveIndicator = document.getElementById('saveIndicator');
+
+  // localStorageから復元
+  restoreState();
+
+  // 経過時間のフォーマット
+  function formatElapsed(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+    const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+    const s = String(totalSec % 60).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
+
+  // タイマー表示の更新
+  function updateTimerDisplay() {
+    let currentElapsed = elapsedMs;
+    if (timerRunning && timerStartedAt) {
+      currentElapsed += Date.now() - timerStartedAt;
+    }
+    elapsedEl.textContent = formatElapsed(currentElapsed);
+  }
+
+  // 現在の累積経過時間を返す
+  function getCurrentElapsed() {
+    let currentElapsed = elapsedMs;
+    if (timerRunning && timerStartedAt) {
+      currentElapsed += Date.now() - timerStartedAt;
+    }
+    return currentElapsed;
+  }
+
+  // タイマー開始
+  function startTimer() {
+    timerRunning = true;
+    timerStartedAt = Date.now();
+    timerInterval = setInterval(updateTimerDisplay, 200);
+    btnStartPause.textContent = '一時停止';
+    btnStartPause.classList.remove('btn-active');
+    btnStartPause.classList.add('btn-outline');
+    stampBtn.disabled = false;
+    saveState();
+  }
+
+  // タイマー一時停止
+  function pauseTimer() {
+    if (timerStartedAt) {
+      elapsedMs += Date.now() - timerStartedAt;
+    }
+    timerRunning = false;
+    timerStartedAt = null;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    btnStartPause.textContent = '再開';
+    btnStartPause.classList.add('btn-active');
+    btnStartPause.classList.remove('btn-outline');
+    updateTimerDisplay();
+    saveState();
+  }
+
+  // タイマーリセット
+  function resetTimer() {
+    timerRunning = false;
+    timerStartedAt = null;
+    elapsedMs = 0;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    btnStartPause.textContent = '開始';
+    btnStartPause.classList.add('btn-active');
+    btnStartPause.classList.remove('btn-outline');
+    stampBtn.disabled = true;
+    updateTimerDisplay();
+    saveState();
+  }
+
+  // 開始/一時停止ボタン
+  btnStartPause.addEventListener('click', () => {
+    if (timerRunning) {
+      pauseTimer();
+    } else {
+      startTimer();
+    }
+  });
+
+  // リセットボタン
+  btnReset.addEventListener('click', () => {
+    if (elapsedMs === 0 && !timerRunning) return;
+    resetTimer();
+    showToast('タイマーをリセットしました');
+  });
 
   // タイムスタンプ挿入
-  document.getElementById('demoStamp').addEventListener('click', () => {
-    const diff = Date.now() - demoStart;
-    const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
-    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-    const stamp = `[${h}:${m}:${s}] `;
+  function insertTimestamp() {
+    if (!timerRunning && elapsedMs === 0) return;
+    const stamp = `[${formatElapsed(getCurrentElapsed())}] `;
     const pos = textarea.selectionStart;
     const before = textarea.value.substring(0, pos);
     const after = textarea.value.substring(pos);
     textarea.value = before + stamp + after;
     textarea.selectionStart = textarea.selectionEnd = pos + stamp.length;
     textarea.focus();
-  });
+    debounceSave();
+  }
 
-  // コピー
+  stampBtn.addEventListener('click', insertTimestamp);
+
+  // テキストコピー
   document.getElementById('demoCopy').addEventListener('click', () => {
-    navigator.clipboard.writeText(textarea.value);
+    if (!textarea.value.trim()) {
+      showToast('コピーする内容がありません');
+      return;
+    }
+    navigator.clipboard.writeText(textarea.value).then(() => {
+      showToast('クリップボードにコピーしました');
+    }).catch(() => {
+      textarea.select();
+      document.execCommand('copy');
+      showToast('クリップボードにコピーしました');
+    });
   });
 
   // Markdownコピー
   document.getElementById('demoMd').addEventListener('click', () => {
+    if (!textarea.value.trim()) {
+      showToast('コピーする内容がありません');
+      return;
+    }
+    const title = titleInput.value.trim() || '議事録';
     const lines = textarea.value.split('\n');
-    const md = lines.map((line) => {
+    let md = `# ${title}\n\n`;
+    md += lines.map((line) => {
       const tsMatch = line.match(/^\[(\d{2}:\d{2}:\d{2})\]\s*(.*)/);
       if (tsMatch) return `- **${tsMatch[1]}** ${tsMatch[2]}`;
       if (line.trim() === '') return '';
       return `- ${line}`;
-    }).join('\n');
-    navigator.clipboard.writeText(md);
+    }).filter((l) => l !== '').join('\n');
+
+    navigator.clipboard.writeText(md).then(() => {
+      showToast('Markdown形式でコピーしました');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = md;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Markdown形式でコピーしました');
+    });
+  });
+
+  // クリアボタン
+  document.getElementById('demoClear').addEventListener('click', () => {
+    if (!textarea.value.trim()) return;
+    if (!confirm('メモの内容をクリアしますか?')) return;
+    textarea.value = '';
+    debounceSave();
+    showToast('メモをクリアしました');
   });
 
   // 折りたたみ
@@ -297,6 +513,86 @@
     document.getElementById('demoBody').style.display = collapsed ? 'none' : '';
     document.getElementById('demoCollapse').textContent = collapsed ? '+' : '-';
   });
+
+  // ショートカットキー
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+Shift+T: タイムスタンプ挿入
+    if (e.ctrlKey && e.shiftKey && e.key === 'T') {
+      e.preventDefault();
+      insertTimestamp();
+    }
+    // Ctrl+Shift+S: テキストコピー
+    if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      document.getElementById('demoCopy').click();
+    }
+  });
+
+  // 自動保存（入力のたびにdebounceで保存）
+  textarea.addEventListener('input', debounceSave);
+  titleInput.addEventListener('input', debounceSave);
+
+  function debounceSave() {
+    saveIndicator.textContent = '';
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      saveState();
+      saveIndicator.textContent = '保存済み';
+      setTimeout(() => { saveIndicator.textContent = ''; }, 2000);
+    }, 500);
+  }
+
+  // 状態をlocalStorageに保存
+  function saveState() {
+    const state = {
+      text: textarea.value,
+      title: titleInput.value,
+      elapsedMs: getCurrentElapsed(),
+      timerRunning: timerRunning,
+      savedAt: Date.now()
+    };
+    localStorage.setItem('meet_timestamp_state', JSON.stringify(state));
+  }
+
+  // 状態を復元
+  function restoreState() {
+    try {
+      const raw = localStorage.getItem('meet_timestamp_state');
+      if (!raw) return;
+      const state = JSON.parse(raw);
+
+      if (state.text) textarea.value = state.text;
+      if (state.title) titleInput.value = state.title;
+
+      if (state.elapsedMs > 0) {
+        elapsedMs = state.elapsedMs;
+
+        // タイマーが動作中だったなら経過分を加算して再開
+        if (state.timerRunning && state.savedAt) {
+          const additionalMs = Date.now() - state.savedAt;
+          elapsedMs += additionalMs;
+          startTimer();
+        } else {
+          // 一時停止状態で復元
+          btnStartPause.textContent = '再開';
+          btnStartPause.classList.add('btn-active');
+          btnStartPause.classList.remove('btn-outline');
+          stampBtn.disabled = false;
+        }
+        updateTimerDisplay();
+      }
+    } catch (e) {
+      // 復元に失敗しても何もしない
+    }
+  }
+
+  // トースト通知
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    setTimeout(() => toast.classList.remove('visible'), 2000);
+  }
 </script>
 </body>
 </html>

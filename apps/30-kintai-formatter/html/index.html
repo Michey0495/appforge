@@ -84,6 +84,8 @@
   .btn-primary:hover { background: #2e4f87; }
   .btn-secondary { background: #f3f4f6; color: #1a1a2e; border: 1px solid #e5e7eb; }
   .btn-secondary:hover { background: #e5e7eb; }
+  .btn-danger { background: transparent; color: #dc2626; border: 1px solid #fecaca; }
+  .btn-danger:hover { background: #fef2f2; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn-sm { padding: 4px 10px; font-size: 11px; }
   .btn-lg { padding: 10px 24px; font-size: 13px; }
@@ -153,13 +155,17 @@
     white-space: nowrap;
   }
   tr:hover { background: #fafbfc; }
+  td.cell-changed {
+    background: #eff6ff;
+    font-weight: 500;
+  }
 
   /* マッピング */
   .mapping-list { display: flex; flex-direction: column; gap: 8px; }
 
   .mapping-row {
     display: grid;
-    grid-template-columns: 160px 24px 180px 140px 160px;
+    grid-template-columns: 160px 24px 180px 140px 160px auto;
     gap: 8px;
     align-items: center;
     padding: 8px 12px;
@@ -179,6 +185,18 @@
     white-space: nowrap;
   }
 
+  .mapping-exclude {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #9ca3af;
+  }
+  .mapping-exclude input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+  }
+
   /* ルール保存 */
   .rule-bar {
     display: flex;
@@ -188,6 +206,21 @@
     align-items: center;
   }
   .rule-bar select { width: auto; min-width: 200px; }
+
+  /* 統計 */
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    padding: 12px 16px;
+    background: #fafbfc;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .stat-item { display: flex; flex-direction: column; gap: 2px; }
+  .stat-value { font-size: 14px; font-weight: 600; color: #1e3461; }
+  .stat-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
 
   /* アクション */
   .action-bar {
@@ -234,6 +267,22 @@
     margin-bottom: 16px;
     display: none;
   }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 20px;
+    background: #1e3461;
+    color: #ffffff;
+    font-size: 12px;
+    border-radius: 2px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 100;
+  }
+  .toast.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -254,10 +303,14 @@
     <div class="drop-zone-filename" id="fileName"></div>
     <input type="file" id="fileInput" accept=".csv">
   </div>
+  <div style="text-align:center; margin-top:-16px; margin-bottom:24px;">
+    <button class="btn btn-secondary" onclick="loadSampleData()">サンプルデータで試す</button>
+  </div>
 
   <!-- 入力プレビュー -->
   <div class="section" id="previewSection">
     <div class="section-title">入力CSVプレビュー（先頭10行）</div>
+    <div class="stats-bar" id="inputStats"></div>
     <div class="table-wrap" id="inputPreview"></div>
   </div>
 
@@ -271,19 +324,22 @@
       </select>
       <button class="btn btn-secondary btn-sm" onclick="loadRule()">読み込む</button>
       <button class="btn btn-secondary btn-sm" onclick="saveRule()">現在のルールを保存</button>
-      <button class="btn btn-secondary btn-sm" onclick="deleteRule()">削除</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteRule()">削除</button>
     </div>
 
     <div class="mapping-list" id="mappingList"></div>
 
     <div class="action-bar">
       <button class="btn btn-primary btn-lg" onclick="executeTransform()">変換実行</button>
+      <button class="btn btn-secondary" onclick="resetMapping()">リセット</button>
     </div>
   </div>
 
   <!-- 変換結果 -->
   <div class="section" id="resultSection">
     <div class="section-title">変換結果</div>
+
+    <div class="stats-bar" id="outputStats"></div>
 
     <div class="preview-comparison">
       <div class="preview-panel">
@@ -298,38 +354,53 @@
 
     <div class="action-bar">
       <button class="btn btn-primary" onclick="downloadCsv()">CSVダウンロード</button>
+      <button class="btn btn-secondary" onclick="copyPreview()">プレビューをコピー</button>
     </div>
   </div>
 </div>
 
-<script>
-const RULES_STORAGE_KEY = 'kintai-formatter-rules';
+<!-- トースト通知 -->
+<div class="toast" id="toast"></div>
 
-let parsedData = null;      // { headers: [], rows: [] }
-let transformedData = null; // { headers: [], rows: [] }
+<script>
+var RULES_STORAGE_KEY = 'kintai-formatter-rules';
+
+var parsedData = null;
+var transformedData = null;
+
+// PapaParse CDN読み込みチェック
+function checkPapaParse() {
+  if (typeof Papa === 'undefined') {
+    showError('CSV解析ライブラリ（PapaParse）の読み込みに失敗しました。ネットワーク接続を確認してページを再読み込みしてください。');
+    return false;
+  }
+  return true;
+}
 
 // ドラッグ&ドロップ
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
+var dropZone = document.getElementById('dropZone');
+var fileInput = document.getElementById('fileInput');
 
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-dropZone.addEventListener('drop', (e) => {
+dropZone.addEventListener('click', function() { fileInput.click(); });
+dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', function() { dropZone.classList.remove('dragover'); });
+dropZone.addEventListener('drop', function(e) {
   e.preventDefault();
   dropZone.classList.remove('dragover');
-  const file = e.dataTransfer.files[0];
+  var file = e.dataTransfer.files[0];
   if (file) handleFile(file);
 });
-fileInput.addEventListener('change', (e) => {
+fileInput.addEventListener('change', function(e) {
   if (e.target.files[0]) handleFile(e.target.files[0]);
 });
 
 function handleFile(file) {
-  if (!file.name.endsWith('.csv')) {
+  if (!file.name.toLowerCase().endsWith('.csv')) {
     showError('CSVファイルを選択してください');
     return;
   }
+  if (!checkPapaParse()) return;
+
   hideError();
   document.getElementById('fileName').textContent = file.name;
 
@@ -337,24 +408,25 @@ function handleFile(file) {
     encoding: 'UTF-8',
     skipEmptyLines: true,
     complete: function(results) {
-      if (results.data.length < 2) {
-        showError('CSVにデータがありません');
+      if (!results.data || results.data.length < 2) {
+        showError('CSVにデータがありません（ヘッダー行 + データ行が必要）');
         return;
       }
 
       parsedData = {
         headers: results.data[0],
-        rows: results.data.slice(1)
+        rows: results.data.slice(1).filter(function(row) {
+          return row.some(function(cell) { return cell && cell.trim() !== ''; });
+        })
       };
 
-      renderInputPreview();
-      renderMappingUI();
-      loadSavedRulesList();
+      if (parsedData.rows.length === 0) {
+        showError('CSVにデータ行がありません');
+        return;
+      }
 
-      document.getElementById('previewSection').classList.add('visible');
-      document.getElementById('mappingSection').classList.add('visible');
-      document.getElementById('resultSection').classList.remove('visible');
-      transformedData = null;
+      onDataLoaded();
+      showToast('CSV読み込み完了: ' + parsedData.rows.length + '行');
     },
     error: function(err) {
       showError('CSV解析エラー: ' + err.message);
@@ -362,19 +434,37 @@ function handleFile(file) {
   });
 }
 
-function renderInputPreview() {
-  const maxRows = 10;
-  const rows = parsedData.rows.slice(0, maxRows);
-  document.getElementById('inputPreview').innerHTML = buildTable(parsedData.headers, rows);
+function onDataLoaded() {
+  renderInputPreview();
+  renderMappingUI();
+  loadSavedRulesList();
+
+  document.getElementById('previewSection').classList.add('visible');
+  document.getElementById('mappingSection').classList.add('visible');
+  document.getElementById('resultSection').classList.remove('visible');
+  transformedData = null;
 }
 
-function buildTable(headers, rows) {
-  let html = '<table><thead><tr>';
-  headers.forEach(h => { html += `<th>${escapeHtml(h)}</th>`; });
+function renderInputPreview() {
+  var maxRows = 10;
+  var rows = parsedData.rows.slice(0, maxRows);
+  document.getElementById('inputPreview').innerHTML = buildTable(parsedData.headers, rows);
+
+  document.getElementById('inputStats').innerHTML =
+    '<div class="stat-item"><span class="stat-value">' + parsedData.headers.length + '</span><span class="stat-label">カラム数</span></div>' +
+    '<div class="stat-item"><span class="stat-value">' + parsedData.rows.length + '</span><span class="stat-label">データ行数</span></div>';
+}
+
+function buildTable(headers, rows, changedCols) {
+  var html = '<table><thead><tr>';
+  headers.forEach(function(h) { html += '<th>' + escapeHtml(h) + '</th>'; });
   html += '</tr></thead><tbody>';
-  rows.forEach(row => {
+  rows.forEach(function(row) {
     html += '<tr>';
-    headers.forEach((_, i) => { html += `<td>${escapeHtml(row[i] || '')}</td>`; });
+    headers.forEach(function(_, i) {
+      var cls = changedCols && changedCols[i] ? ' class="cell-changed"' : '';
+      html += '<td' + cls + '>' + escapeHtml(row[i] || '') + '</td>';
+    });
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -383,64 +473,85 @@ function buildTable(headers, rows) {
 
 // カラムマッピングUI
 function renderMappingUI() {
-  const container = document.getElementById('mappingList');
-  container.innerHTML = parsedData.headers.map((header, i) => `
-    <div class="mapping-row" data-index="${i}">
-      <div class="mapping-source" title="${escapeHtml(header)}">${escapeHtml(header)}</div>
-      <div class="mapping-arrow">-></div>
-      <input type="text" class="output-name" value="${escapeHtml(header)}" placeholder="出力カラム名">
-      <select class="transform-type" onchange="onTransformChange(this, ${i})">
-        <option value="none">なし</option>
-        <option value="date">日付変換</option>
-        <option value="time">時刻変換</option>
-        <option value="fixed">固定値</option>
-      </select>
-      <div class="transform-options" id="transformOpts${i}"></div>
-    </div>
-  `).join('');
+  var container = document.getElementById('mappingList');
+  container.innerHTML = parsedData.headers.map(function(header, i) {
+    return '<div class="mapping-row" data-index="' + i + '">' +
+      '<div class="mapping-source" title="' + escapeAttr(header) + '">' + escapeHtml(header) + '</div>' +
+      '<div class="mapping-arrow">-></div>' +
+      '<input type="text" class="output-name" value="' + escapeAttr(header) + '" placeholder="出力カラム名">' +
+      '<select class="transform-type" onchange="onTransformChange(this, ' + i + ')">' +
+        '<option value="none">なし</option>' +
+        '<option value="date">日付変換</option>' +
+        '<option value="time">時刻変換</option>' +
+        '<option value="fixed">固定値</option>' +
+        '<option value="prefix">接頭辞追加</option>' +
+        '<option value="suffix">接尾辞追加</option>' +
+      '</select>' +
+      '<div class="transform-options" id="transformOpts' + i + '"></div>' +
+      '<div class="mapping-exclude"><input type="checkbox" class="exclude-check" id="exclude' + i + '"><label for="exclude' + i + '" style="margin:0;font-size:10px;color:#9ca3af;cursor:pointer;">除外</label></div>' +
+      '</div>';
+  }).join('');
 }
 
 function onTransformChange(selectEl, index) {
-  const type = selectEl.value;
-  const container = document.getElementById(`transformOpts${index}`);
+  var type = selectEl.value;
+  var container = document.getElementById('transformOpts' + index);
 
   if (type === 'date') {
-    container.innerHTML = `
-      <select class="date-format">
-        <option value="YYYY/MM/DD">YYYY/MM/DD</option>
-        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-        <option value="YYYYMMDD">YYYYMMDD</option>
-      </select>`;
+    container.innerHTML =
+      '<select class="date-format">' +
+        '<option value="YYYY/MM/DD">YYYY/MM/DD</option>' +
+        '<option value="YYYY-MM-DD">YYYY-MM-DD</option>' +
+        '<option value="YYYYMMDD">YYYYMMDD</option>' +
+        '<option value="MM/DD/YYYY">MM/DD/YYYY</option>' +
+      '</select>';
   } else if (type === 'time') {
-    container.innerHTML = `
-      <select class="time-format">
-        <option value="HH:MM">HH:MM</option>
-        <option value="decimal">小数時間</option>
-        <option value="HHMM">HHMM</option>
-      </select>`;
+    container.innerHTML =
+      '<select class="time-format">' +
+        '<option value="HH:MM">HH:MM</option>' +
+        '<option value="decimal">小数時間</option>' +
+        '<option value="HHMM">HHMM</option>' +
+      '</select>';
   } else if (type === 'fixed') {
-    container.innerHTML = `<input type="text" class="fixed-value" placeholder="固定値">`;
+    container.innerHTML = '<input type="text" class="fixed-value" placeholder="固定値">';
+  } else if (type === 'prefix') {
+    container.innerHTML = '<input type="text" class="prefix-value" placeholder="接頭辞">';
+  } else if (type === 'suffix') {
+    container.innerHTML = '<input type="text" class="suffix-value" placeholder="接尾辞">';
   } else {
     container.innerHTML = '';
   }
 }
 
+function resetMapping() {
+  if (!parsedData) return;
+  renderMappingUI();
+  showToast('マッピングをリセットしました');
+}
+
 // マッピング設定の取得
 function getMappingConfig() {
-  const rows = document.querySelectorAll('.mapping-row');
-  return Array.from(rows).map((row, i) => {
-    const outputName = row.querySelector('.output-name').value.trim();
-    const transformType = row.querySelector('.transform-type').value;
-    let formatOrValue = '';
+  var rows = document.querySelectorAll('.mapping-row');
+  return Array.from(rows).map(function(row, i) {
+    var outputName = row.querySelector('.output-name').value.trim();
+    var transformType = row.querySelector('.transform-type').value;
+    var excluded = row.querySelector('.exclude-check').checked;
+    var formatOrValue = '';
 
     if (transformType === 'date') {
-      const sel = row.querySelector('.date-format');
+      var sel = row.querySelector('.date-format');
       formatOrValue = sel ? sel.value : '';
     } else if (transformType === 'time') {
-      const sel = row.querySelector('.time-format');
+      var sel = row.querySelector('.time-format');
       formatOrValue = sel ? sel.value : '';
     } else if (transformType === 'fixed') {
-      const input = row.querySelector('.fixed-value');
+      var input = row.querySelector('.fixed-value');
+      formatOrValue = input ? input.value : '';
+    } else if (transformType === 'prefix') {
+      var input = row.querySelector('.prefix-value');
+      formatOrValue = input ? input.value : '';
+    } else if (transformType === 'suffix') {
+      var input = row.querySelector('.suffix-value');
       formatOrValue = input ? input.value : '';
     }
 
@@ -448,34 +559,44 @@ function getMappingConfig() {
       sourceIndex: i,
       sourceHeader: parsedData.headers[i],
       outputName: outputName || parsedData.headers[i],
-      transformType,
-      formatOrValue
+      transformType: transformType,
+      formatOrValue: formatOrValue,
+      excluded: excluded
     };
   });
 }
 
 // マッピング設定の復元
 function applyMappingConfig(config) {
-  const rows = document.querySelectorAll('.mapping-row');
-  config.forEach(cfg => {
-    // sourceHeader名でマッチング
-    const matchIndex = parsedData.headers.indexOf(cfg.sourceHeader);
+  var rows = document.querySelectorAll('.mapping-row');
+  config.forEach(function(cfg) {
+    var matchIndex = parsedData.headers.indexOf(cfg.sourceHeader);
     if (matchIndex === -1 || matchIndex >= rows.length) return;
 
-    const row = rows[matchIndex];
+    var row = rows[matchIndex];
     row.querySelector('.output-name').value = cfg.outputName;
-    const selectEl = row.querySelector('.transform-type');
+    var selectEl = row.querySelector('.transform-type');
     selectEl.value = cfg.transformType;
     onTransformChange(selectEl, matchIndex);
 
+    if (cfg.excluded) {
+      row.querySelector('.exclude-check').checked = true;
+    }
+
     if (cfg.transformType === 'date') {
-      const sel = row.querySelector('.date-format');
+      var sel = row.querySelector('.date-format');
       if (sel) sel.value = cfg.formatOrValue;
     } else if (cfg.transformType === 'time') {
-      const sel = row.querySelector('.time-format');
+      var sel = row.querySelector('.time-format');
       if (sel) sel.value = cfg.formatOrValue;
     } else if (cfg.transformType === 'fixed') {
-      const input = row.querySelector('.fixed-value');
+      var input = row.querySelector('.fixed-value');
+      if (input) input.value = cfg.formatOrValue;
+    } else if (cfg.transformType === 'prefix') {
+      var input = row.querySelector('.prefix-value');
+      if (input) input.value = cfg.formatOrValue;
+    } else if (cfg.transformType === 'suffix') {
+      var input = row.querySelector('.suffix-value');
       if (input) input.value = cfg.formatOrValue;
     }
   });
@@ -486,11 +607,20 @@ function executeTransform() {
   if (!parsedData) return;
   hideError();
 
-  const config = getMappingConfig();
-  const outputHeaders = config.map(c => c.outputName);
-  const outputRows = parsedData.rows.map(row => {
-    return config.map(cfg => {
-      const rawValue = row[cfg.sourceIndex] || '';
+  var config = getMappingConfig();
+  var activeConfig = config.filter(function(c) { return !c.excluded; });
+  var outputHeaders = activeConfig.map(function(c) { return c.outputName; });
+
+  var changedCols = {};
+  activeConfig.forEach(function(cfg, idx) {
+    if (cfg.transformType !== 'none') {
+      changedCols[idx] = true;
+    }
+  });
+
+  var outputRows = parsedData.rows.map(function(row) {
+    return activeConfig.map(function(cfg) {
+      var rawValue = row[cfg.sourceIndex] || '';
 
       switch (cfg.transformType) {
         case 'date':
@@ -499,28 +629,32 @@ function executeTransform() {
           return convertTime(rawValue, cfg.formatOrValue);
         case 'fixed':
           return cfg.formatOrValue;
+        case 'prefix':
+          return rawValue ? cfg.formatOrValue + rawValue : '';
+        case 'suffix':
+          return rawValue ? rawValue + cfg.formatOrValue : '';
         default:
           return rawValue;
       }
     });
   });
 
-  transformedData = { headers: outputHeaders, rows: outputRows };
+  transformedData = { headers: outputHeaders, rows: outputRows, changedCols: changedCols };
   renderComparison();
   document.getElementById('resultSection').classList.add('visible');
   document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast('変換完了: ' + outputRows.length + '行');
 }
 
 function convertDate(value, format) {
   if (!value.trim()) return '';
 
-  // 入力を解析: YYYY/MM/DD, YYYY-MM-DD, YYYYMMDD, MM/DD/YYYY 等
-  let y, m, d;
-  const cleaned = value.trim();
+  var y, m, d;
+  var cleaned = value.trim();
 
-  const slashMatch = cleaned.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-  const noSepMatch = cleaned.match(/^(\d{4})(\d{2})(\d{2})$/);
-  const usMatch = cleaned.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  var slashMatch = cleaned.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  var noSepMatch = cleaned.match(/^(\d{4})(\d{2})(\d{2})$/);
+  var usMatch = cleaned.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
 
   if (slashMatch) {
     y = slashMatch[1]; m = slashMatch[2]; d = slashMatch[3];
@@ -529,16 +663,17 @@ function convertDate(value, format) {
   } else if (usMatch) {
     m = usMatch[1]; d = usMatch[2]; y = usMatch[3];
   } else {
-    return value; // 解析不能ならそのまま返す
+    return value;
   }
 
   m = m.padStart(2, '0');
   d = d.padStart(2, '0');
 
   switch (format) {
-    case 'YYYY/MM/DD': return `${y}/${m}/${d}`;
-    case 'YYYY-MM-DD': return `${y}-${m}-${d}`;
-    case 'YYYYMMDD': return `${y}${m}${d}`;
+    case 'YYYY/MM/DD': return y + '/' + m + '/' + d;
+    case 'YYYY-MM-DD': return y + '-' + m + '-' + d;
+    case 'YYYYMMDD': return y + m + d;
+    case 'MM/DD/YYYY': return m + '/' + d + '/' + y;
     default: return value;
   }
 }
@@ -546,15 +681,12 @@ function convertDate(value, format) {
 function convertTime(value, format) {
   if (!value.trim()) return '';
 
-  const cleaned = value.trim();
-  let hours, minutes;
+  var cleaned = value.trim();
+  var hours, minutes;
 
-  // HH:MM, H:MM
-  const colonMatch = cleaned.match(/^(\d{1,2}):(\d{2})/);
-  // HHMM
-  const noSepMatch = cleaned.match(/^(\d{2})(\d{2})$/);
-  // 小数 (8.5 = 8時間30分)
-  const decimalMatch = cleaned.match(/^(\d+\.?\d*)$/);
+  var colonMatch = cleaned.match(/^(\d{1,2}):(\d{2})/);
+  var noSepMatch = cleaned.match(/^(\d{2})(\d{2})$/);
+  var decimalMatch = cleaned.match(/^(\d+\.?\d*)$/);
 
   if (colonMatch) {
     hours = parseInt(colonMatch[1], 10);
@@ -563,7 +695,7 @@ function convertTime(value, format) {
     hours = parseInt(noSepMatch[1], 10);
     minutes = parseInt(noSepMatch[2], 10);
   } else if (decimalMatch) {
-    const decimal = parseFloat(decimalMatch[1]);
+    var decimal = parseFloat(decimalMatch[1]);
     hours = Math.floor(decimal);
     minutes = Math.round((decimal - hours) * 60);
   } else {
@@ -572,13 +704,12 @@ function convertTime(value, format) {
 
   switch (format) {
     case 'HH:MM':
-      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-    case 'decimal': {
-      const dec = hours + minutes / 60;
+      return String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+    case 'decimal':
+      var dec = hours + minutes / 60;
       return dec.toFixed(2);
-    }
     case 'HHMM':
-      return `${String(hours).padStart(2, '0')}${String(minutes).padStart(2, '0')}`;
+      return String(hours).padStart(2, '0') + '' + String(minutes).padStart(2, '0');
     default:
       return value;
   }
@@ -586,51 +717,73 @@ function convertTime(value, format) {
 
 // Before/After表示
 function renderComparison() {
-  const maxRows = 10;
+  var maxRows = 10;
   document.getElementById('beforeTable').innerHTML = buildTable(
     parsedData.headers,
     parsedData.rows.slice(0, maxRows)
   );
   document.getElementById('afterTable').innerHTML = buildTable(
     transformedData.headers,
-    transformedData.rows.slice(0, maxRows)
+    transformedData.rows.slice(0, maxRows),
+    transformedData.changedCols
   );
+
+  var excludedCount = getMappingConfig().filter(function(c) { return c.excluded; }).length;
+  document.getElementById('outputStats').innerHTML =
+    '<div class="stat-item"><span class="stat-value">' + transformedData.headers.length + '</span><span class="stat-label">出力カラム数</span></div>' +
+    '<div class="stat-item"><span class="stat-value">' + transformedData.rows.length + '</span><span class="stat-label">出力行数</span></div>' +
+    (excludedCount > 0 ? '<div class="stat-item"><span class="stat-value">' + excludedCount + '</span><span class="stat-label">除外カラム</span></div>' : '');
 }
 
 // CSVダウンロード（BOM付きUTF-8）
 function downloadCsv() {
   if (!transformedData) return;
+  if (!checkPapaParse()) return;
 
-  const csvContent = Papa.unparse({
+  var csvContent = Papa.unparse({
     fields: transformedData.headers,
     data: transformedData.rows
   });
 
-  // BOM付きUTF-8
-  const bom = '\uFEFF';
-  const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  var bom = '\uFEFF';
+  var blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
-  a.download = `kintai-converted-${formatDateFile(new Date())}.csv`;
+  a.download = 'kintai-converted-' + formatDateFile(new Date()) + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+
+  showToast('CSVをダウンロードしました');
+}
+
+function copyPreview() {
+  if (!transformedData) return;
+
+  var text = transformedData.headers.join('\t') + '\n';
+  transformedData.rows.slice(0, 20).forEach(function(row) {
+    text += row.join('\t') + '\n';
+  });
+
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('プレビューをコピーしました');
+  });
 }
 
 // ルール保存・読み込み
 function getSavedRules() {
-  const stored = localStorage.getItem(RULES_STORAGE_KEY);
+  var stored = localStorage.getItem(RULES_STORAGE_KEY);
   return stored ? JSON.parse(stored) : {};
 }
 
 function loadSavedRulesList() {
-  const rules = getSavedRules();
-  const select = document.getElementById('savedRules');
+  var rules = getSavedRules();
+  var select = document.getElementById('savedRules');
   select.innerHTML = '<option value="">ルールを選択...</option>';
-  Object.keys(rules).forEach(name => {
-    const opt = document.createElement('option');
+  Object.keys(rules).forEach(function(name) {
+    var opt = document.createElement('option');
     opt.value = name;
     opt.textContent = name;
     select.appendChild(opt);
@@ -640,58 +793,94 @@ function loadSavedRulesList() {
 function saveRule() {
   if (!parsedData) return;
 
-  const name = prompt('ルール名を入力してください:');
+  var name = prompt('ルール名を入力してください:');
   if (!name || !name.trim()) return;
 
-  const config = getMappingConfig();
-  const rules = getSavedRules();
+  var config = getMappingConfig();
+  var rules = getSavedRules();
   rules[name.trim()] = config;
   localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(rules));
   loadSavedRulesList();
   document.getElementById('savedRules').value = name.trim();
+  showToast('ルール「' + name.trim() + '」を保存しました');
 }
 
 function loadRule() {
-  const name = document.getElementById('savedRules').value;
+  var name = document.getElementById('savedRules').value;
   if (!name || !parsedData) return;
 
-  const rules = getSavedRules();
-  const config = rules[name];
+  var rules = getSavedRules();
+  var config = rules[name];
   if (!config) return;
 
+  renderMappingUI();
   applyMappingConfig(config);
+  showToast('ルール「' + name + '」を読み込みました');
 }
 
 function deleteRule() {
-  const name = document.getElementById('savedRules').value;
+  var name = document.getElementById('savedRules').value;
   if (!name) return;
-  if (!confirm(`ルール「${name}」を削除しますか?`)) return;
+  if (!confirm('ルール「' + name + '」を削除しますか?')) return;
 
-  const rules = getSavedRules();
+  var rules = getSavedRules();
   delete rules[name];
   localStorage.setItem(RULES_STORAGE_KEY, JSON.stringify(rules));
   loadSavedRulesList();
+  showToast('ルール「' + name + '」を削除しました');
+}
+
+// サンプルデータ
+function loadSampleData() {
+  var headers = ['社員番号', '氏名', '日付', '出勤時刻', '退勤時刻', '休憩時間', '勤務区分'];
+  var rows = [
+    ['EMP001', '田中太郎', '2026/03/01', '9:00', '18:00', '1:00', '通常'],
+    ['EMP001', '田中太郎', '2026/03/02', '8:45', '17:30', '1:00', '通常'],
+    ['EMP001', '田中太郎', '2026/03/03', '9:15', '19:00', '1:00', '残業'],
+    ['EMP002', '佐藤花子', '2026/03/01', '10:00', '19:00', '1:00', '通常'],
+    ['EMP002', '佐藤花子', '2026/03/02', '9:00', '18:00', '1:00', '通常'],
+    ['EMP002', '佐藤花子', '2026/03/03', '', '', '', '有給'],
+    ['EMP003', '鈴木一郎', '20260301', '0900', '1800', '1.0', '通常'],
+    ['EMP003', '鈴木一郎', '20260302', '0830', '1730', '1.0', '通常'],
+    ['EMP003', '鈴木一郎', '20260303', '0900', '2100', '1.0', '残業']
+  ];
+
+  parsedData = { headers: headers, rows: rows };
+  document.getElementById('fileName').textContent = 'sample_kintai.csv';
+  onDataLoaded();
+  showToast('サンプルデータを読み込みました');
 }
 
 // ユーティリティ
 function formatDateFile(date) {
-  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+  return date.getFullYear() + '' + String(date.getMonth() + 1).padStart(2, '0') + '' + String(date.getDate()).padStart(2, '0');
 }
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
+function escapeAttr(str) {
+  return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function showError(msg) {
-  const el = document.getElementById('errorMsg');
+  var el = document.getElementById('errorMsg');
   el.textContent = msg;
   el.style.display = 'block';
 }
 
 function hideError() {
   document.getElementById('errorMsg').style.display = 'none';
+}
+
+function showToast(message) {
+  var toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('visible');
+  setTimeout(function() { toast.classList.remove('visible'); }, 2000);
 }
 </script>
 </body>

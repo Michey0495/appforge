@@ -124,6 +124,14 @@
   }
   .api-key-bar > div { flex: 1; }
 
+  .api-status {
+    font-size: 11px;
+    color: #16a34a;
+    margin-top: 4px;
+    display: none;
+  }
+  .api-status.visible { display: block; }
+
   /* 生成ボタン */
   .generate-bar {
     display: flex;
@@ -206,6 +214,43 @@
     border: 1px solid #e5e7eb;
   }
 
+  /* 承認欄 */
+  .ringi-approval-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 32px;
+    font-size: 11px;
+  }
+  .ringi-approval-table th,
+  .ringi-approval-table td {
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 80px;
+  }
+  .ringi-approval-table th {
+    background: #fafbfc;
+    font-weight: 500;
+    color: #6b7280;
+  }
+  .ringi-approval-table td {
+    height: 60px;
+    vertical-align: middle;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #e5e7eb;
+    border-top-color: #1e3461;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   .loading-indicator {
     display: flex;
     align-items: center;
@@ -236,7 +281,7 @@
   @media print {
     body { font-size: 11pt; color: #000; }
     .container { max-width: 100%; padding: 0; margin: 0; }
-    .header, .api-key-bar, .form-section, .generate-bar, .output-actions, .error-msg { display: none !important; }
+    .header, .api-key-bar, .form-section, .generate-bar, .output-actions, .error-msg, .loading-indicator { display: none !important; }
     .output-section { display: block !important; }
     .ringi-document {
       border: none;
@@ -245,6 +290,7 @@
     }
     .ringi-document h1 { font-size: 18pt; }
     .ringi-document h2 { font-size: 12pt; }
+    .ringi-approval-table td { height: 50px; }
     @page {
       size: A4;
       margin: 15mm;
@@ -266,6 +312,7 @@
     <div>
       <label>Anthropic API Key</label>
       <input type="password" id="apiKey" placeholder="sk-ant-...">
+      <div class="api-status" id="apiStatus">保存済み</div>
     </div>
     <button class="btn btn-secondary" onclick="saveApiKey()">保存</button>
   </div>
@@ -326,49 +373,56 @@
   <!-- 生成ボタン -->
   <div class="generate-bar">
     <button class="btn btn-primary btn-lg" id="generateBtn" onclick="generateRingi()">稟議書を生成</button>
+    <button class="btn btn-secondary" onclick="loadSampleData()">サンプル入力</button>
   </div>
 
   <!-- ローディング -->
   <div class="loading-indicator" id="loading" style="display:none;">
-    生成中です。しばらくお待ちください...
+    <span class="spinner"></span>生成中です。しばらくお待ちください...
   </div>
 
   <!-- 出力 -->
   <div class="output-section" id="outputSection">
     <div class="output-actions">
       <button class="btn btn-primary" onclick="window.print()">印刷 / PDF</button>
-      <button class="btn btn-secondary" onclick="copyDocument()">コピー</button>
+      <button class="btn btn-secondary" onclick="copyDocument(this)">コピー</button>
     </div>
     <div class="ringi-document" id="ringiDocument"></div>
   </div>
 </div>
 
 <script>
-const API_KEY_STORAGE = 'ringi-draft-api-key';
+var API_KEY_STORAGE = 'ringi-draft-api-key';
 
 // 初期化
-document.addEventListener('DOMContentLoaded', () => {
-  const savedKey = localStorage.getItem(API_KEY_STORAGE);
+document.addEventListener('DOMContentLoaded', function() {
+  var savedKey = localStorage.getItem(API_KEY_STORAGE);
   if (savedKey) {
     document.getElementById('apiKey').value = savedKey;
+    document.getElementById('apiStatus').classList.add('visible');
   }
+
+  // 希望実施時期のデフォルトを1ヶ月後に設定
+  var defaultDate = new Date();
+  defaultDate.setMonth(defaultDate.getMonth() + 1);
+  document.getElementById('targetDate').value = defaultDate.toISOString().slice(0, 10);
 });
 
 function saveApiKey() {
-  const key = document.getElementById('apiKey').value.trim();
+  var key = document.getElementById('apiKey').value.trim();
   if (key) {
     localStorage.setItem(API_KEY_STORAGE, key);
-    alert('APIキーを保存しました');
+    document.getElementById('apiStatus').classList.add('visible');
   }
 }
 
 function formatYen(input) {
-  const raw = input.value.replace(/[^0-9]/g, '');
+  var raw = input.value.replace(/[^0-9]/g, '');
   input.value = raw;
 
-  const display = document.getElementById('costDisplay');
+  var display = document.getElementById('costDisplay');
   if (raw) {
-    const num = parseInt(raw, 10);
+    var num = parseInt(raw, 10);
     display.textContent = num.toLocaleString('ja-JP') + ' 円';
   } else {
     display.textContent = '';
@@ -376,7 +430,7 @@ function formatYen(input) {
 }
 
 function showError(msg) {
-  const el = document.getElementById('errorMsg');
+  var el = document.getElementById('errorMsg');
   el.textContent = msg;
   el.style.display = 'block';
 }
@@ -388,92 +442,82 @@ function hideError() {
 async function generateRingi() {
   hideError();
 
-  const apiKey = document.getElementById('apiKey').value.trim();
+  var apiKey = document.getElementById('apiKey').value.trim();
   if (!apiKey) {
     showError('Anthropic APIキーを入力してください');
     return;
   }
 
-  const subject = document.getElementById('subject').value.trim();
-  const authorName = document.getElementById('authorName').value.trim();
-  const department = document.getElementById('department').value.trim();
-  const approvalLevel = document.getElementById('approvalLevel').value;
-  const targetDate = document.getElementById('targetDate').value;
-  const estimatedCost = document.getElementById('estimatedCost').value.trim();
-  const reason = document.getElementById('reason').value.trim();
-  const expectedEffect = document.getElementById('expectedEffect').value.trim();
+  var subject = document.getElementById('subject').value.trim();
+  var authorName = document.getElementById('authorName').value.trim();
+  var department = document.getElementById('department').value.trim();
+  var approvalLevel = document.getElementById('approvalLevel').value;
+  var targetDate = document.getElementById('targetDate').value;
+  var estimatedCost = document.getElementById('estimatedCost').value.trim();
+  var reason = document.getElementById('reason').value.trim();
+  var expectedEffect = document.getElementById('expectedEffect').value.trim();
 
   if (!subject || !authorName || !department || !reason) {
     showError('件名、起案者名、起案部署、起案理由は必須です');
     return;
   }
 
-  const costFormatted = estimatedCost
+  var costFormatted = estimatedCost
     ? parseInt(estimatedCost.replace(/[^0-9]/g, ''), 10).toLocaleString('ja-JP') + '円'
     : '未定';
 
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-  const ringiNumber = `R-${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-${String(Math.floor(Math.random() * 900) + 100)}`;
+  var today = new Date();
+  var dateStr = today.getFullYear() + '年' + (today.getMonth() + 1) + '月' + today.getDate() + '日';
+  var ringiNumber = 'R-' + today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0') + '-' + String(Math.floor(Math.random() * 900) + 100);
 
-  const prompt = `あなたは企業の稟議書作成のプロフェッショナルです。以下の情報をもとに、正式な稟議書をHTML形式で生成してください。
+  var prompt = 'あなたは企業の稟議書作成のプロフェッショナルです。以下の情報をもとに、正式な稟議書をHTML形式で生成してください。\n\n' +
+    '入力情報:\n' +
+    '- 件名: ' + subject + '\n' +
+    '- 起案者名: ' + authorName + '\n' +
+    '- 起案部署: ' + department + '\n' +
+    '- 決裁区分: ' + approvalLevel + '\n' +
+    '- 希望実施時期: ' + (targetDate || '未定') + '\n' +
+    '- 概算金額: ' + costFormatted + '\n' +
+    '- 起案理由: ' + reason + '\n' +
+    '- 期待効果: ' + (expectedEffect || '（未記入）') + '\n\n' +
+    '稟議書番号: ' + ringiNumber + '\n' +
+    '起案日: ' + dateStr + '\n\n' +
+    '以下のHTMLテンプレート構造で出力してください（<div>の中身だけ出力。外側のタグは不要）:\n\n' +
+    '1. <h1>稟議書</h1>\n\n' +
+    '2. <div class="ringi-meta">\n' +
+    '  稟議番号・起案日を右寄せで表示\n' +
+    '</div>\n\n' +
+    '3. <table class="ringi-info-table">\n' +
+    '  件名、起案者、起案部署、決裁区分、希望実施時期、概算金額を表形式で\n' +
+    '</table>\n\n' +
+    '4. <h2>1. 起案理由</h2>\n' +
+    '  入力された理由を整形し、ビジネス文書として適切な文章に仕上げる。箇条書きの場合は段落文に整形。\n\n' +
+    '5. <h2>2. 期待効果・ROI</h2>\n' +
+    '  期待効果を具体的に整理。可能であればROI試算を含める。\n\n' +
+    '6. <h2>3. 想定リスクと対策</h2>\n' +
+    '  AIが案件内容から推測し、3〜5項目のリスクと対策を箇条書きで生成。\n\n' +
+    '7. <h2>4. 実施スケジュール概要</h2>\n' +
+    '  希望実施時期から逆算し、準備・実施・評価のフェーズを記載。\n\n' +
+    '8. <h2>5. 添付資料リスト</h2>\n' +
+    '  この稟議に必要と推測される添付資料を箇条書きで列挙（見積書、比較表など）。\n\n' +
+    '9. 最後に以下の承認欄テーブルを追加:\n' +
+    '<table class="ringi-approval-table"><thead><tr><th>起案者</th><th>課長</th><th>部長</th><th>本部長</th><th>役員</th></tr></thead><tbody><tr><td></td><td></td><td></td><td></td><td></td></tr></tbody></table>\n\n' +
+    '注意:\n' +
+    '- HTMLタグのみで出力（Markdownは使わない）\n' +
+    '- <ul><li>を使用して箇条書き\n' +
+    '- <p>タグで段落\n' +
+    '- classはringi-meta, ringi-info-table, ringi-approval-table のみ使用可能\n' +
+    '- 文体は「である」調の堅めのビジネス文書\n' +
+    '- 金額にはカンマ区切りを使用';
 
-入力情報:
-- 件名: ${subject}
-- 起案者名: ${authorName}
-- 起案部署: ${department}
-- 決裁区分: ${approvalLevel}
-- 希望実施時期: ${targetDate || '未定'}
-- 概算金額: ${costFormatted}
-- 起案理由: ${reason}
-- 期待効果: ${expectedEffect || '（未記入）'}
-
-稟議書番号: ${ringiNumber}
-起案日: ${dateStr}
-
-以下のHTMLテンプレート構造で出力してください（<div>の中身だけ出力。外側のタグは不要）:
-
-1. <h1>稟議書</h1>
-
-2. <div class="ringi-meta">
-  稟議番号・起案日を右寄せで表示
-</div>
-
-3. <table class="ringi-info-table">
-  件名、起案者、起案部署、決裁区分、希望実施時期、概算金額を表形式で
-</table>
-
-4. <h2>1. 起案理由</h2>
-  入力された理由を整形し、ビジネス文書として適切な文章に仕上げる。箇条書きの場合は段落文に整形。
-
-5. <h2>2. 期待効果・ROI</h2>
-  期待効果を具体的に整理。可能であればROI試算を含める。
-
-6. <h2>3. 想定リスクと対策</h2>
-  AIが案件内容から推測し、3〜5項目のリスクと対策を箇条書きで生成。
-
-7. <h2>4. 実施スケジュール概要</h2>
-  希望実施時期から逆算し、準備・実施・評価のフェーズを記載。
-
-8. <h2>5. 添付資料リスト</h2>
-  この稟議に必要と推測される添付資料を箇条書きで列挙（見積書、比較表など）。
-
-注意:
-- HTMLタグのみで出力（Markdownは使わない）
-- <ul><li>を使用して箇条書き
-- <p>タグで段落
-- classはringi-meta, ringi-info-table のみ使用可能
-- 文体は「である」調の堅めのビジネス文書
-- 金額にはカンマ区切りを使用`;
-
-  const btn = document.getElementById('generateBtn');
+  var btn = document.getElementById('generateBtn');
   btn.disabled = true;
   btn.textContent = '生成中...';
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('outputSection').classList.remove('visible');
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -491,22 +535,23 @@ async function generateRingi() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error?.message || `API エラー: ${response.status}`);
+      var errorData = await response.json().catch(function() { return {}; });
+      throw new Error(errorData.error?.message || 'API エラー: ' + response.status);
     }
 
-    const data = await response.json();
-    const content = data.content[0]?.text || '';
+    var data = await response.json();
+    var content = data.content[0]?.text || '';
 
     // HTMLを抽出（コードブロックで囲まれている場合を考慮）
-    let html = content;
-    const codeBlockMatch = content.match(/```html?\s*([\s\S]*?)```/);
+    var html = content;
+    var codeBlockMatch = content.match(/```html?\s*([\s\S]*?)```/);
     if (codeBlockMatch) {
       html = codeBlockMatch[1];
     }
 
     document.getElementById('ringiDocument').innerHTML = html;
     document.getElementById('outputSection').classList.add('visible');
+    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   } catch (err) {
     showError('生成に失敗しました: ' + err.message);
@@ -517,14 +562,28 @@ async function generateRingi() {
   }
 }
 
-function copyDocument() {
-  const doc = document.getElementById('ringiDocument');
-  const text = doc.innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    const original = btn.textContent;
-    btn.textContent = 'コピーしました';
-    setTimeout(() => { btn.textContent = original; }, 1500);
+function loadSampleData() {
+  document.getElementById('subject').value = '社内チャットツール（Slack Business+）導入';
+  document.getElementById('authorName').value = '山田 太郎';
+  document.getElementById('department').value = '情報システム部';
+  document.getElementById('approvalLevel').value = 'B決裁（50〜100万円）';
+  document.getElementById('estimatedCost').value = '960000';
+  formatYen(document.getElementById('estimatedCost'));
+  document.getElementById('reason').value = '- 現状メールと電話が主な連絡手段で、情報共有に遅延が生じている\n- 他部門との横断プロジェクトが増加し、リアルタイムコミュニケーションの需要が高い\n- 競合他社はすでにビジネスチャットを導入済み';
+  document.getElementById('expectedEffect').value = '- メール件数を約40%削減（月間推定800通 → 480通）\n- 会議時間の短縮（週平均2時間の削減見込み）\n- 部門間の情報共有速度が向上し、意思決定サイクルの短縮';
+  // 日付は1ヶ月後を設定
+  var d = new Date();
+  d.setMonth(d.getMonth() + 1);
+  document.getElementById('targetDate').value = d.toISOString().split('T')[0];
+}
+
+function copyDocument(btnEl) {
+  var doc = document.getElementById('ringiDocument');
+  var text = doc.innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    var original = btnEl.textContent;
+    btnEl.textContent = 'コピーしました';
+    setTimeout(function() { btnEl.textContent = original; }, 1500);
   });
 }
 </script>

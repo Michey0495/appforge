@@ -58,10 +58,13 @@
     transition: box-shadow 0.15s;
   }
   .block:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+  .block.drag-over { border-color: #1e3461; box-shadow: 0 0 0 2px rgba(30,52,97,0.15); }
   .block-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 12px; border-bottom: 1px solid #f3f4f6; background: #fafafa;
+    cursor: grab;
   }
+  .block-header:active { cursor: grabbing; }
   .block-type {
     font-size: 11px; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.05em; color: #1e3461;
@@ -106,6 +109,20 @@
   .preset-chip:hover { border-color: #1e3461; color: #1e3461; }
 
   .empty-state { text-align: center; padding: 32px; color: #9ca3af; font-size: 12px; }
+
+  .copied-toast {
+    position: fixed; top: 20px; right: 20px; background: #1e3461;
+    color: #fff; padding: 8px 16px; border-radius: 2px; font-size: 12px;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 100;
+  }
+  .copied-toast.show { opacity: 1; }
+
+  .block.dragging { opacity: 0.4; }
+
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -162,13 +179,16 @@
           <div>文字数: <span class="num" id="charCount">0</span></div>
           <div>推定トークン数: <span class="num" id="tokenCount">0</span></div>
         </div>
-        <div style="margin-top: 12px;">
+        <div style="margin-top: 12px; display: flex; gap: 8px;">
           <button class="btn" onclick="copyPrompt()">プロンプトをコピー</button>
+          <button class="btn btn-secondary" onclick="clearAllBlocks()">全削除</button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<div class="copied-toast" id="copiedToast">コピーしました</div>
 
 <script>
   const TYPE_LABELS = {
@@ -191,22 +211,36 @@
 
   let blocks = [];
   let nextId = 0;
+  let dragSourceId = null;
 
-  function addBlock(type, content) {
+  const escapeHtml = (str) => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  };
+
+  const showToast = (message) => {
+    const toast = document.getElementById('copiedToast');
+    toast.textContent = message || 'コピーしました';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  };
+
+  const addBlock = (type, content) => {
     const blockType = type || document.getElementById('blockType').value;
     const blockContent = content || '';
     blocks = [...blocks, { id: nextId++, type: blockType, content: blockContent }];
     renderBlocks();
     updatePreview();
-  }
+  };
 
-  function removeBlock(id) {
+  const removeBlock = (id) => {
     blocks = blocks.filter(b => b.id !== id);
     renderBlocks();
     updatePreview();
-  }
+  };
 
-  function moveBlock(id, direction) {
+  const moveBlock = (id, direction) => {
     const idx = blocks.findIndex(b => b.id === id);
     if (idx < 0) return;
     const newIdx = idx + direction;
@@ -218,37 +252,97 @@
     blocks = newBlocks;
     renderBlocks();
     updatePreview();
-  }
+  };
 
-  function updateBlockContent(id, content) {
+  const updateBlockContent = (id, content) => {
     blocks = blocks.map(b => b.id === id ? { ...b, content } : b);
     updatePreview();
-  }
+  };
 
-  function renderBlocks() {
+  const clearAllBlocks = () => {
+    if (blocks.length === 0) return;
+    blocks = [];
+    nextId = 0;
+    renderBlocks();
+    updatePreview();
+  };
+
+  // ドラッグ&ドロップでブロック並び替え
+  const handleDragStart = (e, id) => {
+    dragSourceId = id;
+    e.target.closest('.block').classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(id));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const blockEl = e.target.closest('.block');
+    if (blockEl) blockEl.classList.add('drag-over');
+  };
+
+  const handleDragLeave = (e) => {
+    const blockEl = e.target.closest('.block');
+    if (blockEl) blockEl.classList.remove('drag-over');
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    const blockEl = e.target.closest('.block');
+    if (blockEl) blockEl.classList.remove('drag-over');
+    if (dragSourceId === null || dragSourceId === targetId) return;
+
+    const sourceIdx = blocks.findIndex(b => b.id === dragSourceId);
+    const targetIdx = blocks.findIndex(b => b.id === targetId);
+    if (sourceIdx < 0 || targetIdx < 0) return;
+
+    const newBlocks = [...blocks];
+    const [moved] = newBlocks.splice(sourceIdx, 1);
+    newBlocks.splice(targetIdx, 0, moved);
+    blocks = newBlocks;
+    dragSourceId = null;
+    renderBlocks();
+    updatePreview();
+  };
+
+  const handleDragEnd = (e) => {
+    dragSourceId = null;
+    document.querySelectorAll('.block').forEach(el => {
+      el.classList.remove('dragging');
+      el.classList.remove('drag-over');
+    });
+  };
+
+  const renderBlocks = () => {
     const container = document.getElementById('blockList');
     if (blocks.length === 0) {
       container.innerHTML = '<div class="empty-state">ブロックを追加してプロンプトを構築してください</div>';
       return;
     }
-    container.innerHTML = blocks.map((b, i) => `
-      <div class="block block-${b.type}">
-        <div class="block-header">
-          <span class="block-type">${escapeHtml(TYPE_LABELS[b.type] || b.type)}</span>
-          <div class="block-actions">
-            <button class="btn btn-secondary btn-sm" onclick="moveBlock(${b.id},-1)" ${i === 0 ? 'disabled' : ''}>上</button>
-            <button class="btn btn-secondary btn-sm" onclick="moveBlock(${b.id},1)" ${i === blocks.length - 1 ? 'disabled' : ''}>下</button>
-            <button class="btn btn-secondary btn-sm btn-danger" onclick="removeBlock(${b.id})">削除</button>
-          </div>
-        </div>
-        <div class="block-body">
-          <textarea rows="3" oninput="updateBlockContent(${b.id}, this.value)" placeholder="${escapeHtml(TYPE_LABELS[b.type])}の内容を入力...">${escapeHtml(b.content)}</textarea>
-        </div>
-      </div>
-    `).join('');
-  }
+    container.innerHTML = blocks.map((b, i) => {
+      const disabledUp = i === 0 ? 'disabled' : '';
+      const disabledDown = i === blocks.length - 1 ? 'disabled' : '';
+      return '<div class="block block-' + b.type + '" draggable="true" ' +
+        'ondragstart="handleDragStart(event,' + b.id + ')" ' +
+        'ondragover="handleDragOver(event)" ' +
+        'ondragleave="handleDragLeave(event)" ' +
+        'ondrop="handleDrop(event,' + b.id + ')" ' +
+        'ondragend="handleDragEnd(event)">' +
+        '<div class="block-header">' +
+        '<span class="block-type">' + escapeHtml(TYPE_LABELS[b.type] || b.type) + '</span>' +
+        '<div class="block-actions">' +
+        '<button class="btn btn-secondary btn-sm" onclick="moveBlock(' + b.id + ',-1)" ' + disabledUp + '>上</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="moveBlock(' + b.id + ',1)" ' + disabledDown + '>下</button>' +
+        '<button class="btn btn-secondary btn-sm btn-danger" onclick="removeBlock(' + b.id + ')">削除</button>' +
+        '</div></div>' +
+        '<div class="block-body">' +
+        '<textarea rows="3" oninput="updateBlockContent(' + b.id + ', this.value)" placeholder="' + escapeHtml(TYPE_LABELS[b.type]) + 'の内容を入力...">' + escapeHtml(b.content) + '</textarea>' +
+        '</div></div>';
+    }).join('');
+  };
 
-  function updatePreview() {
+  const updatePreview = () => {
     const preview = document.getElementById('preview');
     if (blocks.length === 0) {
       preview.innerHTML = '<span style="color:#9ca3af;">プレビューがここに表示されます</span>';
@@ -263,37 +357,50 @@
     blocks.forEach(b => {
       const tag = TAG_NAMES[b.type] || b.type;
       const content = b.content || '';
-      promptText += `<${tag}>\n${content}\n</${tag}>\n\n`;
-      previewHtml += `<span class="tag">&lt;${escapeHtml(tag)}&gt;</span>\n<span class="tag-content">${escapeHtml(content)}</span>\n<span class="tag">&lt;/${escapeHtml(tag)}&gt;</span>\n\n`;
+      promptText += '<' + tag + '>\n' + content + '\n</' + tag + '>\n\n';
+      previewHtml += '<span class="tag">&lt;' + escapeHtml(tag) + '&gt;</span>\n' +
+        '<span class="tag-content">' + escapeHtml(content) + '</span>\n' +
+        '<span class="tag">&lt;/' + escapeHtml(tag) + '&gt;</span>\n\n';
     });
 
     preview.innerHTML = previewHtml;
 
-    // トークン推定
+    // トークン推定: 日本語1文字 ~ 1-2トークン、英語4文字 ~ 1トークン
     const charCount = promptText.length;
-    // 日本語と英語が混在する想定: ざっくり文字数 / 2 (日本語1文字 ~ 1-2トークン)
     const jpChars = (promptText.match(/[\u3000-\u9fff\uff00-\uffef]/g) || []).length;
     const enChars = charCount - jpChars;
     const estimatedTokens = Math.ceil(jpChars / 1.5 + enChars / 4);
 
     document.getElementById('charCount').textContent = charCount;
     document.getElementById('tokenCount').textContent = estimatedTokens;
-  }
+  };
 
-  function copyPrompt() {
+  const buildPromptText = () => {
     let promptText = '';
     blocks.forEach(b => {
       const tag = TAG_NAMES[b.type] || b.type;
-      promptText += `<${tag}>\n${b.content || ''}\n</${tag}>\n\n`;
+      promptText += '<' + tag + '>\n' + (b.content || '') + '\n</' + tag + '>\n\n';
     });
-    navigator.clipboard.writeText(promptText.trim());
-  }
+    return promptText.trim();
+  };
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  const copyPrompt = () => {
+    const text = buildPromptText();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('コピーしました');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('コピーしました');
+    });
+  };
 
   // プリセットテンプレート
   const PRESETS = {
@@ -333,7 +440,7 @@
     ]
   };
 
-  function loadPreset(name) {
+  const loadPreset = (name) => {
     const preset = PRESETS[name];
     if (!preset) return;
     blocks = [];
@@ -343,7 +450,7 @@
     });
     renderBlocks();
     updatePreview();
-  }
+  };
 </script>
 </body>
 </html>

@@ -161,13 +161,19 @@
     color: #9ca3af;
     border-bottom: 1px solid #f3f4f6;
     white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
   }
+  th:hover { color: #1e3461; }
+  th .sort-indicator { font-size: 9px; margin-left: 4px; }
   td {
     padding: 10px 12px;
     border-bottom: 1px solid #f3f4f6;
     vertical-align: top;
   }
   tr:hover { background: #fafbfc; }
+  tr.unassigned-row { background: #fffbeb; }
+  tr.unassigned-row:hover { background: #fef3c7; }
 
   .issue-title {
     font-weight: 500;
@@ -200,6 +206,48 @@
   .score-high { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
   .score-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
   .score-low { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+  .unassigned-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 10px;
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+    border-radius: 2px;
+  }
+
+  /* ラベル集計 */
+  .aggregation-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+  }
+  .aggregation-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 12px;
+  }
+  .aggregation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .aggregation-item {
+    padding: 8px 12px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+  .aggregation-item-count {
+    font-weight: 600;
+    color: #1e3461;
+  }
 
   /* レポート */
   .report-output {
@@ -246,6 +294,8 @@
     gap: 8px;
     margin-bottom: 16px;
   }
+
+  .milestone-section { margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -287,7 +337,7 @@
   <div class="tab-content" id="tabPaste">
     <div class="input-section">
       <label>GitHub API レスポンス JSON</label>
-      <textarea id="jsonInput" placeholder="GitHub APIのレスポンスJSONを貼り付け..."></textarea>
+      <textarea id="jsonInput" placeholder="GitHub APIのレスポンスJSONを貼り付け...&#10;&#10;例: curl -H 'Authorization: token ghp_xxx' https://api.github.com/repos/owner/name/issues?state=open"></textarea>
       <div style="margin-top: 8px;">
         <button class="btn btn-primary" onclick="parseJsonInput()">解析</button>
       </div>
@@ -304,7 +354,7 @@
 
     <!-- アクション -->
     <div class="actions-bar">
-      <button class="btn btn-secondary" onclick="generateReport()">レポート出力</button>
+      <button class="btn btn-secondary" onclick="generateMarkdownReport()">Markdownレポート</button>
       <button class="btn btn-secondary" onclick="exportIssueCsv()">CSVエクスポート</button>
     </div>
 
@@ -324,6 +374,9 @@
       <select id="filterLabel" onchange="renderTable()">
         <option value="">ラベル: すべて</option>
       </select>
+      <select id="filterMilestone" onchange="renderTable()">
+        <option value="">マイルストーン: すべて</option>
+      </select>
     </div>
 
     <!-- テーブル -->
@@ -331,24 +384,28 @@
       <table>
         <thead>
           <tr>
-            <th>番号</th>
-            <th>タイトル</th>
+            <th onclick="sortTable('number')">番号 <span class="sort-indicator" id="sort-number"></span></th>
+            <th onclick="sortTable('title')">タイトル <span class="sort-indicator" id="sort-title"></span></th>
             <th>ラベル</th>
-            <th>アサイン</th>
-            <th>最終更新</th>
-            <th>放置日数</th>
-            <th>スコア</th>
+            <th onclick="sortTable('assignee')">アサイン <span class="sort-indicator" id="sort-assignee"></span></th>
+            <th>マイルストーン</th>
+            <th onclick="sortTable('updatedAt')">最終更新 <span class="sort-indicator" id="sort-updatedAt"></span></th>
+            <th onclick="sortTable('days')">放置日数 <span class="sort-indicator" id="sort-days"></span></th>
+            <th onclick="sortTable('score')">スコア <span class="sort-indicator" id="sort-score"></span></th>
           </tr>
         </thead>
         <tbody id="issueTableBody"></tbody>
       </table>
     </div>
 
+    <!-- ラベル集計 -->
+    <div class="aggregation-section" id="aggregationSection"></div>
+
     <!-- レポート出力 -->
     <div class="report-output" id="reportOutput">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <span style="font-weight: 600; font-size: 13px;">棚卸しレポート</span>
-        <button class="btn btn-secondary" onclick="copyReport()">コピー</button>
+        <button class="btn btn-secondary" onclick="copyReport(this)">コピー</button>
       </div>
       <div class="report-content" id="reportContent"></div>
     </div>
@@ -356,12 +413,13 @@
 </div>
 
 <script>
-let issues = [];
-let processedIssues = [];
+var issues = [];
+var processedIssues = [];
+var currentSort = { key: 'days', direction: 'desc' };
 
 function switchTab(mode) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
 
   if (mode === 'api') {
     document.querySelectorAll('.tab')[0].classList.add('active');
@@ -373,8 +431,8 @@ function switchTab(mode) {
 }
 
 async function fetchIssues() {
-  const token = document.getElementById('ghToken').value.trim();
-  const repo = document.getElementById('ghRepo').value.trim();
+  var token = document.getElementById('ghToken').value.trim();
+  var repo = document.getElementById('ghRepo').value.trim();
   hideError();
 
   if (!token || !repo) {
@@ -387,36 +445,36 @@ async function fetchIssues() {
     return;
   }
 
-  const btn = document.getElementById('fetchBtn');
+  var btn = document.getElementById('fetchBtn');
   btn.disabled = true;
   btn.textContent = '取得中...';
 
   try {
-    let allIssues = [];
-    let page = 1;
-    const perPage = 100;
+    var allIssues = [];
+    var page = 1;
+    var perPage = 100;
 
     while (true) {
-      const response = await fetch(
-        `https://api.github.com/repos/${repo}/issues?state=open&per_page=${perPage}&page=${page}`,
+      var response = await fetch(
+        'https://api.github.com/repos/' + repo + '/issues?state=open&per_page=' + perPage + '&page=' + page,
         {
           headers: {
-            'Authorization': `token ${token}`,
+            'Authorization': 'token ' + token,
             'Accept': 'application/vnd.github.v3+json'
           }
         }
       );
 
       if (!response.ok) {
-        throw new Error(`GitHub API エラー: ${response.status} ${response.statusText}`);
+        throw new Error('GitHub API エラー: ' + response.status + ' ' + response.statusText);
       }
 
-      const data = await response.json();
+      var data = await response.json();
       if (data.length === 0) break;
 
-      // PRを除外（pull_requestフィールドがあるものはPR）
-      const issuesOnly = data.filter(item => !item.pull_request);
-      allIssues = [...allIssues, ...issuesOnly];
+      // PRを除外
+      var issuesOnly = data.filter(function(item) { return !item.pull_request; });
+      allIssues = allIssues.concat(issuesOnly);
 
       if (data.length < perPage) break;
       page++;
@@ -433,7 +491,7 @@ async function fetchIssues() {
 }
 
 function parseJsonInput() {
-  const text = document.getElementById('jsonInput').value.trim();
+  var text = document.getElementById('jsonInput').value.trim();
   hideError();
 
   if (!text) {
@@ -442,9 +500,9 @@ function parseJsonInput() {
   }
 
   try {
-    const data = JSON.parse(text);
-    const arr = Array.isArray(data) ? data : [data];
-    issues = arr.filter(item => !item.pull_request);
+    var data = JSON.parse(text);
+    var arr = Array.isArray(data) ? data : [data];
+    issues = arr.filter(function(item) { return !item.pull_request; });
 
     if (issues.length === 0) {
       showError('イシューデータが見つかりません');
@@ -458,13 +516,13 @@ function parseJsonInput() {
 }
 
 function processIssues() {
-  const now = new Date();
+  var now = new Date();
 
-  processedIssues = issues.map(issue => {
-    const updatedAt = new Date(issue.updated_at);
-    const daysSinceUpdate = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24));
+  processedIssues = issues.map(function(issue) {
+    var updatedAt = new Date(issue.updated_at);
+    var daysSinceUpdate = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24));
 
-    let scoreLevel, scoreLabel;
+    var scoreLevel, scoreLabel;
     if (daysSinceUpdate > 90) {
       scoreLevel = 'high';
       scoreLabel = '高';
@@ -480,9 +538,10 @@ function processIssues() {
       number: issue.number,
       title: issue.title,
       url: issue.html_url,
-      labels: (issue.labels || []).map(l => typeof l === 'string' ? l : l.name),
-      assignees: (issue.assignees || []).map(a => a.login),
+      labels: (issue.labels || []).map(function(l) { return typeof l === 'string' ? l : l.name; }),
+      assignees: (issue.assignees || []).map(function(a) { return a.login; }),
       assignee: issue.assignee ? issue.assignee.login : null,
+      milestone: issue.milestone ? issue.milestone.title : null,
       updatedAt: updatedAt,
       daysSinceUpdate: daysSinceUpdate,
       scoreLevel: scoreLevel,
@@ -490,168 +549,300 @@ function processIssues() {
     };
   });
 
-  processedIssues.sort((a, b) => b.daysSinceUpdate - a.daysSinceUpdate);
+  processedIssues.sort(function(a, b) { return b.daysSinceUpdate - a.daysSinceUpdate; });
 
   updateLabelFilter();
+  updateMilestoneFilter();
   updateStats();
   renderTable();
+  renderAggregation();
   document.getElementById('resultsSection').style.display = 'block';
 }
 
 function updateStats() {
-  const total = processedIssues.length;
-  const avgAge = total > 0
-    ? Math.round(processedIssues.reduce((sum, i) => sum + i.daysSinceUpdate, 0) / total)
+  var total = processedIssues.length;
+  var avgAge = total > 0
+    ? Math.round(processedIssues.reduce(function(sum, i) { return sum + i.daysSinceUpdate; }, 0) / total)
     : 0;
-  const unassigned = processedIssues.filter(i => !i.assignee && i.assignees.length === 0).length;
-  const highCount = processedIssues.filter(i => i.scoreLevel === 'high').length;
-  const medCount = processedIssues.filter(i => i.scoreLevel === 'medium').length;
+  var unassigned = processedIssues.filter(function(i) { return !i.assignee && i.assignees.length === 0; }).length;
+  var highCount = processedIssues.filter(function(i) { return i.scoreLevel === 'high'; }).length;
+  var medCount = processedIssues.filter(function(i) { return i.scoreLevel === 'medium'; }).length;
 
-  document.getElementById('statsBar').innerHTML = `
-    <div class="stat-item"><span class="stat-value">${total}</span><span class="stat-label">オープンイシュー</span></div>
-    <div class="stat-item"><span class="stat-value">${avgAge}日</span><span class="stat-label">平均経過日数</span></div>
-    <div class="stat-item"><span class="stat-value">${unassigned}</span><span class="stat-label">未アサイン</span></div>
-    <div class="stat-item"><span class="stat-value">${highCount}</span><span class="stat-label">スコア: 高</span></div>
-    <div class="stat-item"><span class="stat-value">${medCount}</span><span class="stat-label">スコア: 中</span></div>
-  `;
+  document.getElementById('statsBar').innerHTML =
+    '<div class="stat-item"><span class="stat-value">' + total + '</span><span class="stat-label">オープンイシュー</span></div>' +
+    '<div class="stat-item"><span class="stat-value">' + avgAge + '日</span><span class="stat-label">平均経過日数</span></div>' +
+    '<div class="stat-item"><span class="stat-value">' + unassigned + '</span><span class="stat-label">未アサイン</span></div>' +
+    '<div class="stat-item"><span class="stat-value">' + highCount + '</span><span class="stat-label">スコア: 高</span></div>' +
+    '<div class="stat-item"><span class="stat-value">' + medCount + '</span><span class="stat-label">スコア: 中</span></div>';
 }
 
 function updateLabelFilter() {
-  const labels = [...new Set(processedIssues.flatMap(i => i.labels))].sort();
-  const select = document.getElementById('filterLabel');
+  var labelsSet = {};
+  processedIssues.forEach(function(i) {
+    i.labels.forEach(function(l) { labelsSet[l] = true; });
+  });
+  var labels = Object.keys(labelsSet).sort();
+  var select = document.getElementById('filterLabel');
   select.innerHTML = '<option value="">ラベル: すべて</option>';
-  labels.forEach(l => {
-    const opt = document.createElement('option');
+  labels.forEach(function(l) {
+    var opt = document.createElement('option');
     opt.value = l;
     opt.textContent = l;
     select.appendChild(opt);
   });
 }
 
-function renderTable() {
-  const scoreFilter = document.getElementById('filterScore').value;
-  const assigneeFilter = document.getElementById('filterAssignee').value;
-  const labelFilter = document.getElementById('filterLabel').value;
+function updateMilestoneFilter() {
+  var msSet = {};
+  processedIssues.forEach(function(i) {
+    if (i.milestone) msSet[i.milestone] = true;
+  });
+  var milestones = Object.keys(msSet).sort();
+  var select = document.getElementById('filterMilestone');
+  select.innerHTML = '<option value="">マイルストーン: すべて</option>';
+  var noMsOpt = document.createElement('option');
+  noMsOpt.value = '__none__';
+  noMsOpt.textContent = '未設定';
+  select.appendChild(noMsOpt);
+  milestones.forEach(function(m) {
+    var opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    select.appendChild(opt);
+  });
+}
 
-  let filtered = processedIssues.filter(issue => {
+function sortTable(key) {
+  if (currentSort.key === key) {
+    currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+  } else {
+    currentSort.key = key;
+    currentSort.direction = key === 'title' || key === 'assignee' ? 'asc' : 'desc';
+  }
+
+  // ソートインジケータ更新
+  document.querySelectorAll('.sort-indicator').forEach(function(el) { el.textContent = ''; });
+  var indicator = document.getElementById('sort-' + key);
+  if (indicator) {
+    indicator.textContent = currentSort.direction === 'asc' ? '↑' : '↓';
+  }
+
+  renderTable();
+}
+
+function getFilteredIssues() {
+  var scoreFilter = document.getElementById('filterScore').value;
+  var assigneeFilter = document.getElementById('filterAssignee').value;
+  var labelFilter = document.getElementById('filterLabel').value;
+  var milestoneFilter = document.getElementById('filterMilestone').value;
+
+  var filtered = processedIssues.filter(function(issue) {
     if (scoreFilter && issue.scoreLevel !== scoreFilter) return false;
     if (assigneeFilter === 'assigned' && !issue.assignee && issue.assignees.length === 0) return false;
     if (assigneeFilter === 'unassigned' && (issue.assignee || issue.assignees.length > 0)) return false;
     if (labelFilter && !issue.labels.includes(labelFilter)) return false;
+    if (milestoneFilter === '__none__' && issue.milestone) return false;
+    if (milestoneFilter && milestoneFilter !== '__none__' && issue.milestone !== milestoneFilter) return false;
     return true;
   });
 
-  const tbody = document.getElementById('issueTableBody');
+  // ソート
+  filtered.sort(function(a, b) {
+    var dir = currentSort.direction === 'asc' ? 1 : -1;
+    switch (currentSort.key) {
+      case 'number': return (a.number - b.number) * dir;
+      case 'title': return a.title.localeCompare(b.title, 'ja') * dir;
+      case 'assignee':
+        var aA = a.assignees.length > 0 ? a.assignees[0] : '';
+        var bA = b.assignees.length > 0 ? b.assignees[0] : '';
+        return aA.localeCompare(bA) * dir;
+      case 'updatedAt': return (a.updatedAt - b.updatedAt) * dir;
+      case 'days': return (a.daysSinceUpdate - b.daysSinceUpdate) * dir;
+      case 'score':
+        var scoreOrder = { high: 3, medium: 2, low: 1 };
+        return (scoreOrder[a.scoreLevel] - scoreOrder[b.scoreLevel]) * dir;
+      default: return (b.daysSinceUpdate - a.daysSinceUpdate);
+    }
+  });
+
+  return filtered;
+}
+
+function renderTable() {
+  var filtered = getFilteredIssues();
+  var tbody = document.getElementById('issueTableBody');
 
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">該当するイシューがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">該当するイシューがありません</td></tr>';
     return;
   }
 
-  tbody.innerHTML = filtered.map(issue => {
-    const labelsHtml = issue.labels.map(l =>
-      `<span class="label-tag">${escapeHtml(l)}</span>`
-    ).join('');
+  tbody.innerHTML = filtered.map(function(issue) {
+    var labelsHtml = issue.labels.map(function(l) {
+      return '<span class="label-tag">' + escapeHtml(l) + '</span>';
+    }).join('');
 
-    const assigneesStr = issue.assignees.length > 0
-      ? issue.assignees.join(', ')
-      : '-';
+    var isUnassigned = !issue.assignee && issue.assignees.length === 0;
+    var assigneesStr = issue.assignees.length > 0
+      ? escapeHtml(issue.assignees.join(', '))
+      : '<span class="unassigned-badge">未アサイン</span>';
 
-    const dateStr = formatDate(issue.updatedAt);
+    var dateStr = formatDate(issue.updatedAt);
+    var rowClass = isUnassigned ? ' class="unassigned-row"' : '';
 
-    return `<tr>
-      <td>#${issue.number}</td>
-      <td class="issue-title">${issue.url ? `<a href="${issue.url}" target="_blank" rel="noopener">${escapeHtml(issue.title)}</a>` : escapeHtml(issue.title)}</td>
-      <td>${labelsHtml || '-'}</td>
-      <td>${escapeHtml(assigneesStr)}</td>
-      <td>${dateStr}</td>
-      <td>${issue.daysSinceUpdate}日</td>
-      <td><span class="score-badge score-${issue.scoreLevel}">${issue.scoreLabel}</span></td>
-    </tr>`;
+    return '<tr' + rowClass + '>' +
+      '<td>#' + issue.number + '</td>' +
+      '<td class="issue-title">' + (issue.url ? '<a href="' + issue.url + '" target="_blank" rel="noopener">' + escapeHtml(issue.title) + '</a>' : escapeHtml(issue.title)) + '</td>' +
+      '<td>' + (labelsHtml || '-') + '</td>' +
+      '<td>' + assigneesStr + '</td>' +
+      '<td>' + escapeHtml(issue.milestone || '-') + '</td>' +
+      '<td>' + dateStr + '</td>' +
+      '<td>' + issue.daysSinceUpdate + '日</td>' +
+      '<td><span class="score-badge score-' + issue.scoreLevel + '">' + issue.scoreLabel + '</span></td>' +
+      '</tr>';
   }).join('');
 }
 
-function generateReport() {
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+function renderAggregation() {
+  var container = document.getElementById('aggregationSection');
+  var html = '';
 
-  const high = processedIssues.filter(i => i.scoreLevel === 'high');
-  const medium = processedIssues.filter(i => i.scoreLevel === 'medium');
-  const low = processedIssues.filter(i => i.scoreLevel === 'low');
+  // ラベル集計
+  var labelCounts = {};
+  processedIssues.forEach(function(i) {
+    i.labels.forEach(function(l) {
+      labelCounts[l] = (labelCounts[l] || 0) + 1;
+    });
+  });
+  var labelEntries = Object.entries(labelCounts).sort(function(a, b) { return b[1] - a[1]; });
 
-  let report = `# GitHubイシュー棚卸しレポート\n`;
-  report += `生成日: ${dateStr}\n`;
-  report += `対象イシュー数: ${processedIssues.length}件\n\n`;
+  if (labelEntries.length > 0) {
+    html += '<div class="aggregation-title">ラベル別集計</div>';
+    html += '<div class="aggregation-grid">';
+    labelEntries.forEach(function(entry) {
+      html += '<div class="aggregation-item"><span>' + escapeHtml(entry[0]) + '</span><span class="aggregation-item-count">' + entry[1] + '</span></div>';
+    });
+    html += '</div>';
+  }
 
-  report += `## サマリー\n`;
-  report += `- オープンイシュー: ${processedIssues.length}件\n`;
-  report += `- 対応必須（90日以上放置）: ${high.length}件\n`;
-  report += `- 要確認（30-90日放置）: ${medium.length}件\n`;
-  report += `- 直近更新あり（30日未満）: ${low.length}件\n`;
+  // マイルストーン集計
+  var msCounts = {};
+  var noMsCount = 0;
+  processedIssues.forEach(function(i) {
+    if (i.milestone) {
+      msCounts[i.milestone] = (msCounts[i.milestone] || 0) + 1;
+    } else {
+      noMsCount++;
+    }
+  });
+  var msEntries = Object.entries(msCounts).sort(function(a, b) { return b[1] - a[1]; });
 
-  const unassigned = processedIssues.filter(i => !i.assignee && i.assignees.length === 0);
-  report += `- 未アサイン: ${unassigned.length}件\n\n`;
+  html += '<div class="milestone-section">';
+  html += '<div class="aggregation-title">マイルストーン別集計</div>';
+  html += '<div class="aggregation-grid">';
+  if (noMsCount > 0) {
+    html += '<div class="aggregation-item"><span>未設定</span><span class="aggregation-item-count">' + noMsCount + '</span></div>';
+  }
+  msEntries.forEach(function(entry) {
+    html += '<div class="aggregation-item"><span>' + escapeHtml(entry[0]) + '</span><span class="aggregation-item-count">' + entry[1] + '</span></div>';
+  });
+  html += '</div></div>';
+
+  container.innerHTML = html;
+}
+
+function generateMarkdownReport() {
+  var now = new Date();
+  var dateStr = now.getFullYear() + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + String(now.getDate()).padStart(2, '0');
+
+  var high = processedIssues.filter(function(i) { return i.scoreLevel === 'high'; });
+  var medium = processedIssues.filter(function(i) { return i.scoreLevel === 'medium'; });
+  var low = processedIssues.filter(function(i) { return i.scoreLevel === 'low'; });
+  var unassigned = processedIssues.filter(function(i) { return !i.assignee && i.assignees.length === 0; });
+
+  var report = '# GitHubイシュー棚卸しレポート\n';
+  report += '生成日: ' + dateStr + '\n';
+  report += '対象イシュー数: ' + processedIssues.length + '件\n\n';
+
+  report += '## サマリー\n';
+  report += '- オープンイシュー: ' + processedIssues.length + '件\n';
+  report += '- 対応必須（90日以上放置）: ' + high.length + '件\n';
+  report += '- 要確認（30-90日放置）: ' + medium.length + '件\n';
+  report += '- 直近更新あり（30日未満）: ' + low.length + '件\n';
+  report += '- 未アサイン: ' + unassigned.length + '件\n\n';
 
   if (high.length > 0) {
-    report += `## 対応必須（スコア: 高）\n`;
-    high.forEach(i => {
-      report += `- #${i.number} ${i.title} （${i.daysSinceUpdate}日放置, アサイン: ${i.assignees.length > 0 ? i.assignees.join('/') : 'なし'}）\n`;
+    report += '## 対応必須（スコア: 高）\n';
+    high.forEach(function(i) {
+      var assignStr = i.assignees.length > 0 ? i.assignees.join('/') : 'なし';
+      report += '- #' + i.number + ' ' + i.title + ' （' + i.daysSinceUpdate + '日放置, アサイン: ' + assignStr + '）\n';
     });
     report += '\n';
   }
 
   if (medium.length > 0) {
-    report += `## 要確認（スコア: 中）\n`;
-    medium.forEach(i => {
-      report += `- #${i.number} ${i.title} （${i.daysSinceUpdate}日放置, アサイン: ${i.assignees.length > 0 ? i.assignees.join('/') : 'なし'}）\n`;
+    report += '## 要確認（スコア: 中）\n';
+    medium.forEach(function(i) {
+      var assignStr = i.assignees.length > 0 ? i.assignees.join('/') : 'なし';
+      report += '- #' + i.number + ' ' + i.title + ' （' + i.daysSinceUpdate + '日放置, アサイン: ' + assignStr + '）\n';
+    });
+    report += '\n';
+  }
+
+  if (unassigned.length > 0) {
+    report += '## 未アサインイシュー\n';
+    unassigned.forEach(function(i) {
+      report += '- #' + i.number + ' ' + i.title + ' （' + i.daysSinceUpdate + '日放置）\n';
     });
     report += '\n';
   }
 
   if (low.length > 0) {
-    report += `## 直近更新あり（スコア: 低）\n`;
-    low.forEach(i => {
-      report += `- #${i.number} ${i.title} （${i.daysSinceUpdate}日前更新）\n`;
+    report += '## 直近更新あり（スコア: 低）\n';
+    low.forEach(function(i) {
+      report += '- #' + i.number + ' ' + i.title + ' （' + i.daysSinceUpdate + '日前更新）\n';
     });
     report += '\n';
   }
 
   document.getElementById('reportContent').textContent = report;
   document.getElementById('reportOutput').classList.add('visible');
+  document.getElementById('reportOutput').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function copyReport() {
-  const text = document.getElementById('reportContent').textContent;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    btn.textContent = 'コピーしました';
-    setTimeout(() => { btn.textContent = 'コピー'; }, 1500);
+function copyReport(btnEl) {
+  var text = document.getElementById('reportContent').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var original = btnEl.textContent;
+    btnEl.textContent = 'コピーしました';
+    setTimeout(function() { btnEl.textContent = original; }, 1500);
   });
 }
 
 function exportIssueCsv() {
   if (processedIssues.length === 0) return;
 
-  const bom = '\uFEFF';
-  let csv = bom + '番号,タイトル,ラベル,アサイン,最終更新,放置日数,スコア\n';
+  var bom = '\uFEFF';
+  var csv = bom + '番号,タイトル,ラベル,アサイン,マイルストーン,最終更新,放置日数,スコア\n';
 
-  processedIssues.forEach(i => {
+  processedIssues.forEach(function(i) {
     csv += [
       i.number,
       quoteCsv(i.title),
       quoteCsv(i.labels.join('; ')),
       quoteCsv(i.assignees.join('; ') || 'なし'),
+      quoteCsv(i.milestone || '未設定'),
       formatDate(i.updatedAt),
       i.daysSinceUpdate,
       i.scoreLabel
     ].join(',') + '\n';
   });
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
-  a.download = `issue-audit-${formatDateFile(new Date())}.csv`;
+  a.download = 'issue-audit-' + formatDateFile(new Date()) + '.csv';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -659,7 +850,7 @@ function exportIssueCsv() {
 }
 
 function quoteCsv(val) {
-  const s = String(val);
+  var s = String(val);
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {
     return '"' + s.replace(/"/g, '""') + '"';
   }
@@ -667,21 +858,21 @@ function quoteCsv(val) {
 }
 
 function formatDate(date) {
-  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+  return date.getFullYear() + '/' + String(date.getMonth() + 1).padStart(2, '0') + '/' + String(date.getDate()).padStart(2, '0');
 }
 
 function formatDateFile(date) {
-  return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+  return date.getFullYear() + '' + String(date.getMonth() + 1).padStart(2, '0') + '' + String(date.getDate()).padStart(2, '0');
 }
 
 function escapeHtml(str) {
-  const div = document.createElement('div');
+  var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
 function showError(msg) {
-  const el = document.getElementById('errorMsg');
+  var el = document.getElementById('errorMsg');
   el.textContent = msg;
   el.style.display = 'block';
 }

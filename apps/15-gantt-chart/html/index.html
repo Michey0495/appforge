@@ -146,7 +146,8 @@
       </div>
       <div class="toolbar-group">
         <button class="btn btn-secondary" onclick="scrollToToday()">今日へ移動</button>
-        <button class="btn" onclick="exportPng()">PNG出力</button>
+        <button class="btn btn-secondary" onclick="exportPng()">PNG出力</button>
+        <button class="btn" onclick="exportSvg()">SVG出力</button>
       </div>
     </div>
     <div class="canvas-wrap" id="canvasWrap">
@@ -203,28 +204,45 @@
   nextWeek.setDate(nextWeek.getDate() + 7);
   document.getElementById('taskEnd').valueAsDate = nextWeek;
 
-  function addTask() {
+  const escapeHtml = (str) => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  };
+
+  const parseDate = (str) => new Date(str + 'T00:00:00');
+  const daysBetween = (a, b) => Math.round((b - a) / (1000 * 60 * 60 * 24));
+  const formatDate = (d) => {
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  };
+
+  const addTask = () => {
     const name = document.getElementById('taskName').value.trim();
     const start = document.getElementById('taskStart').value;
     const end = document.getElementById('taskEnd').value;
     const color = document.getElementById('taskColor').value;
 
     if (!name || !start || !end) return;
-    if (new Date(end) < new Date(start)) return;
+    if (new Date(end) < new Date(start)) {
+      alert('終了日は開始日より後にしてください');
+      return;
+    }
 
     tasks = [...tasks, { id: nextId++, name, start, end, color }];
     document.getElementById('taskName').value = '';
     renderTaskList();
     renderChart();
-  }
+  };
 
-  function deleteTask(id) {
+  const deleteTask = (id) => {
     tasks = tasks.filter(t => t.id !== id);
     renderTaskList();
     renderChart();
-  }
+  };
 
-  function openEditModal(id) {
+  const openEditModal = (id) => {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     editingTaskId = id;
@@ -233,70 +251,85 @@
     document.getElementById('editEnd').value = task.end;
     document.getElementById('editColor').value = task.color;
     document.getElementById('editModal').classList.add('active');
-  }
+  };
 
-  function closeEditModal() {
+  const closeEditModal = () => {
     document.getElementById('editModal').classList.remove('active');
     editingTaskId = null;
-  }
+  };
 
-  function saveEdit() {
+  const saveEdit = () => {
     if (editingTaskId === null) return;
     const name = document.getElementById('editName').value.trim();
     const start = document.getElementById('editStart').value;
     const end = document.getElementById('editEnd').value;
     const color = document.getElementById('editColor').value;
     if (!name || !start || !end) return;
+    if (new Date(end) < new Date(start)) {
+      alert('終了日は開始日より後にしてください');
+      return;
+    }
 
     tasks = tasks.map(t => t.id === editingTaskId ? { ...t, name, start, end, color } : t);
     closeEditModal();
     renderTaskList();
     renderChart();
-  }
+  };
 
-  function renderTaskList() {
+  // モーダル外クリックで閉じる
+  document.getElementById('editModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('editModal')) closeEditModal();
+  });
+
+  const renderTaskList = () => {
     const list = document.getElementById('taskList');
     if (tasks.length === 0) {
       list.innerHTML = '<div class="empty-state">タスクが登録されていません</div>';
       return;
     }
-    list.innerHTML = tasks.map(t => `
-      <div class="task-item">
-        <div>
-          <span class="task-color" style="background:${t.color};"></span>
-          <span class="task-name">${escapeHtml(t.name)}</span>
-          <span class="task-dates">${t.start} - ${t.end}</span>
-        </div>
-        <div class="task-actions">
-          <button class="btn btn-secondary btn-sm" onclick="openEditModal(${t.id})">編集</button>
-          <button class="btn btn-secondary btn-sm btn-danger" onclick="deleteTask(${t.id})">削除</button>
-        </div>
-      </div>
-    `).join('');
-  }
+    list.innerHTML = tasks.map(t => {
+      return '<div class="task-item"><div>' +
+        '<span class="task-color" style="background:' + t.color + ';"></span>' +
+        '<span class="task-name">' + escapeHtml(t.name) + '</span>' +
+        '<span class="task-dates">' + t.start + ' - ' + t.end + '</span>' +
+        '</div><div class="task-actions">' +
+        '<button class="btn btn-secondary btn-sm" onclick="openEditModal(' + t.id + ')">編集</button>' +
+        '<button class="btn btn-secondary btn-sm btn-danger" onclick="deleteTask(' + t.id + ')">削除</button>' +
+        '</div></div>';
+    }).join('');
+  };
 
-  function setScale(scale) {
+  const setScale = (scale) => {
     currentScale = scale;
     document.getElementById('scaleDay').classList.toggle('btn-active', scale === 'day');
     document.getElementById('scaleWeek').classList.toggle('btn-active', scale === 'week');
     document.getElementById('scaleMonth').classList.toggle('btn-active', scale === 'month');
     renderChart();
-  }
+  };
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
+  // チャート描画データを計算（Canvas描画とSVGエクスポートで共有）
+  const computeChartData = () => {
+    if (tasks.length === 0) return null;
 
-  // 日付ヘルパー
-  function parseDate(str) { return new Date(str + 'T00:00:00'); }
-  function daysBetween(a, b) { return Math.round((b - a) / (1000 * 60 * 60 * 24)); }
-  function formatDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
+    const allStarts = tasks.map(t => parseDate(t.start));
+    const allEnds = tasks.map(t => parseDate(t.end));
+    const minDate = new Date(Math.min(...allStarts));
+    const maxDate = new Date(Math.max(...allEnds));
 
-  function renderChart() {
+    const chartStart = new Date(minDate);
+    chartStart.setDate(chartStart.getDate() - 3);
+    const chartEnd = new Date(maxDate);
+    chartEnd.setDate(chartEnd.getDate() + 7);
+
+    const totalDays = daysBetween(chartStart, chartEnd) + 1;
+    const cellWidth = DAY_WIDTH[currentScale];
+    const chartWidth = LABEL_WIDTH + totalDays * cellWidth;
+    const chartHeight = HEADER_HEIGHT + tasks.length * ROW_HEIGHT + 8;
+
+    return { chartStart, chartEnd, totalDays, cellWidth, chartWidth, chartHeight };
+  };
+
+  const renderChart = () => {
     const canvas = document.getElementById('ganttCanvas');
     const ctx = canvas.getContext('2d');
     const wrap = document.getElementById('canvasWrap');
@@ -311,22 +344,8 @@
       return;
     }
 
-    // 日付範囲の計算
-    const allStarts = tasks.map(t => parseDate(t.start));
-    const allEnds = tasks.map(t => parseDate(t.end));
-    const minDate = new Date(Math.min(...allStarts));
-    const maxDate = new Date(Math.max(...allEnds));
-
-    // 前後に余白を追加
-    const chartStart = new Date(minDate);
-    chartStart.setDate(chartStart.getDate() - 3);
-    const chartEnd = new Date(maxDate);
-    chartEnd.setDate(chartEnd.getDate() + 7);
-
-    const totalDays = daysBetween(chartStart, chartEnd) + 1;
-    const cellWidth = DAY_WIDTH[currentScale];
-    const chartWidth = LABEL_WIDTH + totalDays * cellWidth;
-    const chartHeight = HEADER_HEIGHT + tasks.length * ROW_HEIGHT + 8;
+    const data = computeChartData();
+    const { chartStart, totalDays, cellWidth, chartWidth, chartHeight } = data;
 
     const dpr = window.devicePixelRatio || 1;
     canvas.width = chartWidth * dpr;
@@ -367,19 +386,17 @@
     for (let i = 0; i <= totalDays; i++) {
       const x = LABEL_WIDTH + i * cellWidth;
 
-      // 月ラベル (上段)
       if (current.getMonth() !== prevMonth) {
         prevMonth = current.getMonth();
         ctx.fillStyle = '#1a1a2e';
         ctx.font = '11px Inter, sans-serif';
         ctx.textAlign = 'left';
-        ctx.fillText(`${current.getFullYear()}/${current.getMonth() + 1}`, x + 4, 16);
+        ctx.fillText((current.getFullYear()) + '/' + (current.getMonth() + 1), x + 4, 16);
         ctx.fillStyle = '#9ca3af';
         ctx.font = '10px Inter, sans-serif';
         ctx.textAlign = 'center';
       }
 
-      // 日ラベル (下段) - スケールに応じて間引き
       const showLabel = currentScale === 'day' ||
         (currentScale === 'week' && current.getDay() === 1) ||
         (currentScale === 'month' && current.getDate() === 1);
@@ -389,7 +406,6 @@
         ctx.fillText(current.getDate(), x + cellWidth / 2, 40);
       }
 
-      // グリッド縦線
       const isWeekend = current.getDay() === 0 || current.getDay() === 6;
       if (isWeekend && currentScale === 'day') {
         ctx.fillStyle = 'rgba(0,0,0,0.015)';
@@ -411,21 +427,18 @@
     tasks.forEach((task, i) => {
       const y = HEADER_HEIGHT + i * ROW_HEIGHT;
 
-      // 行の区切り線
       ctx.strokeStyle = '#f3f4f6';
       ctx.beginPath();
       ctx.moveTo(0, y + ROW_HEIGHT);
       ctx.lineTo(chartWidth, y + ROW_HEIGHT);
       ctx.stroke();
 
-      // タスク名
       ctx.fillStyle = '#1a1a2e';
       ctx.font = '12px Inter, sans-serif';
       ctx.textAlign = 'left';
       const displayName = task.name.length > 16 ? task.name.slice(0, 15) + '...' : task.name;
       ctx.fillText(displayName, 12, y + ROW_HEIGHT / 2 + 4);
 
-      // タスクバー
       const startDate = parseDate(task.start);
       const endDate = parseDate(task.end);
       const startOffset = daysBetween(chartStart, startDate);
@@ -439,12 +452,12 @@
       ctx.fillStyle = task.color;
       ctx.fillRect(barX, barY, barW, barH);
 
-      // バー内のテキスト (十分な幅がある場合)
       if (barW > 60) {
         ctx.fillStyle = '#ffffff';
         ctx.font = '10px Inter, sans-serif';
         ctx.textAlign = 'left';
-        const barText = task.name.length > Math.floor(barW / 7) ? task.name.slice(0, Math.floor(barW / 7) - 2) + '..' : task.name;
+        const maxChars = Math.floor(barW / 7);
+        const barText = task.name.length > maxChars ? task.name.slice(0, maxChars - 2) + '..' : task.name;
         ctx.fillText(barText, barX + 6, barY + 14);
       }
     });
@@ -464,17 +477,15 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // 今日ラベル
       ctx.fillStyle = '#ef4444';
       ctx.font = '9px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('TODAY', todayX, 52);
     }
 
-    // キャンバスデータをstore (ツールチップ用)
     canvas._chartStart = chartStart;
     canvas._cellWidth = cellWidth;
-  }
+  };
 
   // ツールチップ
   const tooltip = document.getElementById('tooltip');
@@ -487,7 +498,6 @@
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // タスク行のヒット判定
     const rowIndex = Math.floor((y - HEADER_HEIGHT) / ROW_HEIGHT);
     if (rowIndex < 0 || rowIndex >= tasks.length || y < HEADER_HEIGHT) {
       tooltip.style.display = 'none';
@@ -497,6 +507,7 @@
     const task = tasks[rowIndex];
     const cellWidth = DAY_WIDTH[currentScale];
     const chartStart = canvas._chartStart;
+    if (!chartStart) { tooltip.style.display = 'none'; return; }
     const startDate = parseDate(task.start);
     const endDate = parseDate(task.end);
     const startOffset = daysBetween(chartStart, startDate);
@@ -508,7 +519,7 @@
       tooltip.style.display = 'block';
       tooltip.style.left = (e.clientX + 12) + 'px';
       tooltip.style.top = (e.clientY - 8) + 'px';
-      tooltip.innerHTML = `${task.name}<br>${task.start} ~ ${task.end}<br>${duration}日間`;
+      tooltip.innerHTML = escapeHtml(task.name) + '<br>' + task.start + ' ~ ' + task.end + '<br>' + duration + '日間';
     } else {
       tooltip.style.display = 'none';
     }
@@ -516,7 +527,7 @@
 
   canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
-  function scrollToToday() {
+  const scrollToToday = () => {
     if (tasks.length === 0) return;
     const chartStart = canvas._chartStart;
     if (!chartStart) return;
@@ -526,21 +537,117 @@
     const cellWidth = DAY_WIDTH[currentScale];
     const wrap = document.getElementById('canvasWrap');
     wrap.scrollLeft = Math.max(0, LABEL_WIDTH + todayOffset * cellWidth - wrap.clientWidth / 2);
-  }
+  };
 
-  function exportPng() {
+  const exportPng = () => {
     if (tasks.length === 0) return;
-    const canvas = document.getElementById('ganttCanvas');
+    const c = document.getElementById('ganttCanvas');
     const link = document.createElement('a');
     link.download = 'gantt-chart.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = c.toDataURL('image/png');
     link.click();
-  }
+  };
 
-  // ウィンドウリサイズ対応
+  // SVGエクスポート
+  const exportSvg = () => {
+    if (tasks.length === 0) return;
+
+    const data = computeChartData();
+    const { chartStart, totalDays, cellWidth, chartWidth, chartHeight } = data;
+
+    let svg = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    svg += '<svg xmlns="http://www.w3.org/2000/svg" width="' + chartWidth + '" height="' + chartHeight + '" viewBox="0 0 ' + chartWidth + ' ' + chartHeight + '">\n';
+    svg += '<style>text { font-family: Inter, Helvetica Neue, Arial, sans-serif; }</style>\n';
+
+    // 背景
+    svg += '<rect width="' + chartWidth + '" height="' + chartHeight + '" fill="#ffffff"/>\n';
+    // ヘッダー背景
+    svg += '<rect width="' + chartWidth + '" height="' + HEADER_HEIGHT + '" fill="#fafafa"/>\n';
+    // ヘッダー下線
+    svg += '<line x1="0" y1="' + HEADER_HEIGHT + '" x2="' + chartWidth + '" y2="' + HEADER_HEIGHT + '" stroke="#e5e7eb"/>\n';
+    // ラベル列区切り
+    svg += '<line x1="' + LABEL_WIDTH + '" y1="0" x2="' + LABEL_WIDTH + '" y2="' + chartHeight + '" stroke="#e5e7eb"/>\n';
+
+    // 日付ヘッダー
+    const current = new Date(chartStart);
+    let prevMonth = -1;
+    for (let i = 0; i <= totalDays; i++) {
+      const x = LABEL_WIDTH + i * cellWidth;
+
+      if (current.getMonth() !== prevMonth) {
+        prevMonth = current.getMonth();
+        svg += '<text x="' + (x + 4) + '" y="16" font-size="11" fill="#1a1a2e" text-anchor="start">' +
+          current.getFullYear() + '/' + (current.getMonth() + 1) + '</text>\n';
+      }
+
+      const showLabel = currentScale === 'day' ||
+        (currentScale === 'week' && current.getDay() === 1) ||
+        (currentScale === 'month' && current.getDate() === 1);
+      if (showLabel) {
+        svg += '<text x="' + (x + cellWidth / 2) + '" y="40" font-size="10" fill="#9ca3af" text-anchor="middle">' +
+          current.getDate() + '</text>\n';
+      }
+
+      if (currentScale === 'day' || (currentScale === 'week' && current.getDay() === 1) || (currentScale === 'month' && current.getDate() === 1)) {
+        svg += '<line x1="' + x + '" y1="' + HEADER_HEIGHT + '" x2="' + x + '" y2="' + chartHeight + '" stroke="#f3f4f6"/>\n';
+      }
+
+      current.setDate(current.getDate() + 1);
+    }
+
+    // タスク行
+    tasks.forEach((task, i) => {
+      const y = HEADER_HEIGHT + i * ROW_HEIGHT;
+      svg += '<line x1="0" y1="' + (y + ROW_HEIGHT) + '" x2="' + chartWidth + '" y2="' + (y + ROW_HEIGHT) + '" stroke="#f3f4f6"/>\n';
+
+      const displayName = task.name.length > 16 ? task.name.slice(0, 15) + '...' : task.name;
+      svg += '<text x="12" y="' + (y + ROW_HEIGHT / 2 + 4) + '" font-size="12" fill="#1a1a2e">' + svgEscape(displayName) + '</text>\n';
+
+      const startDate = parseDate(task.start);
+      const endDate = parseDate(task.end);
+      const startOffset = daysBetween(chartStart, startDate);
+      const duration = daysBetween(startDate, endDate) + 1;
+      const barX = LABEL_WIDTH + startOffset * cellWidth;
+      const barW = duration * cellWidth;
+      const barH = 20;
+      const barY = y + (ROW_HEIGHT - barH) / 2;
+
+      svg += '<rect x="' + barX + '" y="' + barY + '" width="' + barW + '" height="' + barH + '" fill="' + task.color + '"/>\n';
+
+      if (barW > 60) {
+        const maxChars = Math.floor(barW / 7);
+        const barText = task.name.length > maxChars ? task.name.slice(0, maxChars - 2) + '..' : task.name;
+        svg += '<text x="' + (barX + 6) + '" y="' + (barY + 14) + '" font-size="10" fill="#ffffff">' + svgEscape(barText) + '</text>\n';
+      }
+    });
+
+    // 今日のマーカー
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    const todayOffset = daysBetween(chartStart, todayDate);
+    if (todayOffset >= 0 && todayOffset <= totalDays) {
+      const todayX = LABEL_WIDTH + todayOffset * cellWidth + cellWidth / 2;
+      svg += '<line x1="' + todayX + '" y1="0" x2="' + todayX + '" y2="' + chartHeight + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>\n';
+      svg += '<text x="' + todayX + '" y="52" font-size="9" fill="#ef4444" text-anchor="middle">TODAY</text>\n';
+    }
+
+    svg += '</svg>';
+
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = 'gantt-chart.svg';
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const svgEscape = (str) => {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+
   window.addEventListener('resize', () => { renderChart(); });
 
-  // 初期描画
   renderChart();
 </script>
 </body>

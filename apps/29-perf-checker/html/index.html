@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ページ速度チェッカー - Chrome拡張</title>
+<title>ページ速度チェッカー</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,195 +18,905 @@
   }
 
   .container {
-    max-width: 720px;
+    max-width: 960px;
     margin: 0 auto;
-    padding: 48px 32px;
+    padding: 32px;
   }
 
   .header {
-    margin-bottom: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 32px;
     padding-bottom: 16px;
     border-bottom: 1px solid #f3f4f6;
   }
-  .header-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-  .header-subtitle { font-size: 12px; color: #9ca3af; }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-subtitle { font-size: 11px; color: #9ca3af; }
 
-  h2 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    margin-top: 32px;
-    color: #1e3461;
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 6px;
   }
 
-  p {
-    margin-bottom: 12px;
-    line-height: 1.8;
-    color: #374151;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 500;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary { background: #1e3461; color: #ffffff; }
+  .btn-primary:hover { background: #2e4f87; }
+  .btn-secondary { background: #f3f4f6; color: #1a1a2e; border: 1px solid #e5e7eb; }
+  .btn-secondary:hover { background: #e5e7eb; }
+  .btn-lg { padding: 10px 24px; font-size: 13px; }
+
+  /* スコアカード */
+  .score-section {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
   }
 
-  .feature-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 24px 0;
-  }
-
-  .feature-card {
-    padding: 16px;
+  .score-card {
+    flex: 1;
+    min-width: 120px;
+    text-align: center;
+    padding: 24px 16px;
     border: 1px solid #f3f4f6;
     border-radius: 2px;
   }
-  .feature-card-title {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .feature-card-desc {
-    font-size: 11px;
-    color: #6b7280;
-    line-height: 1.5;
-  }
 
-  .install-steps {
-    margin: 20px 0;
-    counter-reset: step;
-  }
-  .install-step {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 12px 0;
-    border-bottom: 1px solid #f3f4f6;
-  }
-  .install-step:last-child { border-bottom: none; }
-
-  .step-number {
-    flex: 0 0 24px;
-    height: 24px;
+  .score-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #1e3461;
-    color: #ffffff;
+    margin: 0 auto 12px;
+    font-size: 24px;
+    font-weight: 700;
+    border: 3px solid;
+  }
+  .score-good { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+  .score-medium { border-color: #d97706; color: #d97706; background: #fffbeb; }
+  .score-bad { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
+
+  .score-label {
     font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+  .score-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  .score-unit {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 400;
+  }
+  .score-rating {
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .rating-good { color: #16a34a; }
+  .rating-medium { color: #d97706; }
+  .rating-bad { color: #dc2626; }
+
+  /* 総合スコア */
+  .overall-score {
+    text-align: center;
+    padding: 32px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    margin-bottom: 32px;
+  }
+  .overall-score .score-circle {
+    width: 100px;
+    height: 100px;
+    font-size: 32px;
+    border-width: 4px;
+  }
+  .overall-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+  }
+
+  /* セクション */
+  .section {
+    margin-bottom: 28px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  /* メトリクステーブル */
+  .metrics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .metrics-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .metrics-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+  }
+  .metrics-table tr:hover { background: #fafbfc; }
+
+  .metric-name { font-weight: 500; }
+  .metric-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: #f3f4f6;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .metric-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+  .bar-good { background: #16a34a; }
+  .bar-medium { background: #d97706; }
+  .bar-bad { background: #dc2626; }
+
+  .badge {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: 10px;
     font-weight: 600;
     border-radius: 2px;
   }
-  .step-text {
-    font-size: 12px;
-    color: #374151;
-    line-height: 1.6;
-  }
+  .badge-good { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+  .badge-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .badge-bad { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
-  code {
-    font-family: 'SF Mono', 'Consolas', monospace;
+  /* リソーステーブル */
+  .resource-table {
+    width: 100%;
+    border-collapse: collapse;
     font-size: 11px;
-    background: #f3f4f6;
-    padding: 2px 6px;
+  }
+  .resource-table th {
+    text-align: left;
+    padding: 6px 10px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    border-bottom: 1px solid #f3f4f6;
+    position: sticky;
+    top: 0;
+    background: #ffffff;
+    z-index: 1;
+  }
+  .resource-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #f3f4f6;
+    white-space: nowrap;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .resource-table tr:hover { background: #fafbfc; }
+
+  .resource-wrap {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #f3f4f6;
     border-radius: 2px;
-    color: #1e3461;
   }
 
-  .metrics-list {
-    margin: 16px 0;
-  }
-  .metric-item {
-    padding: 8px 0;
-    border-bottom: 1px solid #f3f4f6;
+  /* 改善提案 */
+  .suggestions-list { display: flex; flex-direction: column; gap: 8px; }
+  .suggestion-item {
+    padding: 12px 16px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
     display: flex;
     gap: 12px;
+    align-items: flex-start;
   }
-  .metric-item:last-child { border-bottom: none; }
-  .metric-name { font-weight: 500; min-width: 160px; font-size: 12px; }
-  .metric-desc { font-size: 12px; color: #6b7280; }
+  .suggestion-priority {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .priority-high { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+  .priority-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+  .priority-low { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+  .suggestion-text {
+    font-size: 12px;
+    line-height: 1.6;
+    color: #374151;
+  }
+
+  /* アクションバー */
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .info-text {
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  /* リソース集計 */
+  .resource-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .resource-summary-item {
+    padding: 12px 16px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+  }
+  .resource-summary-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    margin-bottom: 4px;
+  }
+  .resource-summary-count {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e3461;
+  }
+  .resource-summary-size {
+    font-size: 11px;
+    color: #6b7280;
+  }
+
+  .hidden { display: none; }
+
+  /* タイムラインバー */
+  .timeline-bar {
+    position: relative;
+    height: 32px;
+    background: #f3f4f6;
+    border-radius: 2px;
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .timeline-segment {
+    position: absolute;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #ffffff;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .timeline-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    font-size: 11px;
+  }
+  .timeline-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .timeline-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <div class="header-title">ページ速度チェッカー</div>
-    <div class="header-subtitle">Chrome拡張 - Performance APIによるページ計測ツール</div>
-  </div>
-
-  <p>
-    閲覧中のページのパフォーマンスを即座に計測するChrome拡張です。
-    ブラウザの Performance API を使って、読み込み時間やリソースの状況を可視化し、改善ポイントを提示します。
-  </p>
-
-  <h2>計測項目</h2>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <div class="feature-card-title">DOMContentLoaded</div>
-      <div class="feature-card-desc">HTMLの解析が完了しDOMツリーが構築されるまでの時間</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card-title">Load Time</div>
-      <div class="feature-card-desc">画像やスタイルシート含む全リソースの読み込み完了時間</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card-title">TTFB</div>
-      <div class="feature-card-desc">Time to First Byte。サーバーからの最初のレスポンス到達時間</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card-title">DOM要素数</div>
-      <div class="feature-card-desc">ページ内の全DOM要素の数。多すぎるとレンダリングに影響</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card-title">リソース集計</div>
-      <div class="feature-card-desc">読み込まれたリソースの件数と合計サイズ</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-card-title">画像分析</div>
-      <div class="feature-card-desc">画像ファイルの枚数と合計転送サイズ</div>
+    <div>
+      <div class="header-title">ページ速度チェッカー</div>
+      <div class="header-subtitle">Performance APIによるページ計測ツール</div>
     </div>
   </div>
 
-  <h2>スコア判定</h2>
-  <p>
-    各指標を総合的に評価し、100点満点のスコアと Good / Medium / Bad の3段階で判定を表示します。
-    基準値を超えた項目には具体的な改善提案を表示します。
-  </p>
+  <!-- アクション -->
+  <div class="action-bar">
+    <button class="btn btn-primary btn-lg" id="analyzeBtn" onclick="analyze()">このページを計測</button>
+    <button class="btn btn-secondary" onclick="exportReport()">レポートをコピー</button>
+    <span class="info-text" id="lastAnalyzed"></span>
+  </div>
 
-  <h2>インストール手順</h2>
-  <div class="install-steps">
-    <div class="install-step">
-      <div class="step-number">1</div>
-      <div class="step-text"><code>chrome-ext</code> フォルダを任意の場所に配置します。</div>
+  <!-- 総合スコア -->
+  <div class="overall-score hidden" id="overallSection">
+    <div class="score-circle" id="overallCircle">--</div>
+    <div class="overall-label" id="overallLabel">総合スコア</div>
+  </div>
+
+  <!-- 主要メトリクス -->
+  <div class="score-section hidden" id="scoreSection">
+    <div class="score-card" id="cardTTFB">
+      <div class="score-label">TTFB</div>
+      <div class="score-value">--</div>
     </div>
-    <div class="install-step">
-      <div class="step-number">2</div>
-      <div class="step-text">Chrome で <code>chrome://extensions</code> を開きます。</div>
+    <div class="score-card" id="cardDCL">
+      <div class="score-label">DOMContentLoaded</div>
+      <div class="score-value">--</div>
     </div>
-    <div class="install-step">
-      <div class="step-number">3</div>
-      <div class="step-text">右上の「デベロッパーモード」をオンにします。</div>
+    <div class="score-card" id="cardLoad">
+      <div class="score-label">Load</div>
+      <div class="score-value">--</div>
     </div>
-    <div class="install-step">
-      <div class="step-number">4</div>
-      <div class="step-text">「パッケージ化されていない拡張機能を読み込む」をクリックし、<code>chrome-ext</code> フォルダを選択します。</div>
+    <div class="score-card" id="cardDOMSize">
+      <div class="score-label">DOM要素数</div>
+      <div class="score-value">--</div>
     </div>
-    <div class="install-step">
-      <div class="step-number">5</div>
-      <div class="step-text">ツールバーに追加された拡張アイコンをクリックすると、現在のページの計測結果が表示されます。</div>
+    <div class="score-card" id="cardResources">
+      <div class="score-label">リソース数</div>
+      <div class="score-value">--</div>
     </div>
   </div>
 
-  <h2>使用技術</h2>
-  <div class="metrics-list">
-    <div class="metric-item">
-      <div class="metric-name">Performance API</div>
-      <div class="metric-desc">ブラウザ標準のナビゲーション・リソースタイミング情報</div>
+  <!-- ナビゲーションタイムライン -->
+  <div class="section hidden" id="timelineSection">
+    <div class="section-title">ナビゲーションタイムライン</div>
+    <div class="timeline-bar" id="timelineBar"></div>
+    <div class="timeline-legend" id="timelineLegend"></div>
+  </div>
+
+  <!-- 詳細メトリクス -->
+  <div class="section hidden" id="detailSection">
+    <div class="section-title">詳細メトリクス</div>
+    <table class="metrics-table" id="metricsTable">
+      <thead>
+        <tr>
+          <th style="width: 200px;">指標</th>
+          <th style="width: 100px;">値</th>
+          <th>バー</th>
+          <th style="width: 80px;">判定</th>
+        </tr>
+      </thead>
+      <tbody id="metricsBody"></tbody>
+    </table>
+  </div>
+
+  <!-- リソース集計 -->
+  <div class="section hidden" id="resourceSummarySection">
+    <div class="section-title">リソース種別集計</div>
+    <div class="resource-summary" id="resourceSummary"></div>
+  </div>
+
+  <!-- リソース一覧 -->
+  <div class="section hidden" id="resourceSection">
+    <div class="section-title">リソースタイミング詳細（上位30件、所要時間順）</div>
+    <div class="resource-wrap">
+      <table class="resource-table">
+        <thead>
+          <tr>
+            <th>リソース名</th>
+            <th>種別</th>
+            <th>サイズ</th>
+            <th>所要時間</th>
+          </tr>
+        </thead>
+        <tbody id="resourceBody"></tbody>
+      </table>
     </div>
-    <div class="metric-item">
-      <div class="metric-name">Chrome Extensions API</div>
-      <div class="metric-desc">Manifest V3、chrome.scripting.executeScript</div>
-    </div>
-    <div class="metric-item">
-      <div class="metric-name">activeTab権限</div>
-      <div class="metric-desc">拡張クリック時のみアクティブタブにアクセス。常時監視はしない</div>
-    </div>
+  </div>
+
+  <!-- 改善提案 -->
+  <div class="section hidden" id="suggestionsSection">
+    <div class="section-title">改善提案</div>
+    <div class="suggestions-list" id="suggestionsList"></div>
   </div>
 </div>
+
+<script>
+var analysisResult = null;
+
+// メトリクスの閾値定義
+var THRESHOLDS = {
+  ttfb: { good: 200, medium: 600 },
+  dcl: { good: 1500, medium: 3000 },
+  load: { good: 3000, medium: 6000 },
+  domSize: { good: 800, medium: 1500 },
+  resources: { good: 30, medium: 60 },
+  totalSize: { good: 1048576, medium: 3145728 },
+  domInteractive: { good: 1000, medium: 2500 },
+  redirectTime: { good: 0, medium: 100 },
+  dnsLookup: { good: 20, medium: 100 },
+  tcpConnect: { good: 50, medium: 200 },
+  serverResponse: { good: 200, medium: 600 }
+};
+
+function getRating(value, thresholds) {
+  if (value <= thresholds.good) return 'good';
+  if (value <= thresholds.medium) return 'medium';
+  return 'bad';
+}
+
+function getRatingLabel(rating) {
+  switch (rating) {
+    case 'good': return 'Good';
+    case 'medium': return 'Medium';
+    case 'bad': return 'Bad';
+  }
+}
+
+function formatMs(ms) {
+  if (ms < 0) return '0 ms';
+  if (ms < 1000) return Math.round(ms) + ' ms';
+  return (ms / 1000).toFixed(2) + ' s';
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+function getResourceType(entry) {
+  var type = entry.initiatorType || '';
+  switch (type) {
+    case 'script': return 'JS';
+    case 'css':
+    case 'link': return 'CSS';
+    case 'img': return '画像';
+    case 'xmlhttprequest':
+    case 'fetch': return 'API';
+    case 'font': return 'フォント';
+    default:
+      // URLベースで推定
+      var name = entry.name || '';
+      if (name.match(/\.js(\?|$)/i)) return 'JS';
+      if (name.match(/\.css(\?|$)/i)) return 'CSS';
+      if (name.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)(\?|$)/i)) return '画像';
+      if (name.match(/\.(woff2?|ttf|otf|eot)(\?|$)/i)) return 'フォント';
+      return 'その他';
+  }
+}
+
+function getResourceName(url) {
+  try {
+    var u = new URL(url);
+    var path = u.pathname;
+    var parts = path.split('/');
+    return parts[parts.length - 1] || u.hostname;
+  } catch (e) {
+    return url.slice(0, 60);
+  }
+}
+
+function analyze() {
+  var nav = performance.getEntriesByType('navigation')[0];
+  var resources = performance.getEntriesByType('resource');
+  var domCount = document.querySelectorAll('*').length;
+
+  if (!nav) {
+    alert('ナビゲーションタイミング情報が取得できませんでした');
+    return;
+  }
+
+  // メトリクス計算
+  var ttfb = nav.responseStart - nav.requestStart;
+  var dcl = nav.domContentLoadedEventEnd - nav.startTime;
+  var loadTime = nav.loadEventEnd - nav.startTime;
+  var domInteractive = nav.domInteractive - nav.startTime;
+  var redirectTime = nav.redirectEnd - nav.redirectStart;
+  var dnsLookup = nav.domainLookupEnd - nav.domainLookupStart;
+  var tcpConnect = nav.connectEnd - nav.connectStart;
+  var serverResponse = nav.responseEnd - nav.requestStart;
+
+  // リソース集計
+  var totalTransferSize = 0;
+  var resourcesByType = {};
+
+  resources.forEach(function(r) {
+    var type = getResourceType(r);
+    if (!resourcesByType[type]) {
+      resourcesByType[type] = { count: 0, size: 0 };
+    }
+    resourcesByType[type].count++;
+    resourcesByType[type].size += r.transferSize || 0;
+    totalTransferSize += r.transferSize || 0;
+  });
+
+  // スコア計算（各指標を0-100に換算して平均）
+  function calcScore(value, thresholds) {
+    if (value <= thresholds.good) return 100;
+    if (value >= thresholds.medium * 2) return 0;
+    if (value <= thresholds.medium) {
+      return Math.round(100 - ((value - thresholds.good) / (thresholds.medium - thresholds.good)) * 50);
+    }
+    return Math.round(50 - ((value - thresholds.medium) / thresholds.medium) * 50);
+  }
+
+  var scores = [
+    calcScore(ttfb, THRESHOLDS.ttfb),
+    calcScore(dcl, THRESHOLDS.dcl),
+    calcScore(loadTime, THRESHOLDS.load),
+    calcScore(domCount, THRESHOLDS.domSize),
+    calcScore(resources.length, THRESHOLDS.resources),
+    calcScore(totalTransferSize, THRESHOLDS.totalSize)
+  ];
+  var overallScore = Math.round(scores.reduce(function(a, b) { return a + b; }, 0) / scores.length);
+  overallScore = Math.max(0, Math.min(100, overallScore));
+
+  analysisResult = {
+    ttfb: ttfb,
+    dcl: dcl,
+    loadTime: loadTime,
+    domInteractive: domInteractive,
+    redirectTime: redirectTime,
+    dnsLookup: dnsLookup,
+    tcpConnect: tcpConnect,
+    serverResponse: serverResponse,
+    domCount: domCount,
+    resourceCount: resources.length,
+    totalTransferSize: totalTransferSize,
+    resourcesByType: resourcesByType,
+    resources: resources,
+    overallScore: overallScore,
+    nav: nav
+  };
+
+  renderResults();
+}
+
+function renderResults() {
+  var r = analysisResult;
+
+  // タイムスタンプ表示
+  document.getElementById('lastAnalyzed').textContent = '計測時刻: ' + new Date().toLocaleTimeString('ja-JP');
+
+  // 全セクション表示
+  ['overallSection', 'scoreSection', 'timelineSection', 'detailSection',
+   'resourceSummarySection', 'resourceSection', 'suggestionsSection'].forEach(function(id) {
+    document.getElementById(id).classList.remove('hidden');
+  });
+
+  // 総合スコア
+  var overallRating = r.overallScore >= 80 ? 'good' : (r.overallScore >= 50 ? 'medium' : 'bad');
+  var circle = document.getElementById('overallCircle');
+  circle.textContent = r.overallScore;
+  circle.className = 'score-circle score-' + overallRating;
+
+  // スコアカード
+  renderScoreCard('cardTTFB', 'TTFB', formatMs(r.ttfb), getRating(r.ttfb, THRESHOLDS.ttfb));
+  renderScoreCard('cardDCL', 'DOMContentLoaded', formatMs(r.dcl), getRating(r.dcl, THRESHOLDS.dcl));
+  renderScoreCard('cardLoad', 'Load', formatMs(r.loadTime), getRating(r.loadTime, THRESHOLDS.load));
+  renderScoreCard('cardDOMSize', 'DOM要素数', r.domCount + '個', getRating(r.domCount, THRESHOLDS.domSize));
+  renderScoreCard('cardResources', 'リソース数', r.resourceCount + '件', getRating(r.resourceCount, THRESHOLDS.resources));
+
+  // ナビゲーションタイムライン
+  renderTimeline();
+
+  // 詳細メトリクス
+  renderMetrics();
+
+  // リソース集計
+  renderResourceSummary();
+
+  // リソース一覧
+  renderResourceList();
+
+  // 改善提案
+  renderSuggestions();
+}
+
+function renderScoreCard(cardId, labelText, valueText, rating) {
+  var card = document.getElementById(cardId);
+  card.innerHTML =
+    '<div class="score-label">' + labelText + '</div>' +
+    '<div class="score-value">' + valueText + '</div>' +
+    '<div class="score-rating rating-' + rating + '">' + getRatingLabel(rating) + '</div>';
+}
+
+function renderTimeline() {
+  var nav = analysisResult.nav;
+  var total = nav.loadEventEnd - nav.startTime;
+  if (total <= 0) total = 1;
+
+  var phases = [
+    { name: 'Redirect', start: nav.redirectStart, end: nav.redirectEnd, color: '#9ca3af' },
+    { name: 'DNS', start: nav.domainLookupStart, end: nav.domainLookupEnd, color: '#6366f1' },
+    { name: 'TCP', start: nav.connectStart, end: nav.connectEnd, color: '#8b5cf6' },
+    { name: 'Request', start: nav.requestStart, end: nav.responseStart, color: '#1e3461' },
+    { name: 'Response', start: nav.responseStart, end: nav.responseEnd, color: '#2e4f87' },
+    { name: 'DOM処理', start: nav.responseEnd, end: nav.domContentLoadedEventEnd, color: '#16a34a' },
+    { name: 'Load', start: nav.domContentLoadedEventEnd, end: nav.loadEventEnd, color: '#d97706' }
+  ];
+
+  var barHtml = '';
+  var legendHtml = '';
+
+  phases.forEach(function(phase) {
+    var duration = (phase.end || 0) - (phase.start || 0);
+    if (duration <= 0) return;
+
+    var left = ((phase.start - nav.startTime) / total * 100).toFixed(2);
+    var width = (duration / total * 100).toFixed(2);
+    if (parseFloat(width) < 1) width = '1';
+
+    barHtml += '<div class="timeline-segment" style="left:' + left + '%; width:' + width + '%; background:' + phase.color + ';">' + phase.name + '</div>';
+    legendHtml += '<div class="timeline-legend-item"><div class="timeline-legend-color" style="background:' + phase.color + ';"></div>' + phase.name + ' ' + formatMs(duration) + '</div>';
+  });
+
+  document.getElementById('timelineBar').innerHTML = barHtml;
+  document.getElementById('timelineLegend').innerHTML = legendHtml;
+}
+
+function renderMetrics() {
+  var r = analysisResult;
+  var metrics = [
+    { name: 'TTFB (Time to First Byte)', value: r.ttfb, threshold: THRESHOLDS.ttfb },
+    { name: 'DOM Interactive', value: r.domInteractive, threshold: THRESHOLDS.domInteractive },
+    { name: 'DOMContentLoaded', value: r.dcl, threshold: THRESHOLDS.dcl },
+    { name: 'Load完了', value: r.loadTime, threshold: THRESHOLDS.load },
+    { name: 'リダイレクト時間', value: r.redirectTime, threshold: THRESHOLDS.redirectTime },
+    { name: 'DNS参照', value: r.dnsLookup, threshold: THRESHOLDS.dnsLookup },
+    { name: 'TCP接続', value: r.tcpConnect, threshold: THRESHOLDS.tcpConnect },
+    { name: 'サーバー応答', value: r.serverResponse, threshold: THRESHOLDS.serverResponse },
+    { name: 'DOM要素数', value: r.domCount, threshold: THRESHOLDS.domSize, isCount: true },
+    { name: 'リソース数', value: r.resourceCount, threshold: THRESHOLDS.resources, isCount: true },
+    { name: '転送サイズ合計', value: r.totalTransferSize, threshold: THRESHOLDS.totalSize, isBytes: true }
+  ];
+
+  var maxValue = Math.max.apply(null, metrics.filter(function(m) { return !m.isCount && !m.isBytes; }).map(function(m) { return m.value; }));
+  if (maxValue <= 0) maxValue = 1;
+
+  var html = '';
+  metrics.forEach(function(m) {
+    var rating = getRating(m.value, m.threshold);
+    var displayValue = m.isBytes ? formatBytes(m.value) : (m.isCount ? m.value : formatMs(m.value));
+    var barWidth = m.isBytes
+      ? Math.min(100, (m.value / (m.threshold.medium * 2)) * 100)
+      : (m.isCount ? Math.min(100, (m.value / (m.threshold.medium * 2)) * 100) : Math.min(100, (m.value / maxValue) * 100));
+
+    html += '<tr>' +
+      '<td class="metric-name">' + m.name + '</td>' +
+      '<td>' + displayValue + '</td>' +
+      '<td><div class="metric-bar-wrap"><div class="metric-bar bar-' + rating + '" style="width:' + barWidth.toFixed(1) + '%;"></div></div></td>' +
+      '<td><span class="badge badge-' + rating + '">' + getRatingLabel(rating) + '</span></td>' +
+      '</tr>';
+  });
+
+  document.getElementById('metricsBody').innerHTML = html;
+}
+
+function renderResourceSummary() {
+  var types = analysisResult.resourcesByType;
+  var html = '';
+
+  // 合計行
+  html += '<div class="resource-summary-item">' +
+    '<div class="resource-summary-type">合計</div>' +
+    '<div class="resource-summary-count">' + analysisResult.resourceCount + '件</div>' +
+    '<div class="resource-summary-size">' + formatBytes(analysisResult.totalTransferSize) + '</div>' +
+    '</div>';
+
+  Object.keys(types).sort(function(a, b) { return types[b].size - types[a].size; }).forEach(function(type) {
+    html += '<div class="resource-summary-item">' +
+      '<div class="resource-summary-type">' + type + '</div>' +
+      '<div class="resource-summary-count">' + types[type].count + '件</div>' +
+      '<div class="resource-summary-size">' + formatBytes(types[type].size) + '</div>' +
+      '</div>';
+  });
+
+  document.getElementById('resourceSummary').innerHTML = html;
+}
+
+function renderResourceList() {
+  var resources = analysisResult.resources.slice().sort(function(a, b) {
+    return b.duration - a.duration;
+  }).slice(0, 30);
+
+  var html = '';
+  resources.forEach(function(r) {
+    var type = getResourceType(r);
+    var name = getResourceName(r.name);
+    var size = r.transferSize ? formatBytes(r.transferSize) : '-';
+    var duration = formatMs(r.duration);
+
+    html += '<tr>' +
+      '<td title="' + escapeAttr(r.name) + '">' + escapeHtml(name) + '</td>' +
+      '<td>' + type + '</td>' +
+      '<td>' + size + '</td>' +
+      '<td>' + duration + '</td>' +
+      '</tr>';
+  });
+
+  document.getElementById('resourceBody').innerHTML = html;
+}
+
+function renderSuggestions() {
+  var r = analysisResult;
+  var suggestions = [];
+
+  if (r.ttfb > THRESHOLDS.ttfb.medium) {
+    suggestions.push({
+      priority: 'high',
+      text: 'TTFB が ' + formatMs(r.ttfb) + ' です。サーバーの応答が遅い可能性があります。CDN導入やサーバーサイドのキャッシュ戦略を見直してください。'
+    });
+  } else if (r.ttfb > THRESHOLDS.ttfb.good) {
+    suggestions.push({
+      priority: 'medium',
+      text: 'TTFB が ' + formatMs(r.ttfb) + ' です。200ms以下を目指してサーバー応答の最適化を検討してください。'
+    });
+  }
+
+  if (r.domCount > THRESHOLDS.domSize.medium) {
+    suggestions.push({
+      priority: 'high',
+      text: 'DOM要素が ' + r.domCount + '個あります。不要な要素を削減し、仮想スクロールの導入を検討してください。'
+    });
+  } else if (r.domCount > THRESHOLDS.domSize.good) {
+    suggestions.push({
+      priority: 'medium',
+      text: 'DOM要素が ' + r.domCount + '個あります。800個以下を目指して構造を簡素化すると描画性能が向上します。'
+    });
+  }
+
+  if (r.resourceCount > THRESHOLDS.resources.medium) {
+    suggestions.push({
+      priority: 'high',
+      text: 'リソースが ' + r.resourceCount + '件読み込まれています。バンドルの統合やコード分割で HTTP リクエスト数を削減してください。'
+    });
+  }
+
+  if (r.totalTransferSize > THRESHOLDS.totalSize.medium) {
+    suggestions.push({
+      priority: 'high',
+      text: '総転送サイズが ' + formatBytes(r.totalTransferSize) + ' です。画像の圧縮、JS/CSSのminify、gzip圧縮を確認してください。'
+    });
+  }
+
+  var types = r.resourcesByType;
+  if (types['画像'] && types['画像'].size > 500000) {
+    suggestions.push({
+      priority: 'medium',
+      text: '画像の合計サイズが ' + formatBytes(types['画像'].size) + ' です。WebP変換や遅延読み込み（lazy loading）を検討してください。'
+    });
+  }
+
+  if (types['JS'] && types['JS'].count > 10) {
+    suggestions.push({
+      priority: 'medium',
+      text: 'JavaScriptファイルが ' + types['JS'].count + '件あります。バンドル統合や defer/async 属性の活用で読み込みを最適化できます。'
+    });
+  }
+
+  if (r.loadTime > THRESHOLDS.load.good && r.dcl < r.loadTime * 0.3) {
+    suggestions.push({
+      priority: 'low',
+      text: 'DOMContentLoadedは速いがLoad完了が遅い状態です。メインコンテンツ表示後に読み込まれるリソースの遅延読み込みを確認してください。'
+    });
+  }
+
+  if (r.redirectTime > 100) {
+    suggestions.push({
+      priority: 'medium',
+      text: 'リダイレクトに ' + formatMs(r.redirectTime) + ' かかっています。不要なリダイレクトを減らすとページ表示が速くなります。'
+    });
+  }
+
+  if (suggestions.length === 0) {
+    suggestions.push({
+      priority: 'low',
+      text: '各指標は良好な範囲内です。現時点で大きな問題は見つかりませんでした。'
+    });
+  }
+
+  var html = '';
+  suggestions.forEach(function(s) {
+    var priorityLabel = s.priority === 'high' ? '高' : (s.priority === 'medium' ? '中' : '低');
+    html += '<div class="suggestion-item">' +
+      '<span class="suggestion-priority priority-' + s.priority + '">' + priorityLabel + '</span>' +
+      '<span class="suggestion-text">' + escapeHtml(s.text) + '</span>' +
+      '</div>';
+  });
+
+  document.getElementById('suggestionsList').innerHTML = html;
+}
+
+function exportReport() {
+  if (!analysisResult) {
+    alert('先に計測を実行してください');
+    return;
+  }
+
+  var r = analysisResult;
+  var report = '# ページ速度チェックレポート\n';
+  report += '計測日時: ' + new Date().toLocaleString('ja-JP') + '\n';
+  report += 'URL: ' + location.href + '\n';
+  report += '総合スコア: ' + r.overallScore + '/100\n\n';
+
+  report += '## 主要メトリクス\n';
+  report += '- TTFB: ' + formatMs(r.ttfb) + '\n';
+  report += '- DOMContentLoaded: ' + formatMs(r.dcl) + '\n';
+  report += '- Load完了: ' + formatMs(r.loadTime) + '\n';
+  report += '- DOM要素数: ' + r.domCount + '\n';
+  report += '- リソース数: ' + r.resourceCount + '\n';
+  report += '- 転送サイズ合計: ' + formatBytes(r.totalTransferSize) + '\n\n';
+
+  report += '## リソース種別\n';
+  Object.keys(r.resourcesByType).forEach(function(type) {
+    var t = r.resourcesByType[type];
+    report += '- ' + type + ': ' + t.count + '件 (' + formatBytes(t.size) + ')\n';
+  });
+
+  navigator.clipboard.writeText(report).then(function() {
+    var btn = document.querySelectorAll('.btn-secondary')[0];
+    var original = btn.textContent;
+    btn.textContent = 'コピーしました';
+    setTimeout(function() { btn.textContent = original; }, 1500);
+  });
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ページ読み込み完了後に自動計測
+window.addEventListener('load', function() {
+  // loadイベント完了のタイミングデータが確定するまで少し待つ
+  setTimeout(function() {
+    analyze();
+  }, 500);
+});
+</script>
 </body>
 </html>

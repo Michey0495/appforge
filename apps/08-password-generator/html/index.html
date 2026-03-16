@@ -81,7 +81,6 @@
   }
   .btn-outline:hover { background: #f3f4f6; }
 
-  /* 強度メーター */
   .strength-meter {
     margin-top: 12px;
   }
@@ -100,7 +99,6 @@
     border-radius: 2px;
   }
 
-  /* 強度レベルごとの色（ネイビー系グラデーション） */
   .strength-0 { background: #c4b5a0; width: 10%; }
   .strength-1 { background: #8b9ab5; width: 30%; }
   .strength-2 { background: #5a7aaa; width: 50%; }
@@ -141,7 +139,25 @@
     color: #6b7280;
   }
 
-  /* 生成セクション */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    background: #fafafa;
+  }
+  .detail-item {
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .detail-item span {
+    color: #1a1a2e;
+    font-weight: 500;
+  }
+
   .gen-controls {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -199,7 +215,6 @@
     accent-color: #1e3461;
   }
 
-  /* 生成結果 */
   .generated-row {
     display: flex;
     gap: 8px;
@@ -254,6 +269,39 @@
     font-family: inherit;
   }
   .toggle-vis:hover { background: #f3f4f6; }
+
+  .history-section {
+    margin-top: 16px;
+  }
+  .history-list {
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-item:hover { background: #fafafa; }
+  .history-copy {
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 10px;
+    color: #6b7280;
+    font-family: inherit;
+    flex-shrink: 0;
+  }
+  .history-copy:hover { background: #f3f4f6; }
 </style>
 </head>
 <body>
@@ -287,6 +335,13 @@
       </div>
     </div>
 
+    <div class="detail-grid" id="detailGrid" style="display:none;">
+      <div class="detail-item">エントロピー: <span id="detailEntropy">---</span></div>
+      <div class="detail-item">文字数: <span id="detailLength">---</span></div>
+      <div class="detail-item">文字種: <span id="detailCharsets">---</span></div>
+      <div class="detail-item">推測パターン: <span id="detailPattern">---</span></div>
+    </div>
+
     <div class="warning-msg" id="warningMsg"></div>
     <div class="suggestions" id="suggestions"></div>
   </div>
@@ -300,7 +355,7 @@
       <div>
         <label>文字数</label>
         <div class="slider-row">
-          <input type="range" id="lengthSlider" min="8" max="64" value="16">
+          <input type="range" id="lengthSlider" min="4" max="128" value="16">
           <span class="slider-value" id="lengthValue">16</span>
         </div>
       </div>
@@ -309,6 +364,7 @@
         <label><input type="checkbox" id="optLower" checked> 小文字 (a-z)</label>
         <label><input type="checkbox" id="optDigits" checked> 数字 (0-9)</label>
         <label><input type="checkbox" id="optSymbols" checked> 記号 (!@#$...)</label>
+        <label><input type="checkbox" id="optExcludeAmbiguous"> 紛らわしい文字を除外 (0Ol1I)</label>
       </div>
     </div>
 
@@ -319,25 +375,35 @@
     </div>
 
     <div class="entropy-display" id="entropyDisplay"></div>
+
+    <!-- 生成履歴 -->
+    <div class="history-section">
+      <label>生成履歴（最新5件）</label>
+      <div class="history-list" id="historyList">
+        <div style="padding:12px; color:#9ca3af; text-align:center; font-size:12px;">まだ生成されていません</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast">コピーしました</div>
 
 <script>
-  const STRENGTH_LABELS = ['脆弱', 'やや弱い', '普通', '強い', '堅牢'];
+  var STRENGTH_LABELS = ['脆弱', 'やや弱い', '普通', '強い', '堅牢'];
+  var passwordHistory = [];
 
-  const passwordInput = document.getElementById('passwordCheck');
-  const strengthBar = document.getElementById('strengthBar');
-  const strengthText = document.getElementById('strengthText');
-  const crackTimeEl = document.getElementById('crackTime');
-  const warningEl = document.getElementById('warningMsg');
-  const suggestionsEl = document.getElementById('suggestions');
+  var passwordInput = document.getElementById('passwordCheck');
+  var strengthBar = document.getElementById('strengthBar');
+  var strengthText = document.getElementById('strengthText');
+  var crackTimeEl = document.getElementById('crackTime');
+  var warningEl = document.getElementById('warningMsg');
+  var suggestionsEl = document.getElementById('suggestions');
+  var detailGrid = document.getElementById('detailGrid');
 
   // 表示/非表示トグル
-  document.getElementById('toggleVis').addEventListener('click', () => {
-    const input = passwordInput;
-    const btn = document.getElementById('toggleVis');
+  document.getElementById('toggleVis').addEventListener('click', function() {
+    var input = passwordInput;
+    var btn = document.getElementById('toggleVis');
     if (input.type === 'password') {
       input.type = 'text';
       btn.textContent = '非表示';
@@ -348,8 +414,8 @@
   });
 
   // リアルタイム強度チェック
-  passwordInput.addEventListener('input', () => {
-    const password = passwordInput.value;
+  passwordInput.addEventListener('input', function() {
+    var password = passwordInput.value;
 
     if (!password) {
       strengthBar.className = 'strength-bar-fill';
@@ -357,16 +423,41 @@
       crackTimeEl.textContent = '---';
       warningEl.classList.remove('show');
       suggestionsEl.textContent = '';
+      detailGrid.style.display = 'none';
       return;
     }
 
-    const result = zxcvbn(password);
-    const score = result.score;
+    // zxcvbnのロード待ち
+    if (typeof zxcvbn === 'undefined') {
+      strengthText.textContent = '読み込み中...';
+      return;
+    }
+
+    var result = zxcvbn(password);
+    var score = result.score;
 
     // 強度バー更新
-    strengthBar.className = `strength-bar-fill strength-${score}`;
+    strengthBar.className = 'strength-bar-fill strength-' + score;
     strengthText.textContent = STRENGTH_LABELS[score];
     crackTimeEl.textContent = result.crack_times_display.offline_slow_hashing_1e4_per_second;
+
+    // 詳細情報
+    detailGrid.style.display = 'grid';
+    document.getElementById('detailLength').textContent = password.length;
+    document.getElementById('detailEntropy').textContent = result.guesses_log10 ? (result.guesses_log10 * 3.32).toFixed(1) + ' bits' : '---';
+
+    // 文字種判定
+    var charsets = [];
+    if (/[a-z]/.test(password)) charsets.push('小文字');
+    if (/[A-Z]/.test(password)) charsets.push('大文字');
+    if (/[0-9]/.test(password)) charsets.push('数字');
+    if (/[^a-zA-Z0-9]/.test(password)) charsets.push('記号');
+    document.getElementById('detailCharsets').textContent = charsets.join(', ') || '---';
+
+    // 推測パターン
+    var patterns = result.sequence.map(function(s) { return s.pattern; });
+    var uniquePatterns = patterns.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    document.getElementById('detailPattern').textContent = uniquePatterns.join(', ') || 'なし';
 
     // 警告表示
     if (result.feedback.warning) {
@@ -385,9 +476,9 @@
   });
 
   // スライダー値表示
-  const lengthSlider = document.getElementById('lengthSlider');
-  const lengthValue = document.getElementById('lengthValue');
-  lengthSlider.addEventListener('input', () => {
+  var lengthSlider = document.getElementById('lengthSlider');
+  var lengthValue = document.getElementById('lengthValue');
+  lengthSlider.addEventListener('input', function() {
     lengthValue.textContent = lengthSlider.value;
   });
 
@@ -395,17 +486,30 @@
   document.getElementById('btnGenerate').addEventListener('click', generatePassword);
 
   function generatePassword() {
-    const length = parseInt(lengthSlider.value);
-    const useUpper = document.getElementById('optUpper').checked;
-    const useLower = document.getElementById('optLower').checked;
-    const useDigits = document.getElementById('optDigits').checked;
-    const useSymbols = document.getElementById('optSymbols').checked;
+    var length = parseInt(lengthSlider.value);
+    var useUpper = document.getElementById('optUpper').checked;
+    var useLower = document.getElementById('optLower').checked;
+    var useDigits = document.getElementById('optDigits').checked;
+    var useSymbols = document.getElementById('optSymbols').checked;
+    var excludeAmbiguous = document.getElementById('optExcludeAmbiguous').checked;
 
-    let charset = '';
-    if (useUpper) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    if (useLower) charset += 'abcdefghijklmnopqrstuvwxyz';
-    if (useDigits) charset += '0123456789';
-    if (useSymbols) charset += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    var upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var lower = 'abcdefghijklmnopqrstuvwxyz';
+    var digits = '0123456789';
+    var symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    if (excludeAmbiguous) {
+      upper = upper.replace(/[OI]/g, '');
+      lower = lower.replace(/[ol]/g, '');
+      digits = digits.replace(/[01]/g, '');
+    }
+
+    var charset = '';
+    var required = [];
+    if (useUpper) { charset += upper; required.push(upper); }
+    if (useLower) { charset += lower; required.push(lower); }
+    if (useDigits) { charset += digits; required.push(digits); }
+    if (useSymbols) { charset += symbols; required.push(symbols); }
 
     if (charset.length === 0) {
       document.getElementById('generatedPassword').value = '';
@@ -413,38 +517,110 @@
       return;
     }
 
-    // crypto.getRandomValues で安全な乱数を生成
-    const array = new Uint32Array(length);
+    // 各文字種から最低1文字を保証
+    var password = '';
+    var array = new Uint32Array(length);
     crypto.getRandomValues(array);
-    const password = Array.from(array)
-      .map(n => charset[n % charset.length])
-      .join('');
 
+    // 先に各文字種から1文字ずつ確保
+    var guaranteedChars = [];
+    for (var r = 0; r < required.length && r < length; r++) {
+      var rndArr = new Uint32Array(1);
+      crypto.getRandomValues(rndArr);
+      guaranteedChars.push(required[r][rndArr[0] % required[r].length]);
+    }
+
+    // 残りをランダム生成
+    var remaining = length - guaranteedChars.length;
+    var restChars = [];
+    for (var i = 0; i < remaining; i++) {
+      restChars.push(charset[array[i] % charset.length]);
+    }
+
+    // 結合してシャッフル
+    var allChars = guaranteedChars.concat(restChars);
+    // Fisher-Yates シャッフル
+    var shuffleArr = new Uint32Array(allChars.length);
+    crypto.getRandomValues(shuffleArr);
+    for (var j = allChars.length - 1; j > 0; j--) {
+      var k = shuffleArr[j] % (j + 1);
+      var temp = allChars[j];
+      allChars[j] = allChars[k];
+      allChars[k] = temp;
+    }
+
+    password = allChars.join('');
     document.getElementById('generatedPassword').value = password;
 
     // エントロピー計算
-    const entropy = Math.log2(Math.pow(charset.length, length));
+    var entropy = Math.log2(Math.pow(charset.length, length));
     document.getElementById('entropyDisplay').textContent =
-      `エントロピー: ${entropy.toFixed(1)} bits / 文字種: ${charset.length} / 文字数: ${length}`;
+      'エントロピー: ' + entropy.toFixed(1) + ' bits / 文字種: ' + charset.length + ' / 文字数: ' + length;
 
     // 生成したパスワードの強度も自動チェック
     passwordInput.value = password;
     passwordInput.type = 'text';
     document.getElementById('toggleVis').textContent = '非表示';
     passwordInput.dispatchEvent(new Event('input'));
+
+    // 履歴に追加
+    addToHistory(password);
+  }
+
+  // 生成履歴
+  function addToHistory(pw) {
+    passwordHistory.unshift(pw);
+    if (passwordHistory.length > 5) passwordHistory.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    var list = document.getElementById('historyList');
+    if (passwordHistory.length === 0) {
+      list.innerHTML = '<div style="padding:12px; color:#9ca3af; text-align:center; font-size:12px;">まだ生成されていません</div>';
+      return;
+    }
+    list.innerHTML = passwordHistory.map(function(pw) {
+      // パスワードの一部をマスク表示
+      var masked = pw.length > 8 ? pw.slice(0, 4) + '****' + pw.slice(-4) : pw;
+      return '<div class="history-item"><span title="' + escapeAttr(pw) + '">' + escapeHtml(masked) + '</span><button class="history-copy" data-pw="' + escapeAttr(pw) + '">コピー</button></div>';
+    }).join('');
+
+    list.querySelectorAll('.history-copy').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        navigator.clipboard.writeText(btn.dataset.pw).then(function() {
+          showToast('コピーしました');
+        });
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function escapeAttr(str) {
+    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
   // コピー
-  document.getElementById('btnCopy').addEventListener('click', () => {
-    const password = document.getElementById('generatedPassword').value;
+  document.getElementById('btnCopy').addEventListener('click', function() {
+    var password = document.getElementById('generatedPassword').value;
     if (!password) return;
 
-    navigator.clipboard.writeText(password).then(() => {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 1500);
+    navigator.clipboard.writeText(password).then(function() {
+      showToast('コピーしました');
     });
   });
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 1500);
+  }
 
   // 初期生成
   generatePassword();

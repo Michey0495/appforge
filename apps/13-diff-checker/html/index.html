@@ -85,6 +85,16 @@
   .split-added { background: #f0fdf4; }
   .split-removed { background: #fef2f2; }
   .split-empty { background: #f9fafb; }
+
+  .copied-toast {
+    position: fixed; top: 20px; right: 20px; background: #1e3461;
+    color: #fff; padding: 8px 16px; border-radius: 2px; font-size: 12px;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 100;
+  }
+  .copied-toast.show { opacity: 1; }
+
+  .btn-group-actions { display: flex; gap: 8px; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -97,16 +107,18 @@
   <div class="section">
     <div class="grid-2">
       <div>
-        <label>テキスト A</label>
+        <label>テキスト A (元テキスト)</label>
         <textarea id="textA" rows="12" placeholder="元のテキストを入力..."></textarea>
       </div>
       <div>
-        <label>テキスト B</label>
+        <label>テキスト B (比較テキスト)</label>
         <textarea id="textB" rows="12" placeholder="比較するテキストを入力..."></textarea>
       </div>
     </div>
-    <div style="margin-top: 16px;">
+    <div class="btn-group-actions">
       <button class="btn" onclick="runDiff()">比較する</button>
+      <button class="btn btn-secondary" onclick="swapTexts()">A / B 入れ替え</button>
+      <button class="btn btn-secondary" onclick="clearTexts()">クリア</button>
     </div>
   </div>
 
@@ -127,20 +139,49 @@
   </div>
 </div>
 
+<div class="copied-toast" id="copiedToast">コピーしました</div>
+
 <script>
   let currentView = 'unified';
   let lastDiffResult = null;
   let diffText = '';
 
-  function escapeHtml(str) {
+  const escapeHtml = (str) => {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
-  }
+  };
 
-  function runDiff() {
+  const showToast = (message) => {
+    const toast = document.getElementById('copiedToast');
+    toast.textContent = message || 'コピーしました';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 1500);
+  };
+
+  const swapTexts = () => {
+    const a = document.getElementById('textA');
+    const b = document.getElementById('textB');
+    const tmp = a.value;
+    a.value = b.value;
+    b.value = tmp;
+    // 比較結果が表示中なら再比較
+    if (lastDiffResult) runDiff();
+  };
+
+  const clearTexts = () => {
+    document.getElementById('textA').value = '';
+    document.getElementById('textB').value = '';
+    document.getElementById('resultSection').style.display = 'none';
+    lastDiffResult = null;
+    diffText = '';
+  };
+
+  const runDiff = () => {
     const textA = document.getElementById('textA').value;
     const textB = document.getElementById('textB').value;
+
+    if (textA === '' && textB === '') return;
 
     // 行単位のdiffを取得
     const changes = Diff.diffLines(textA, textB);
@@ -155,30 +196,29 @@
       else unchanged += lineCount;
     });
 
-    document.getElementById('stats').innerHTML = `
-      <div class="stat-added">追加: <span class="num">+${added}</span> 行</div>
-      <div class="stat-removed">削除: <span class="num">-${removed}</span> 行</div>
-      <div class="stat-unchanged">変更なし: <span class="num">${unchanged}</span> 行</div>
-    `;
+    document.getElementById('stats').innerHTML =
+      '<div class="stat-added">追加: <span class="num">+' + added + '</span> 行</div>' +
+      '<div class="stat-removed">削除: <span class="num">-' + removed + '</span> 行</div>' +
+      '<div class="stat-unchanged">変更なし: <span class="num">' + unchanged + '</span> 行</div>';
 
     document.getElementById('resultSection').style.display = 'block';
     renderDiff();
-  }
+  };
 
-  function setView(view) {
+  const setView = (view) => {
     currentView = view;
     document.getElementById('btnUnified').classList.toggle('btn-active', view === 'unified');
     document.getElementById('btnSplit').classList.toggle('btn-active', view === 'split');
     renderDiff();
-  }
+  };
 
-  function renderDiff() {
+  const renderDiff = () => {
     if (!lastDiffResult) return;
     if (currentView === 'unified') renderUnified();
     else renderSplit();
-  }
+  };
 
-  function renderUnified() {
+  const renderUnified = () => {
     const output = document.getElementById('diffOutput');
     let html = '<div class="diff-view">';
     let lineNumA = 1;
@@ -189,28 +229,28 @@
       const lines = part.value.replace(/\n$/, '').split('\n');
       lines.forEach(line => {
         if (part.added) {
-          html += `<div class="diff-line diff-added">
-            <div class="diff-line-num"></div>
-            <div class="diff-line-num">${lineNumB}</div>
-            <div class="diff-line-content">+ ${escapeHtml(line)}</div>
-          </div>`;
-          diffText += `+ ${line}\n`;
+          html += '<div class="diff-line diff-added">' +
+            '<div class="diff-line-num"></div>' +
+            '<div class="diff-line-num">' + lineNumB + '</div>' +
+            '<div class="diff-line-content">+ ' + escapeHtml(line) + '</div>' +
+            '</div>';
+          diffText += '+ ' + line + '\n';
           lineNumB++;
         } else if (part.removed) {
-          html += `<div class="diff-line diff-removed">
-            <div class="diff-line-num">${lineNumA}</div>
-            <div class="diff-line-num"></div>
-            <div class="diff-line-content">- ${escapeHtml(line)}</div>
-          </div>`;
-          diffText += `- ${line}\n`;
+          html += '<div class="diff-line diff-removed">' +
+            '<div class="diff-line-num">' + lineNumA + '</div>' +
+            '<div class="diff-line-num"></div>' +
+            '<div class="diff-line-content">- ' + escapeHtml(line) + '</div>' +
+            '</div>';
+          diffText += '- ' + line + '\n';
           lineNumA++;
         } else {
-          html += `<div class="diff-line diff-unchanged">
-            <div class="diff-line-num">${lineNumA}</div>
-            <div class="diff-line-num">${lineNumB}</div>
-            <div class="diff-line-content">  ${escapeHtml(line)}</div>
-          </div>`;
-          diffText += `  ${line}\n`;
+          html += '<div class="diff-line diff-unchanged">' +
+            '<div class="diff-line-num">' + lineNumA + '</div>' +
+            '<div class="diff-line-num">' + lineNumB + '</div>' +
+            '<div class="diff-line-content">  ' + escapeHtml(line) + '</div>' +
+            '</div>';
+          diffText += '  ' + line + '\n';
           lineNumA++;
           lineNumB++;
         }
@@ -219,11 +259,10 @@
 
     html += '</div>';
     output.innerHTML = html;
-  }
+  };
 
-  function renderSplit() {
+  const renderSplit = () => {
     const output = document.getElementById('diffOutput');
-    // 左右のペインを構築
     const leftLines = [];
     const rightLines = [];
     let lineNumA = 1;
@@ -236,21 +275,21 @@
         lines.forEach(line => {
           leftLines.push({ num: '', content: '', type: 'empty' });
           rightLines.push({ num: lineNumB, content: line, type: 'added' });
-          diffText += `+ ${line}\n`;
+          diffText += '+ ' + line + '\n';
           lineNumB++;
         });
       } else if (part.removed) {
         lines.forEach(line => {
           leftLines.push({ num: lineNumA, content: line, type: 'removed' });
           rightLines.push({ num: '', content: '', type: 'empty' });
-          diffText += `- ${line}\n`;
+          diffText += '- ' + line + '\n';
           lineNumA++;
         });
       } else {
         lines.forEach(line => {
           leftLines.push({ num: lineNumA, content: line, type: '' });
           rightLines.push({ num: lineNumB, content: line, type: '' });
-          diffText += `  ${line}\n`;
+          diffText += '  ' + line + '\n';
           lineNumA++;
           lineNumB++;
         });
@@ -268,28 +307,40 @@
       const lClass = l.type === 'removed' ? 'split-removed' : l.type === 'empty' ? 'split-empty' : '';
       const rClass = r.type === 'added' ? 'split-added' : r.type === 'empty' ? 'split-empty' : '';
 
-      leftHtml += `<div class="split-line ${lClass}">
-        <div class="split-line-num">${l.num}</div>
-        <div class="split-line-content">${escapeHtml(l.content)}</div>
-      </div>`;
+      leftHtml += '<div class="split-line ' + lClass + '">' +
+        '<div class="split-line-num">' + l.num + '</div>' +
+        '<div class="split-line-content">' + escapeHtml(l.content) + '</div>' +
+        '</div>';
 
-      rightHtml += `<div class="split-line ${rClass}">
-        <div class="split-line-num">${r.num}</div>
-        <div class="split-line-content">${escapeHtml(r.content)}</div>
-      </div>`;
+      rightHtml += '<div class="split-line ' + rClass + '">' +
+        '<div class="split-line-num">' + r.num + '</div>' +
+        '<div class="split-line-content">' + escapeHtml(r.content) + '</div>' +
+        '</div>';
     }
 
-    output.innerHTML = `<div class="split-view">
-      <div class="split-pane">${leftHtml}</div>
-      <div class="split-pane">${rightHtml}</div>
-    </div>`;
-  }
+    output.innerHTML = '<div class="split-view">' +
+      '<div class="split-pane">' + leftHtml + '</div>' +
+      '<div class="split-pane">' + rightHtml + '</div>' +
+      '</div>';
+  };
 
-  function copyDiffResult() {
-    if (diffText) {
-      navigator.clipboard.writeText(diffText);
-    }
-  }
+  const copyDiffResult = () => {
+    if (!diffText) return;
+    navigator.clipboard.writeText(diffText).then(() => {
+      showToast('コピーしました');
+    }).catch(() => {
+      // フォールバック: textarea経由でコピー
+      const ta = document.createElement('textarea');
+      ta.value = diffText;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('コピーしました');
+    });
+  };
 </script>
 </body>
 </html>

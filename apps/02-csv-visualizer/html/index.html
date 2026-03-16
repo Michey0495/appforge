@@ -458,25 +458,28 @@
       // 非数値カラム（ラベル候補）
       const textColumns = headers.filter((h) => !numericColumns.includes(h));
 
-      // ラベル列: テキスト列を優先、なければ全カラム
-      const labelCandidates = textColumns.length > 0 ? textColumns : headers;
-      labelCandidates.forEach((h) => {
+      // ラベル列: 全カラムを選択肢に追加（テキスト列を先頭にソート）
+      const labelCandidates = [...textColumns, ...numericColumns.filter((h) => !textColumns.includes(h))];
+      const finalLabelCandidates = labelCandidates.length > 0 ? labelCandidates : headers;
+      finalLabelCandidates.forEach((h) => {
         const opt = document.createElement('option');
         opt.value = h;
         opt.textContent = h;
         labelColumn.appendChild(opt);
       });
 
-      // データ列: 数値列のみ
-      numericColumns.forEach((h) => {
+      // データ列: 数値列のみ。数値列がなければ全カラムをフォールバック
+      const dataCandidates = numericColumns.length > 0 ? numericColumns : headers;
+      dataCandidates.forEach((h) => {
         const opt = document.createElement('option');
         opt.value = h;
         opt.textContent = h;
         dataColumn.appendChild(opt);
       });
 
-      // 数値列が2つ以上あれば2番目をデフォルトに（最初はラベルの場合が多い）
-      if (numericColumns.length >= 2) {
+      // テキスト列があり数値列が2つ以上なら、ラベルは最初のテキスト列、データは最初の数値列
+      if (textColumns.length > 0 && numericColumns.length > 0) {
+        labelColumn.value = textColumns[0];
         dataColumn.value = numericColumns[0];
       }
     }

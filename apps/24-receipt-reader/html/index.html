@@ -338,7 +338,10 @@ dropzone.addEventListener('drop', (e) => {
   dropzone.classList.remove('dragover');
   handleFiles(e.dataTransfer.files);
 });
-fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+fileInput.addEventListener('change', (e) => {
+  handleFiles(e.target.files);
+  fileInput.value = '';
+});
 
 function handleFiles(files) {
   const apiKey = document.getElementById('apiKey').value.trim();

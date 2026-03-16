@@ -17,8 +17,16 @@
     display: flex; justify-content: space-between; align-items: baseline;
     border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
   }
-  .header h1 { font-size: 15px; font-weight: 600; }
+  .header-title { font-size: 15px; font-weight: 600; }
   .header .subtitle { font-size: 11px; color: #9ca3af; }
+  .sw-status {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+  }
+  .sw-status.active { color: #166534; border-color: #bbf7d0; background: #f0fdf4; }
   label {
     display: block; font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.05em; color: #9ca3af; margin-bottom: 6px;
@@ -29,7 +37,7 @@
     color: #1a1a2e; background: #ffffff; outline: none;
   }
   input:focus, textarea:focus, select:focus { border-color: #1e3461; }
-  textarea { resize: vertical; font-family: 'Inter', monospace; }
+  textarea { resize: vertical; font-family: 'SF Mono', 'Fira Code', monospace; }
   .btn {
     background: #1e3461; color: #ffffff; padding: 8px 16px; font-size: 12px;
     border-radius: 2px; border: none; cursor: pointer; font-family: inherit;
@@ -40,11 +48,11 @@
   }
   .btn-secondary:hover { background: #f9fafb; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
   .btn-danger {
-    background: #ffffff; border: 1px solid #e5e7eb; color: #ef4444;
+    background: #ffffff; border: 1px solid #e5e7eb; color: #b91c1c;
   }
   .btn-danger:hover { background: #fef2f2; }
   .section { margin-bottom: 32px; }
-  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+  .section-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
   .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
   .form-row > * { flex: 1; }
@@ -68,7 +76,8 @@
   .method-POST { background: rgba(34,197,94,0.08); color: #15803d; }
   .method-PUT { background: rgba(245,158,11,0.08); color: #b45309; }
   .method-DELETE { background: rgba(239,68,68,0.08); color: #dc2626; }
-  .mock-path { font-family: monospace; font-size: 12px; }
+  .method-PATCH { background: rgba(168,85,247,0.08); color: #7c3aed; }
+  .mock-path { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; }
   .mock-status { font-size: 11px; color: #6b7280; margin-left: 8px; }
   .response-panel {
     border: 1px solid #e5e7eb; border-radius: 2px; background: #fafafa;
@@ -79,10 +88,11 @@
   }
   .response-status { font-weight: 600; }
   .status-2xx { color: #15803d; }
+  .status-3xx { color: #1e3461; }
   .status-4xx { color: #b45309; }
   .status-5xx { color: #dc2626; }
   .response-body {
-    padding: 16px; font-family: monospace; font-size: 12px;
+    padding: 16px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
     white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto;
   }
   .response-headers-list {
@@ -90,39 +100,78 @@
     font-size: 11px; color: #6b7280;
   }
   .response-headers-list div { margin-bottom: 2px; }
+  .response-time {
+    font-size: 11px; color: #9ca3af; font-family: 'SF Mono', 'Fira Code', monospace;
+  }
   .empty-state {
     text-align: center; padding: 32px; color: #9ca3af; font-size: 12px;
   }
-  .header-entry { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-end; }
+  .header-entry { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
   .header-entry input { flex: 1; }
   .line-numbers-wrap { display: flex; border: 1px solid #e5e7eb; border-radius: 2px; }
   .line-numbers {
     background: #f9fafb; color: #9ca3af; padding: 8px 8px 8px 12px;
-    font-family: monospace; font-size: 13px; line-height: 1.6;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; line-height: 1.6;
     text-align: right; user-select: none; min-width: 36px; border-right: 1px solid #f3f4f6;
   }
   .line-numbers-wrap textarea {
     border: none; flex: 1; border-radius: 0;
   }
+  .request-log {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    font-size: 11px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .log-entry {
+    padding: 6px 12px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-time { color: #9ca3af; flex-shrink: 0; }
+  .log-method { font-weight: 600; flex-shrink: 0; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h1>API モックサーバー</h1>
-    <div class="subtitle">ブラウザ内 fetch インターセプト</div>
+    <div>
+      <span class="header-title">API モックサーバー</span>
+      <div class="subtitle">ブラウザ内 fetch インターセプト</div>
+    </div>
+    <span class="sw-status" id="swStatus">インターセプト: 待機中</span>
   </div>
 
   <div class="grid-2">
     <!-- 左: モック定義 -->
     <div>
       <div class="section">
-        <h2>モックエンドポイント定義</h2>
+        <div class="section-title">モックエンドポイント定義</div>
         <div class="form-row">
           <div style="flex:0 0 120px;">
             <label>メソッド</label>
             <select id="mockMethod">
-              <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+              <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
             </select>
           </div>
           <div>
@@ -146,7 +195,7 @@
         <div class="form-group">
           <label>レスポンス遅延</label>
           <div class="slider-row">
-            <input type="range" id="mockDelay" min="0" max="3000" step="100" value="0">
+            <input type="range" id="mockDelay" min="0" max="5000" step="100" value="0">
             <div class="slider-value"><span id="delayValue">0</span>ms</div>
           </div>
         </div>
@@ -157,7 +206,7 @@
             <div class="header-entry">
               <input type="text" placeholder="ヘッダー名" class="header-key">
               <input type="text" placeholder="値" class="header-val">
-              <button class="btn-secondary btn" style="padding:8px;font-size:11px;" onclick="removeHeader(this)">x</button>
+              <button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;flex:0 0 auto;" onclick="removeHeader(this)">x</button>
             </div>
           </div>
           <button class="btn btn-secondary" style="margin-top:4px;font-size:11px;" onclick="addHeaderEntry()">ヘッダー追加</button>
@@ -167,7 +216,10 @@
       </div>
 
       <div class="section">
-        <h2>登録済みモック</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span class="section-title" style="margin-bottom:0;">登録済みモック</span>
+          <button class="btn btn-danger" style="font-size:11px;padding:4px 10px;" onclick="clearAllMocks()">全削除</button>
+        </div>
         <div class="mock-list" id="mockList">
           <div class="empty-state">モックが登録されていません</div>
         </div>
@@ -177,12 +229,12 @@
     <!-- 右: テストパネル -->
     <div>
       <div class="section">
-        <h2>テストリクエスト</h2>
+        <div class="section-title">テストリクエスト</div>
         <div class="form-row">
           <div style="flex:0 0 120px;">
             <label>メソッド</label>
             <select id="testMethod">
-              <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option>
+              <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option>
             </select>
           </div>
           <div>
@@ -194,58 +246,91 @@
           <label>リクエストボディ</label>
           <textarea id="testBody" rows="4" placeholder='{"name": "test"}'></textarea>
         </div>
+        <div class="form-group">
+          <label>リクエストヘッダー</label>
+          <div id="testHeaderEntries">
+            <div class="header-entry">
+              <input type="text" placeholder="ヘッダー名" class="test-header-key" value="Content-Type">
+              <input type="text" placeholder="値" class="test-header-val" value="application/json">
+              <button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;flex:0 0 auto;" onclick="removeTestHeader(this)">x</button>
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="margin-top:4px;font-size:11px;" onclick="addTestHeaderEntry()">ヘッダー追加</button>
+        </div>
         <button class="btn" onclick="sendTestRequest()">送信</button>
       </div>
 
       <div class="section">
-        <h2>レスポンス</h2>
+        <div class="section-title">レスポンス</div>
         <div class="response-panel" id="responsePanel">
           <div class="empty-state">リクエストを送信してください</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">リクエストログ</div>
+        <div class="request-log" id="requestLog">
+          <div class="empty-state">ログはありません</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
+<div class="toast" id="toast">コピーしました</div>
+
 <script>
   // モック格納
-  const mocks = [];
+  var mocks = [];
+  var requestLogs = [];
 
   // 行番号の更新
-  const mockBodyEl = document.getElementById('mockBody');
-  const lineNumbersEl = document.getElementById('lineNumbers');
+  var mockBodyEl = document.getElementById('mockBody');
+  var lineNumbersEl = document.getElementById('lineNumbers');
 
   function updateLineNumbers() {
-    const lines = mockBodyEl.value.split('\n').length;
-    lineNumbersEl.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+    var lines = mockBodyEl.value.split('\n').length;
+    lineNumbersEl.textContent = Array.from({ length: lines }, function(_, i) { return i + 1; }).join('\n');
   }
   mockBodyEl.addEventListener('input', updateLineNumbers);
-  mockBodyEl.addEventListener('scroll', () => {
+  mockBodyEl.addEventListener('scroll', function() {
     lineNumbersEl.scrollTop = mockBodyEl.scrollTop;
   });
 
   // 遅延スライダー
-  const delaySlider = document.getElementById('mockDelay');
-  const delayValue = document.getElementById('delayValue');
-  delaySlider.addEventListener('input', () => {
-    delayValue.textContent = delaySlider.value;
+  var delaySlider = document.getElementById('mockDelay');
+  var delayValueEl = document.getElementById('delayValue');
+  delaySlider.addEventListener('input', function() {
+    delayValueEl.textContent = delaySlider.value;
   });
 
-  // ヘッダーエントリ追加/削除
+  // ヘッダーエントリ追加/削除（モック定義用）
   function addHeaderEntry() {
-    const container = document.getElementById('headerEntries');
-    const div = document.createElement('div');
+    var container = document.getElementById('headerEntries');
+    var div = document.createElement('div');
     div.className = 'header-entry';
-    div.innerHTML = `
-      <input type="text" placeholder="ヘッダー名" class="header-key">
-      <input type="text" placeholder="値" class="header-val">
-      <button class="btn-secondary btn" style="padding:8px;font-size:11px;" onclick="removeHeader(this)">x</button>
-    `;
+    div.innerHTML = '<input type="text" placeholder="ヘッダー名" class="header-key"><input type="text" placeholder="値" class="header-val"><button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;flex:0 0 auto;" onclick="removeHeader(this)">x</button>';
     container.appendChild(div);
   }
 
   function removeHeader(btn) {
-    const entries = document.querySelectorAll('.header-entry');
+    var entries = document.querySelectorAll('#headerEntries .header-entry');
+    if (entries.length > 1) {
+      btn.parentElement.remove();
+    }
+  }
+
+  // テストリクエスト用ヘッダー
+  function addTestHeaderEntry() {
+    var container = document.getElementById('testHeaderEntries');
+    var div = document.createElement('div');
+    div.className = 'header-entry';
+    div.innerHTML = '<input type="text" placeholder="ヘッダー名" class="test-header-key"><input type="text" placeholder="値" class="test-header-val"><button class="btn btn-secondary" style="padding:6px 10px;font-size:11px;flex:0 0 auto;" onclick="removeTestHeader(this)">x</button>';
+    container.appendChild(div);
+  }
+
+  function removeTestHeader(btn) {
+    var entries = document.querySelectorAll('#testHeaderEntries .header-entry');
     if (entries.length > 1) {
       btn.parentElement.remove();
     }
@@ -253,28 +338,82 @@
 
   // カスタムヘッダーを収集
   function collectHeaders() {
-    const headers = {};
-    document.querySelectorAll('.header-entry').forEach(entry => {
-      const key = entry.querySelector('.header-key').value.trim();
-      const val = entry.querySelector('.header-val').value.trim();
+    var headers = {};
+    document.querySelectorAll('#headerEntries .header-entry').forEach(function(entry) {
+      var key = entry.querySelector('.header-key').value.trim();
+      var val = entry.querySelector('.header-val').value.trim();
       if (key) headers[key] = val;
     });
     return headers;
   }
 
+  // テスト用ヘッダー収集
+  function collectTestHeaders() {
+    var headers = {};
+    document.querySelectorAll('#testHeaderEntries .header-entry').forEach(function(entry) {
+      var key = entry.querySelector('.test-header-key').value.trim();
+      var val = entry.querySelector('.test-header-val').value.trim();
+      if (key) headers[key] = val;
+    });
+    return headers;
+  }
+
+  // JSON検証
+  function validateJson(str) {
+    if (!str.trim()) return { valid: true, data: null };
+    try {
+      return { valid: true, data: JSON.parse(str) };
+    } catch (e) {
+      return { valid: false, error: e.message };
+    }
+  }
+
   // モック登録
   function registerMock() {
-    const method = document.getElementById('mockMethod').value;
-    const path = document.getElementById('mockPath').value.trim();
-    const status = parseInt(document.getElementById('mockStatus').value) || 200;
-    const body = mockBodyEl.value;
-    const delay = parseInt(delaySlider.value) || 0;
-    const headers = collectHeaders();
+    var method = document.getElementById('mockMethod').value;
+    var path = document.getElementById('mockPath').value.trim();
+    var status = parseInt(document.getElementById('mockStatus').value) || 200;
+    var body = mockBodyEl.value;
+    var delay = parseInt(delaySlider.value) || 0;
+    var headers = collectHeaders();
 
-    if (!path) return;
+    if (!path) {
+      showToast('パスを入力してください');
+      return;
+    }
 
-    mocks.push({ method, path, status, body, delay, headers });
+    if (!path.startsWith('/')) {
+      path = '/' + path;
+    }
+
+    // JSONの検証（空でなければ）
+    if (body.trim()) {
+      var jsonCheck = validateJson(body);
+      if (!jsonCheck.valid) {
+        showToast('JSON構文エラー: ' + jsonCheck.error);
+        return;
+      }
+    }
+
+    // 重複チェック
+    var existingIdx = -1;
+    for (var i = 0; i < mocks.length; i++) {
+      if (mocks[i].method === method && mocks[i].path === path) {
+        existingIdx = i;
+        break;
+      }
+    }
+
+    if (existingIdx >= 0) {
+      mocks[existingIdx] = { method: method, path: path, status: status, body: body, delay: delay, headers: headers };
+      showToast('モックを更新しました');
+    } else {
+      mocks.push({ method: method, path: path, status: status, body: body, delay: delay, headers: headers });
+      showToast('モックを登録しました');
+    }
+
     renderMockList();
+    updateInterceptStatus();
 
     // フォームリセット
     document.getElementById('mockPath').value = '';
@@ -284,91 +423,314 @@
 
   // モック一覧の描画
   function renderMockList() {
-    const list = document.getElementById('mockList');
+    var list = document.getElementById('mockList');
     if (mocks.length === 0) {
       list.innerHTML = '<div class="empty-state">モックが登録されていません</div>';
       return;
     }
-    list.innerHTML = mocks.map((m, i) => `
-      <div class="mock-item">
-        <div>
-          <span class="mock-method method-${m.method}">${m.method}</span>
-          <span class="mock-path">${escapeHtml(m.path)}</span>
-          <span class="mock-status">${m.status}</span>
-          ${m.delay > 0 ? `<span class="mock-status">${m.delay}ms</span>` : ''}
-        </div>
-        <button class="btn btn-danger" style="font-size:11px;padding:4px 10px;" onclick="deleteMock(${i})">削除</button>
-      </div>
-    `).join('');
+    list.innerHTML = mocks.map(function(m, i) {
+      return '<div class="mock-item">' +
+        '<div>' +
+        '<span class="mock-method method-' + m.method + '">' + m.method + '</span>' +
+        '<span class="mock-path">' + escapeHtml(m.path) + '</span>' +
+        '<span class="mock-status">' + m.status + '</span>' +
+        (m.delay > 0 ? '<span class="mock-status">' + m.delay + 'ms</span>' : '') +
+        '</div>' +
+        '<div style="display:flex; gap:4px;">' +
+        '<button class="btn btn-secondary" style="font-size:11px;padding:4px 10px;" onclick="editMock(' + i + ')">編集</button>' +
+        '<button class="btn btn-danger" style="font-size:11px;padding:4px 10px;" onclick="deleteMock(' + i + ')">削除</button>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function editMock(index) {
+    var m = mocks[index];
+    document.getElementById('mockMethod').value = m.method;
+    document.getElementById('mockPath').value = m.path;
+    document.getElementById('mockStatus').value = m.status;
+    mockBodyEl.value = m.body;
+    delaySlider.value = m.delay;
+    delayValueEl.textContent = m.delay;
+    updateLineNumbers();
   }
 
   function deleteMock(index) {
     mocks.splice(index, 1);
     renderMockList();
+    updateInterceptStatus();
+  }
+
+  function clearAllMocks() {
+    mocks = [];
+    renderMockList();
+    updateInterceptStatus();
   }
 
   function escapeHtml(str) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
   }
 
-  // テストリクエスト送信
-  async function sendTestRequest() {
-    const method = document.getElementById('testMethod').value;
-    const url = document.getElementById('testUrl').value.trim();
-    const body = document.getElementById('testBody').value.trim();
-    const panel = document.getElementById('responsePanel');
+  // インターセプト状態表示
+  function updateInterceptStatus() {
+    var el = document.getElementById('swStatus');
+    if (mocks.length > 0) {
+      el.textContent = 'インターセプト: 有効 (' + mocks.length + '件)';
+      el.classList.add('active');
+    } else {
+      el.textContent = 'インターセプト: 待機中';
+      el.classList.remove('active');
+    }
+  }
 
-    if (!url) return;
+  // fetch をオーバーライドしてインターセプト
+  var originalFetch = window.fetch;
+
+  window.fetch = function(input, init) {
+    var url, method;
+
+    if (typeof input === 'object' && input instanceof Request) {
+      url = new URL(input.url).pathname;
+      method = (init && init.method) || input.method || 'GET';
+    } else {
+      try {
+        var parsed = new URL(String(input), window.location.origin);
+        url = parsed.pathname;
+      } catch (e) {
+        url = String(input);
+      }
+      method = (init && init.method) || 'GET';
+    }
+    method = method.toUpperCase();
 
     // モックを検索
-    const mock = mocks.find(m => m.method === method && m.path === url);
+    var mock = findMatchingMock(method, url);
 
-    if (!mock) {
-      panel.innerHTML = `
-        <div class="response-header">
-          <span class="response-status status-4xx">404 Not Found</span>
-        </div>
-        <div class="response-body">一致するモックエンドポイントが見つかりませんでした。
-登録済みモック: ${mocks.length} 件</div>
-      `;
+    if (mock) {
+      addLog(method, url, mock.status, true);
+      return new Promise(function(resolve) {
+        var doResolve = function() {
+          var responseHeaders = { 'Content-Type': 'application/json' };
+          var hkeys = Object.keys(mock.headers);
+          for (var hi = 0; hi < hkeys.length; hi++) {
+            responseHeaders[hkeys[hi]] = mock.headers[hkeys[hi]];
+          }
+
+          var responseBody = mock.body || '';
+          responseBody = processTemplateVars(responseBody, url);
+
+          resolve(new Response(responseBody, {
+            status: mock.status,
+            statusText: getStatusText(mock.status),
+            headers: responseHeaders
+          }));
+        };
+        if (mock.delay > 0) {
+          setTimeout(doResolve, mock.delay);
+        } else {
+          doResolve();
+        }
+      });
+    }
+
+    return originalFetch.apply(window, arguments);
+  };
+
+  // パスパターンマッチング
+  function findMatchingMock(method, url) {
+    // 完全一致を先に
+    for (var i = 0; i < mocks.length; i++) {
+      if (mocks[i].method === method && mocks[i].path === url) return mocks[i];
+    }
+    // パラメータ付きパスのマッチ
+    for (var j = 0; j < mocks.length; j++) {
+      var m = mocks[j];
+      if (m.method !== method) continue;
+      var pattern = m.path
+        .replace(/:[a-zA-Z_][a-zA-Z0-9_]*/g, '[^/]+')
+        .replace(/\*/g, '.*');
+      var regex = new RegExp('^' + pattern + '$');
+      if (regex.test(url)) return m;
+    }
+    return null;
+  }
+
+  // テンプレート変数処理
+  function processTemplateVars(body, url) {
+    return body
+      .replace(/\{\{timestamp\}\}/g, new Date().toISOString())
+      .replace(/\{\{random\}\}/g, String(Math.floor(Math.random() * 10000)))
+      .replace(/\{\{url\}\}/g, url);
+  }
+
+  function getStatusText(code) {
+    var texts = {
+      200: 'OK', 201: 'Created', 204: 'No Content',
+      301: 'Moved Permanently', 302: 'Found', 304: 'Not Modified',
+      400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden',
+      404: 'Not Found', 405: 'Method Not Allowed', 409: 'Conflict',
+      422: 'Unprocessable Entity', 429: 'Too Many Requests',
+      500: 'Internal Server Error', 502: 'Bad Gateway', 503: 'Service Unavailable'
+    };
+    return texts[code] || '';
+  }
+
+  // リクエストログ
+  function addLog(method, url, status, isMocked) {
+    var now = new Date();
+    var timeStr = String(now.getHours()).padStart(2, '0') + ':' +
+                  String(now.getMinutes()).padStart(2, '0') + ':' +
+                  String(now.getSeconds()).padStart(2, '0');
+    requestLogs.unshift({
+      time: timeStr,
+      method: method,
+      url: url,
+      status: status,
+      mocked: isMocked
+    });
+    if (requestLogs.length > 50) requestLogs.pop();
+    renderLog();
+  }
+
+  function renderLog() {
+    var logEl = document.getElementById('requestLog');
+    if (requestLogs.length === 0) {
+      logEl.innerHTML = '<div class="empty-state">ログはありません</div>';
+      return;
+    }
+    logEl.innerHTML = requestLogs.map(function(l) {
+      var statusClass = '';
+      if (l.status >= 200 && l.status < 300) statusClass = 'status-2xx';
+      else if (l.status >= 300 && l.status < 400) statusClass = 'status-3xx';
+      else if (l.status >= 400 && l.status < 500) statusClass = 'status-4xx';
+      else if (l.status >= 500) statusClass = 'status-5xx';
+      return '<div class="log-entry">' +
+        '<span class="log-time">' + l.time + '</span>' +
+        '<span class="log-method mock-method method-' + l.method + '" style="min-width:44px;font-size:10px;padding:1px 6px;">' + l.method + '</span>' +
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(l.url) + '</span>' +
+        '<span class="response-status ' + statusClass + '">' + l.status + '</span>' +
+        (l.mocked ? '<span style="color:#9ca3af;">MOCK</span>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  // テストリクエスト送信（fetch経由でインターセプトされる）
+  async function sendTestRequest() {
+    var method = document.getElementById('testMethod').value;
+    var url = document.getElementById('testUrl').value.trim();
+    var body = document.getElementById('testBody').value.trim();
+    var panel = document.getElementById('responsePanel');
+    var testHeaders = collectTestHeaders();
+
+    if (!url) {
+      showToast('URLを入力してください');
       return;
     }
 
-    // 遅延のシミュレーション
-    if (mock.delay > 0) {
-      panel.innerHTML = '<div class="empty-state">送信中...</div>';
-      await new Promise(r => setTimeout(r, mock.delay));
+    if (!url.startsWith('/') && !url.startsWith('http')) {
+      url = '/' + url;
     }
 
-    // ステータスコードに応じたクラス
-    let statusClass = 'status-2xx';
-    if (mock.status >= 400 && mock.status < 500) statusClass = 'status-4xx';
-    if (mock.status >= 500) statusClass = 'status-5xx';
+    panel.innerHTML = '<div class="empty-state">送信中...</div>';
 
-    // レスポンスヘッダーの構築
-    const responseHeaders = { 'Content-Type': 'application/json', ...mock.headers };
-    const headersHtml = Object.entries(responseHeaders)
-      .map(([k, v]) => `<div>${escapeHtml(k)}: ${escapeHtml(v)}</div>`).join('');
+    var startTime = performance.now();
 
-    // レスポンスボディの整形
-    let formattedBody = mock.body;
     try {
-      formattedBody = JSON.stringify(JSON.parse(mock.body), null, 2);
-    } catch (e) {
-      // JSONでなければそのまま
-    }
+      var fetchOptions = {
+        method: method,
+        headers: testHeaders
+      };
 
-    panel.innerHTML = `
-      <div class="response-header">
-        <span class="response-status ${statusClass}">${mock.status}</span>
-        <span style="font-size:11px;color:#9ca3af;">${mock.delay}ms delay</span>
-      </div>
-      <div class="response-headers-list">${headersHtml}</div>
-      <div class="response-body">${escapeHtml(formattedBody)}</div>
-    `;
+      if (body && method !== 'GET' && method !== 'HEAD') {
+        fetchOptions.body = body;
+      }
+
+      var response = await fetch(url, fetchOptions);
+      var endTime = performance.now();
+      var elapsed = (endTime - startTime).toFixed(0);
+
+      var responseText = await response.text();
+
+      var formattedBody = responseText;
+      try {
+        formattedBody = JSON.stringify(JSON.parse(responseText), null, 2);
+      } catch (e) {
+        // JSONでなければそのまま
+      }
+
+      var statusClass = 'status-2xx';
+      if (response.status >= 300 && response.status < 400) statusClass = 'status-3xx';
+      if (response.status >= 400 && response.status < 500) statusClass = 'status-4xx';
+      if (response.status >= 500) statusClass = 'status-5xx';
+
+      var headersHtml = '';
+      response.headers.forEach(function(value, key) {
+        headersHtml += '<div>' + escapeHtml(key) + ': ' + escapeHtml(value) + '</div>';
+      });
+
+      panel.innerHTML = '<div class="response-header">' +
+        '<span class="response-status ' + statusClass + '">' + response.status + ' ' + (response.statusText || getStatusText(response.status)) + '</span>' +
+        '<span class="response-time">' + elapsed + 'ms</span>' +
+        '</div>' +
+        (headersHtml ? '<div class="response-headers-list">' + headersHtml + '</div>' : '') +
+        '<div class="response-body">' + escapeHtml(formattedBody) + '</div>';
+
+    } catch (err) {
+      var endTime2 = performance.now();
+      var elapsed2 = (endTime2 - startTime).toFixed(0);
+      panel.innerHTML = '<div class="response-header">' +
+        '<span class="response-status status-5xx">エラー</span>' +
+        '<span class="response-time">' + elapsed2 + 'ms</span>' +
+        '</div>' +
+        '<div class="response-body">' + escapeHtml(err.message) + '</div>';
+    }
   }
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 1500);
+  }
+
+  // サンプルモックを自動登録
+  (function() {
+    mocks.push({
+      method: 'GET',
+      path: '/api/users',
+      status: 200,
+      body: JSON.stringify({
+        users: [
+          { id: 1, name: "田中太郎", email: "tanaka@example.com" },
+          { id: 2, name: "佐藤花子", email: "sato@example.com" }
+        ],
+        total: 2,
+        timestamp: "{{timestamp}}"
+      }, null, 2),
+      delay: 200,
+      headers: {}
+    });
+    mocks.push({
+      method: 'POST',
+      path: '/api/users',
+      status: 201,
+      body: JSON.stringify({ message: "ユーザーを作成しました", id: "{{random}}" }, null, 2),
+      delay: 300,
+      headers: {}
+    });
+    mocks.push({
+      method: 'GET',
+      path: '/api/users/:id',
+      status: 200,
+      body: JSON.stringify({ id: 1, name: "田中太郎", email: "tanaka@example.com" }, null, 2),
+      delay: 100,
+      headers: {}
+    });
+    renderMockList();
+    updateInterceptStatus();
+  })();
 </script>
 </body>
 </html>

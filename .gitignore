@@ -4,3 +4,5 @@ dist/
 .DS_Store
 *.local
 portal/public/apps
+.vercel
+.env*.local

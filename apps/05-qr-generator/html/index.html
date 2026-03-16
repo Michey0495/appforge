@@ -521,12 +521,14 @@
 
         // ヘッダー行をスキップ（URL列を特定する）
         const header = lines[0].split(',');
+        const urlKeywords = ['url', 'link', 'href', 'uri', 'text', 'data'];
         const urlIndex = header.findIndex(h =>
-          h.trim().toLowerCase() === 'url'
+          urlKeywords.includes(h.trim().toLowerCase())
         );
 
-        // URLカラムが見つかった場合はデータ行から抽出、見つからなければ1列目を使う
-        const startIndex = urlIndex >= 0 ? 1 : 0;
+        // URLカラムが見つかった場合はデータ行から抽出、見つからなければ全行の1列目を使う
+        const hasHeader = urlIndex >= 0 || header.some(h => isNaN(parseFloat(h.trim())));
+        const startIndex = hasHeader ? 1 : 0;
         const colIndex = urlIndex >= 0 ? urlIndex : 0;
 
         const urls = lines.slice(startIndex).map(line => {

@@ -88,7 +88,6 @@
 
   .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* タブ */
   .tabs {
     display: flex;
     gap: 0;
@@ -116,14 +115,12 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* 横並び（Diff用） */
   .side-by-side {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
   }
 
-  /* 出力エリア */
   .output-area {
     width: 100%;
     min-height: 200px;
@@ -143,7 +140,6 @@
     display: block;
   }
 
-  /* 行番号付き出力 */
   .line {
     display: flex;
     padding: 0 12px 0 0;
@@ -164,14 +160,12 @@
     white-space: pre;
   }
 
-  /* シンタックスハイライト */
   .json-key { color: #1e3461; }
   .json-string { color: #166534; }
   .json-number { color: #c2410c; }
   .json-boolean { color: #7c3aed; }
   .json-null { color: #9ca3af; }
 
-  /* ツリービュー */
   .tree-view { padding: 16px; }
   .tree-node { margin-left: 20px; }
   .tree-toggle {
@@ -186,19 +180,16 @@
   .tree-children { display: block; }
   .tree-children.collapsed { display: none; }
 
-  /* Diff色 */
   .diff-added { background: #ecfdf5; }
   .diff-removed { background: #fef2f2; }
   .diff-changed { background: #fffbeb; }
 
-  /* エラー */
   .error-msg {
     color: #b91c1c;
     font-size: 12px;
     margin-top: 8px;
   }
 
-  /* JSONPathセクション */
   .search-row {
     display: flex;
     gap: 8px;
@@ -227,6 +218,27 @@
     align-items: center;
     margin-bottom: 8px;
   }
+
+  /* インデント選択 */
+  .indent-select {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .indent-select label {
+    margin-bottom: 0;
+    font-size: 11px;
+  }
+  .indent-select select {
+    border: 1px solid #e5e7eb;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 2px;
+    background: #fff;
+    color: #1a1a2e;
+    outline: none;
+  }
 </style>
 </head>
 <body>
@@ -236,7 +248,6 @@
     <span class="header-subtitle">JSON Formatter & Diff</span>
   </div>
 
-  <!-- タブ切替 -->
   <div class="tabs">
     <button class="tab active" data-tab="format">整形 / 検証</button>
     <button class="tab" data-tab="diff">差分比較</button>
@@ -250,6 +261,14 @@
     </div>
 
     <div class="section">
+      <div class="indent-select">
+        <label>インデント</label>
+        <select id="indentSize">
+          <option value="2" selected>2スペース</option>
+          <option value="4">4スペース</option>
+          <option value="tab">タブ</option>
+        </select>
+      </div>
       <div class="btn-group">
         <button class="btn" id="btnFormat">整形</button>
         <button class="btn btn-outline" id="btnMinify">圧縮</button>
@@ -307,10 +326,10 @@
 
 <script>
   // タブ切替
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
       tab.classList.add('active');
       document.getElementById('panel' + capitalize(tab.dataset.tab)).classList.add('active');
     });
@@ -318,52 +337,103 @@
 
   function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-  // シンタックスハイライト付きHTML生成
-  function highlightJson(json, indent) {
-    const formatted = JSON.stringify(json, null, indent);
-    // HTMLエスケープしてからハイライト
-    const escaped = formatted
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
-    return escaped.replace(
-      /("(?:\\.|[^"\\])*")\s*:/g,
-      '<span class="json-key">$1</span>:'
-    ).replace(
-      /:\s*("(?:\\.|[^"\\])*")/g,
-      ': <span class="json-string">$1</span>'
-    ).replace(
-      /:\s*(-?\d+\.?\d*(?:[eE][+-]?\d+)?)/g,
-      ': <span class="json-number">$1</span>'
-    ).replace(
-      /:\s*(true|false)/g,
-      ': <span class="json-boolean">$1</span>'
-    ).replace(
-      /:\s*(null)/g,
-      ': <span class="json-null">$1</span>'
-    ).replace(
-      // 配列内の値もハイライト
-      /(?<=[\[,]\s*)("(?:\\.|[^"\\])*")(?=\s*[,\]])/g,
-      '<span class="json-string">$1</span>'
-    ).replace(
-      /(?<=[\[,]\s*)(-?\d+\.?\d*(?:[eE][+-]?\d+)?)(?=\s*[,\]])/g,
-      '<span class="json-number">$1</span>'
-    ).replace(
-      /(?<=[\[,]\s*)(true|false)(?=\s*[,\]])/g,
-      '<span class="json-boolean">$1</span>'
-    ).replace(
-      /(?<=[\[,]\s*)(null)(?=\s*[,\]])/g,
-      '<span class="json-null">$1</span>'
-    );
+  // インデントサイズ取得
+  function getIndent() {
+    var val = document.getElementById('indentSize').value;
+    if (val === 'tab') return '\t';
+    return parseInt(val, 10);
+  }
+
+  // シンタックスハイライト付きHTML生成（lookbehindを使わない実装）
+  function highlightJson(json, indent) {
+    var formatted = JSON.stringify(json, null, indent);
+    var result = '';
+    var i = 0;
+    var len = formatted.length;
+
+    while (i < len) {
+      var ch = formatted[i];
+
+      // 文字列の処理
+      if (ch === '"') {
+        var strStart = i;
+        i++;
+        while (i < len) {
+          if (formatted[i] === '\\') {
+            i += 2;
+            continue;
+          }
+          if (formatted[i] === '"') {
+            i++;
+            break;
+          }
+          i++;
+        }
+        var str = formatted.slice(strStart, i);
+        var escapedStr = escapeHtml(str);
+
+        // 後続にコロンがあればキー
+        var afterStr = i;
+        while (afterStr < len && (formatted[afterStr] === ' ' || formatted[afterStr] === '\t')) afterStr++;
+        if (formatted[afterStr] === ':') {
+          result += '<span class="json-key">' + escapedStr + '</span>';
+        } else {
+          result += '<span class="json-string">' + escapedStr + '</span>';
+        }
+        continue;
+      }
+
+      // 数値の処理
+      if (ch === '-' || (ch >= '0' && ch <= '9')) {
+        var numStart = i;
+        if (ch === '-') i++;
+        while (i < len && ((formatted[i] >= '0' && formatted[i] <= '9') || formatted[i] === '.' || formatted[i] === 'e' || formatted[i] === 'E' || formatted[i] === '+' || formatted[i] === '-')) {
+          if ((formatted[i] === '+' || formatted[i] === '-') && formatted[i-1] !== 'e' && formatted[i-1] !== 'E') break;
+          i++;
+        }
+        result += '<span class="json-number">' + escapeHtml(formatted.slice(numStart, i)) + '</span>';
+        continue;
+      }
+
+      // true
+      if (formatted.slice(i, i + 4) === 'true') {
+        result += '<span class="json-boolean">true</span>';
+        i += 4;
+        continue;
+      }
+
+      // false
+      if (formatted.slice(i, i + 5) === 'false') {
+        result += '<span class="json-boolean">false</span>';
+        i += 5;
+        continue;
+      }
+
+      // null
+      if (formatted.slice(i, i + 4) === 'null') {
+        result += '<span class="json-null">null</span>';
+        i += 4;
+        continue;
+      }
+
+      // その他の文字はそのまま
+      result += escapeHtml(ch);
+      i++;
+    }
+
+    return result;
   }
 
   // 行番号付きで出力
   function renderWithLineNumbers(el, html) {
-    const lines = html.split('\n');
-    el.innerHTML = lines.map((line, i) =>
-      `<div class="line"><span class="line-no">${i + 1}</span><span class="line-content">${line}</span></div>`
-    ).join('');
+    var lines = html.split('\n');
+    el.innerHTML = lines.map(function(line, i) {
+      return '<div class="line"><span class="line-no">' + (i + 1) + '</span><span class="line-content">' + line + '</span></div>';
+    }).join('');
   }
 
   // JSONパース共通
@@ -376,60 +446,94 @@
   }
 
   // 整形ボタン
-  document.getElementById('btnFormat').addEventListener('click', () => {
-    const input = document.getElementById('jsonInput').value.trim();
-    const output = document.getElementById('formatOutput');
-    const { data, error } = tryParseJson(input);
-    if (error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+  document.getElementById('btnFormat').addEventListener('click', function() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var output = document.getElementById('formatOutput');
+    if (!input) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSONを入力してください</div>';
       return;
     }
-    const html = highlightJson(data, 2);
+    var parsed = tryParseJson(input);
+    if (parsed.error) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSON解析エラー: ' + escapeHtml(parsed.error) + '</div>';
+      return;
+    }
+    var html = highlightJson(parsed.data, getIndent());
     renderWithLineNumbers(output, html);
   });
 
   // 圧縮ボタン
-  document.getElementById('btnMinify').addEventListener('click', () => {
-    const input = document.getElementById('jsonInput').value.trim();
-    const output = document.getElementById('formatOutput');
-    const { data, error } = tryParseJson(input);
-    if (error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+  document.getElementById('btnMinify').addEventListener('click', function() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var output = document.getElementById('formatOutput');
+    if (!input) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSONを入力してください</div>';
       return;
     }
-    const minified = JSON.stringify(data);
+    var parsed = tryParseJson(input);
+    if (parsed.error) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSON解析エラー: ' + escapeHtml(parsed.error) + '</div>';
+      return;
+    }
+    var minified = JSON.stringify(parsed.data);
     renderWithLineNumbers(output, escapeHtml(minified));
   });
 
   // 検証ボタン
-  document.getElementById('btnValidate').addEventListener('click', () => {
-    const input = document.getElementById('jsonInput').value.trim();
-    const output = document.getElementById('formatOutput');
-    const { data, error } = tryParseJson(input);
-    if (error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">不正なJSON: ${error}</div>`;
+  document.getElementById('btnValidate').addEventListener('click', function() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var output = document.getElementById('formatOutput');
+    if (!input) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSONを入力してください</div>';
+      return;
+    }
+    var parsed = tryParseJson(input);
+    if (parsed.error) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">不正なJSON: ' + escapeHtml(parsed.error) + '</div>';
     } else {
-      const type = Array.isArray(data) ? '配列' : typeof data === 'object' ? 'オブジェクト' : typeof data;
-      const keys = typeof data === 'object' && data !== null ? Object.keys(data).length : 0;
-      const size = new Blob([input]).size;
-      output.innerHTML = `<div style="padding:16px;">有効なJSONです<br>型: ${type}<br>キー数: ${keys}<br>サイズ: ${size} bytes</div>`;
+      var data = parsed.data;
+      var type = Array.isArray(data) ? '配列' : (typeof data === 'object' && data !== null) ? 'オブジェクト' : typeof data;
+      var keys = (typeof data === 'object' && data !== null) ? Object.keys(data).length : 0;
+      var size = new Blob([input]).size;
+      var depth = computeDepth(data);
+      output.innerHTML = '<div style="padding:16px;">有効なJSONです<br>型: ' + type + '<br>トップレベルキー数: ' + keys + '<br>最大深度: ' + depth + '<br>サイズ: ' + formatBytes(size) + '</div>';
     }
   });
 
+  function computeDepth(obj) {
+    if (obj === null || typeof obj !== 'object') return 0;
+    var maxChild = 0;
+    var entries = Array.isArray(obj) ? obj : Object.values(obj);
+    for (var i = 0; i < entries.length; i++) {
+      var d = computeDepth(entries[i]);
+      if (d > maxChild) maxChild = d;
+    }
+    return maxChild + 1;
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
   // ツリービュー
-  document.getElementById('btnTreeView').addEventListener('click', () => {
-    const input = document.getElementById('jsonInput').value.trim();
-    const output = document.getElementById('formatOutput');
-    const { data, error } = tryParseJson(input);
-    if (error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+  document.getElementById('btnTreeView').addEventListener('click', function() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var output = document.getElementById('formatOutput');
+    if (!input) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSONを入力してください</div>';
       return;
     }
-    output.innerHTML = '<div class="tree-view">' + buildTree(data, '') + '</div>';
-    // トグル動作
-    output.querySelectorAll('.tree-toggle').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        const children = toggle.parentElement.querySelector('.tree-children');
+    var parsed = tryParseJson(input);
+    if (parsed.error) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSON解析エラー: ' + escapeHtml(parsed.error) + '</div>';
+      return;
+    }
+    output.innerHTML = '<div class="tree-view">' + buildTree(parsed.data, '') + '</div>';
+    output.querySelectorAll('.tree-toggle').forEach(function(toggle) {
+      toggle.addEventListener('click', function() {
+        var children = toggle.parentElement.querySelector('.tree-children');
         if (children) {
           children.classList.toggle('collapsed');
           toggle.textContent = children.classList.contains('collapsed') ? '+' : '-';
@@ -441,102 +545,125 @@
   function buildTree(obj, path) {
     if (obj === null) return '<span class="json-null">null</span>';
     if (typeof obj !== 'object') {
-      if (typeof obj === 'string') return `<span class="json-string">"${escapeHtml(obj)}"</span>`;
-      if (typeof obj === 'number') return `<span class="json-number">${obj}</span>`;
-      if (typeof obj === 'boolean') return `<span class="json-boolean">${obj}</span>`;
+      if (typeof obj === 'string') return '<span class="json-string">"' + escapeHtml(obj) + '"</span>';
+      if (typeof obj === 'number') return '<span class="json-number">' + obj + '</span>';
+      if (typeof obj === 'boolean') return '<span class="json-boolean">' + obj + '</span>';
       return String(obj);
     }
 
-    const isArray = Array.isArray(obj);
-    const entries = isArray ? obj.map((v, i) => [i, v]) : Object.entries(obj);
-    const bracket = isArray ? ['[', ']'] : ['{', '}'];
+    var isArray = Array.isArray(obj);
+    var entries = isArray ? obj.map(function(v, i) { return [i, v]; }) : Object.entries(obj);
+    var bracket = isArray ? ['[', ']'] : ['{', '}'];
 
     if (entries.length === 0) return bracket[0] + bracket[1];
 
-    let html = `<span class="tree-toggle">-</span> ${bracket[0]}<div class="tree-children">`;
-    entries.forEach(([key, val]) => {
-      const keyLabel = isArray ? `<span class="json-number">${key}</span>` : `<span class="tree-key">"${escapeHtml(String(key))}"</span>`;
-      html += `<div class="tree-node">${keyLabel}: ${buildTree(val, path + '.' + key)}</div>`;
+    var html = '<span class="tree-toggle">-</span> ' + bracket[0] + '<div class="tree-children">';
+    entries.forEach(function(entry) {
+      var key = entry[0];
+      var val = entry[1];
+      var keyLabel = isArray
+        ? '<span class="json-number">' + key + '</span>'
+        : '<span class="tree-key">"' + escapeHtml(String(key)) + '"</span>';
+      html += '<div class="tree-node">' + keyLabel + ': ' + buildTree(val, path + '.' + key) + '</div>';
     });
-    html += `</div>${bracket[1]}`;
+    html += '</div>' + bracket[1];
     return html;
   }
 
   // JSONPath検索
-  document.getElementById('btnSearch').addEventListener('click', () => {
-    const input = document.getElementById('jsonInput').value.trim();
-    const pathStr = document.getElementById('jsonPath').value.trim();
-    const output = document.getElementById('formatOutput');
-    const { data, error } = tryParseJson(input);
-    if (error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON解析エラー: ${error}</div>`;
+  document.getElementById('btnSearch').addEventListener('click', function() {
+    var input = document.getElementById('jsonInput').value.trim();
+    var pathStr = document.getElementById('jsonPath').value.trim();
+    var output = document.getElementById('formatOutput');
+    if (!input) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSONを入力してください</div>';
+      return;
+    }
+    var parsed = tryParseJson(input);
+    if (parsed.error) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSON解析エラー: ' + escapeHtml(parsed.error) + '</div>';
       return;
     }
     if (!pathStr) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">パスを入力してください</div>`;
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">パスを入力してください</div>';
       return;
     }
 
     try {
-      const result = resolveJsonPath(data, pathStr);
-      const html = highlightJson(result, 2);
+      var result = resolveJsonPath(parsed.data, pathStr);
+      var html = highlightJson(result, getIndent());
       renderWithLineNumbers(output, html);
     } catch (e) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">パス解決エラー: ${e.message}</div>`;
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">パス解決エラー: ' + escapeHtml(e.message) + '</div>';
     }
   });
 
-  // 簡易JSONPathリゾルバ（ドット記法・ブラケット記法対応）
+  // Enterキーで検索実行
+  document.getElementById('jsonPath').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      document.getElementById('btnSearch').click();
+    }
+  });
+
+  // 簡易JSONPathリゾルバ
   function resolveJsonPath(obj, path) {
-    const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
-    let current = obj;
-    for (const part of parts) {
+    // $. プレフィクスの除去
+    if (path.startsWith('$.')) path = path.slice(2);
+    if (path.startsWith('$')) path = path.slice(1);
+
+    var parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+    var current = obj;
+    for (var i = 0; i < parts.length; i++) {
       if (current === null || current === undefined) {
-        throw new Error(`パス "${path}" が見つかりません`);
+        throw new Error('"' + path + '" が見つかりません');
       }
-      current = current[part];
+      current = current[parts[i]];
     }
     if (current === undefined) {
-      throw new Error(`パス "${path}" が見つかりません`);
+      throw new Error('"' + path + '" が見つかりません');
     }
     return current;
   }
 
   // 差分比較
-  document.getElementById('btnDiff').addEventListener('click', () => {
-    const a = document.getElementById('diffA').value.trim();
-    const b = document.getElementById('diffB').value.trim();
-    const output = document.getElementById('diffOutput');
+  document.getElementById('btnDiff').addEventListener('click', function() {
+    var a = document.getElementById('diffA').value.trim();
+    var b = document.getElementById('diffB').value.trim();
+    var output = document.getElementById('diffOutput');
 
-    const parsedA = tryParseJson(a);
-    const parsedB = tryParseJson(b);
+    if (!a || !b) {
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">両方のJSONを入力してください</div>';
+      return;
+    }
+
+    var parsedA = tryParseJson(a);
+    var parsedB = tryParseJson(b);
 
     if (parsedA.error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON A エラー: ${parsedA.error}</div>`;
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSON A エラー: ' + escapeHtml(parsedA.error) + '</div>';
       return;
     }
     if (parsedB.error) {
-      output.innerHTML = `<div style="padding:16px;" class="error-msg">JSON B エラー: ${parsedB.error}</div>`;
+      output.innerHTML = '<div style="padding:16px;" class="error-msg">JSON B エラー: ' + escapeHtml(parsedB.error) + '</div>';
       return;
     }
 
-    const diffs = computeDiff(parsedA.data, parsedB.data, '');
+    var diffs = computeDiff(parsedA.data, parsedB.data, '');
     if (diffs.length === 0) {
       output.innerHTML = '<div style="padding:16px; color:#6b7280;">差分はありません</div>';
       return;
     }
 
-    let html = '';
-    let lineNo = 0;
-    diffs.forEach(d => {
-      lineNo++;
-      let cls = '';
+    var html = '';
+    diffs.forEach(function(d, idx) {
+      var lineNo = idx + 1;
+      var cls = '';
       if (d.type === 'added') cls = 'diff-added';
       if (d.type === 'removed') cls = 'diff-removed';
       if (d.type === 'changed') cls = 'diff-changed';
 
-      const prefix = d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~';
-      html += `<div class="line ${cls}"><span class="line-no">${lineNo}</span><span class="line-content">${prefix} ${escapeHtml(d.path)}: ${escapeHtml(d.detail)}</span></div>`;
+      var prefix = d.type === 'added' ? '+' : d.type === 'removed' ? '-' : '~';
+      html += '<div class="line ' + cls + '"><span class="line-no">' + lineNo + '</span><span class="line-content">' + prefix + ' ' + escapeHtml(d.path) + ': ' + escapeHtml(d.detail) + '</span></div>';
     });
 
     output.innerHTML = html;
@@ -544,65 +671,70 @@
 
   // 再帰的差分計算
   function computeDiff(a, b, path) {
-    const diffs = [];
-    const aType = typeof a;
-    const bType = typeof b;
+    var diffs = [];
+    var aType = typeof a;
+    var bType = typeof b;
 
     if (aType !== bType || Array.isArray(a) !== Array.isArray(b)) {
-      diffs.push({ type: 'changed', path: path || '(root)', detail: `${JSON.stringify(a)} -> ${JSON.stringify(b)}` });
+      diffs.push({ type: 'changed', path: path || '(root)', detail: JSON.stringify(a) + ' -> ' + JSON.stringify(b) });
       return diffs;
     }
 
     if (a === null || b === null || aType !== 'object') {
       if (a !== b) {
-        diffs.push({ type: 'changed', path: path || '(root)', detail: `${JSON.stringify(a)} -> ${JSON.stringify(b)}` });
+        diffs.push({ type: 'changed', path: path || '(root)', detail: JSON.stringify(a) + ' -> ' + JSON.stringify(b) });
       }
       return diffs;
     }
 
-    const aKeys = new Set(Object.keys(a));
-    const bKeys = new Set(Object.keys(b));
+    var aKeys = Object.keys(a);
+    var bKeys = Object.keys(b);
+    var bKeySet = {};
+    bKeys.forEach(function(k) { bKeySet[k] = true; });
+    var aKeySet = {};
+    aKeys.forEach(function(k) { aKeySet[k] = true; });
 
     // Aにだけ存在
-    aKeys.forEach(key => {
-      if (!bKeys.has(key)) {
-        diffs.push({ type: 'removed', path: `${path}.${key}`, detail: JSON.stringify(a[key]) });
+    aKeys.forEach(function(key) {
+      if (!bKeySet[key]) {
+        diffs.push({ type: 'removed', path: path + '.' + key, detail: JSON.stringify(a[key]) });
       }
     });
 
     // Bにだけ存在
-    bKeys.forEach(key => {
-      if (!aKeys.has(key)) {
-        diffs.push({ type: 'added', path: `${path}.${key}`, detail: JSON.stringify(b[key]) });
+    bKeys.forEach(function(key) {
+      if (!aKeySet[key]) {
+        diffs.push({ type: 'added', path: path + '.' + key, detail: JSON.stringify(b[key]) });
       }
     });
 
     // 両方に存在
-    aKeys.forEach(key => {
-      if (bKeys.has(key)) {
-        const childDiffs = computeDiff(a[key], b[key], `${path}.${key}`);
-        diffs.push(...childDiffs);
+    aKeys.forEach(function(key) {
+      if (bKeySet[key]) {
+        var childDiffs = computeDiff(a[key], b[key], path + '.' + key);
+        diffs.push.apply(diffs, childDiffs);
       }
     });
 
     return diffs;
   }
 
-  function escapeHtml(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
   // コピー
-  document.getElementById('btnCopyFormat').addEventListener('click', () => {
-    const output = document.getElementById('formatOutput');
-    const text = output.textContent || output.innerText;
+  document.getElementById('btnCopyFormat').addEventListener('click', function() {
+    var output = document.getElementById('formatOutput');
+    var text = output.textContent || output.innerText;
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-      const toast = document.getElementById('toast');
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 1500);
+    navigator.clipboard.writeText(text).then(function() {
+      showToast('コピーしました');
     });
   });
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 1500);
+  }
 </script>
 </body>
 </html>

@@ -20,7 +20,7 @@
     display: flex; justify-content: space-between; align-items: baseline;
     border-bottom: 1px solid #f3f4f6; padding-bottom: 16px; margin-bottom: 32px;
   }
-  .header h1 { font-size: 15px; font-weight: 600; }
+  .header-title { font-size: 15px; font-weight: 600; }
   .header .subtitle { font-size: 11px; color: #9ca3af; }
   label {
     display: block; font-size: 11px; text-transform: uppercase;
@@ -45,23 +45,68 @@
   }
   .btn-secondary:hover { background: #f9fafb; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
   .section { margin-bottom: 32px; }
-  .row { display: flex; gap: 12px; align-items: flex-end; }
-  .flags { display: flex; gap: 16px; align-items: center; margin-top: 8px; }
-  .flags label {
-    display: flex; align-items: center; gap: 4px;
-    text-transform: none; letter-spacing: normal; font-size: 13px; color: #1a1a2e; margin-bottom: 0;
+
+  /* パターン入力部 */
+  .pattern-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 2px;
+    padding: 4px 8px;
+    background: #fff;
+    transition: border-color 0.15s;
   }
-  .flags input[type="checkbox"] { accent-color: #1e3461; }
+  .pattern-row:focus-within { border-color: #1e3461; }
+  .pattern-slash { color: #9ca3af; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 14px; user-select: none; }
+  .pattern-input {
+    flex: 1;
+    border: none;
+    padding: 6px 0;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: #1a1a2e;
+    outline: none;
+    background: transparent;
+    width: auto;
+  }
+  .pattern-flags {
+    display: flex;
+    gap: 2px;
+  }
+  .flag-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-weight: 500;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: all 0.15s;
+  }
+  .flag-btn:hover { color: #1e3461; background: #f3f4f6; }
+  .flag-btn.active {
+    color: #1e3461;
+    background: rgba(30,52,97,0.08);
+    border-color: rgba(30,52,97,0.2);
+  }
+
   .preset-row { display: flex; gap: 12px; align-items: flex-end; margin-top: 12px; }
   .preset-row select { max-width: 280px; }
   .highlight-area {
     border: 1px solid #e5e7eb; border-radius: 2px; padding: 12px 16px;
     min-height: 80px; white-space: pre-wrap; word-break: break-all;
-    font-family: 'Inter', monospace; font-size: 13px; line-height: 1.8;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; line-height: 1.8;
     background: #fafafa;
   }
   .match-hl {
     background: rgba(30,52,97,0.1); border-bottom: 2px solid #1e3461;
+    padding: 1px 0;
+  }
+  .match-hl-alt {
+    background: rgba(30,52,97,0.18); border-bottom: 2px solid #2e4f87;
     padding: 1px 0;
   }
   .stats {
@@ -79,36 +124,81 @@
     padding: 8px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top;
   }
   .match-table tr:hover td { background: #fafafa; }
-  .match-text { font-family: monospace; color: #1e3461; font-weight: 500; }
-  .group-text { font-family: monospace; color: #6b7280; font-size: 11px; }
+  .match-text { font-family: 'SF Mono', 'Fira Code', monospace; color: #1e3461; font-weight: 500; }
+  .group-text { font-family: 'SF Mono', 'Fira Code', monospace; color: #6b7280; font-size: 11px; }
   .replace-section { display: flex; gap: 12px; align-items: flex-end; }
   .replace-section .field { flex: 1; }
   .replace-result {
     border: 1px solid #e5e7eb; border-radius: 2px; padding: 12px 16px;
     min-height: 60px; white-space: pre-wrap; word-break: break-all;
-    font-size: 13px; background: #fafafa;
+    font-size: 13px; background: #fafafa; font-family: 'SF Mono', 'Fira Code', monospace;
   }
-  .error-msg { color: #ef4444; font-size: 12px; margin-top: 4px; }
-  h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+  .error-msg { color: #b91c1c; font-size: 12px; margin-top: 4px; }
+  .section-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; color: #1a1a2e; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #1e3461;
+    color: #ffffff;
+    padding: 8px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  .cheatsheet {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #f3f4f6;
+    border-radius: 2px;
+    background: #fafafa;
+    font-size: 11px;
+  }
+  .cheatsheet-item {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+  .cheatsheet-item code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-weight: 500;
+    color: #1e3461;
+    background: rgba(30,52,97,0.06);
+    padding: 1px 4px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .cheatsheet-item span { color: #6b7280; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h1>正規表現テスター</h1>
+    <span class="header-title">正規表現テスター</span>
     <div class="subtitle">リアルタイム正規表現マッチング</div>
   </div>
 
   <div class="section">
     <label>パターン</label>
-    <input type="text" id="pattern" placeholder="正規表現を入力...">
-    <div id="patternError" class="error-msg"></div>
-    <div class="flags">
-      <label><input type="checkbox" id="flag-g" checked> g (global)</label>
-      <label><input type="checkbox" id="flag-i"> i (case-insensitive)</label>
-      <label><input type="checkbox" id="flag-m"> m (multiline)</label>
-      <label><input type="checkbox" id="flag-s"> s (dotAll)</label>
+    <div class="pattern-row">
+      <span class="pattern-slash">/</span>
+      <input type="text" class="pattern-input" id="pattern" placeholder="正規表現を入力...">
+      <span class="pattern-slash">/</span>
+      <div class="pattern-flags">
+        <button class="flag-btn active" data-flag="g" title="global">g</button>
+        <button class="flag-btn" data-flag="i" title="case-insensitive">i</button>
+        <button class="flag-btn" data-flag="m" title="multiline">m</button>
+        <button class="flag-btn" data-flag="s" title="dotAll">s</button>
+      </div>
     </div>
+    <div id="patternError" class="error-msg"></div>
     <div class="preset-row">
       <div style="flex:1;">
         <label>プリセット</label>
@@ -120,6 +210,8 @@
           <option value="date">日付 (YYYY-MM-DD)</option>
           <option value="ip">IPアドレス</option>
           <option value="postal_jp">郵便番号 (日本)</option>
+          <option value="html_tag">HTMLタグ</option>
+          <option value="hex_color">HEXカラー</option>
         </select>
       </div>
     </div>
@@ -131,20 +223,21 @@
   </div>
 
   <div class="section">
-    <h2>マッチ結果</h2>
+    <div class="section-title">マッチ結果</div>
     <div class="stats">
       マッチ数: <span id="matchCount">0</span>
+      &nbsp;&nbsp; 実行時間: <span id="execTime">-</span>
     </div>
     <div id="highlighted" class="highlight-area"></div>
   </div>
 
   <div class="section">
-    <h2>マッチ詳細</h2>
+    <div class="section-title">マッチ詳細</div>
     <table class="match-table">
       <thead>
         <tr>
-          <th>番号</th>
-          <th>位置</th>
+          <th style="width:50px;">番号</th>
+          <th style="width:60px;">位置</th>
           <th>マッチ文字列</th>
           <th>キャプチャグループ</th>
         </tr>
@@ -154,73 +247,105 @@
   </div>
 
   <div class="section">
-    <h2>置換</h2>
+    <div class="section-title">置換</div>
     <div class="replace-section">
       <div class="field">
         <label>置換文字列</label>
-        <input type="text" id="replaceInput" placeholder="置換後の文字列...">
+        <input type="text" id="replaceInput" placeholder="置換後の文字列... ($1, $2 でグループ参照)">
       </div>
-      <button class="btn btn-secondary" onclick="copyReplaceResult()" style="margin-bottom:0;">コピー</button>
+      <button class="btn btn-secondary" id="btnCopyReplace" style="margin-bottom:0;">コピー</button>
     </div>
     <div style="margin-top: 12px;">
       <label>置換結果</label>
       <div id="replaceResult" class="replace-result"></div>
     </div>
   </div>
+
+  <div class="section">
+    <div class="section-title">クイックリファレンス</div>
+    <div class="cheatsheet">
+      <div class="cheatsheet-item"><code>.</code> <span>任意の1文字</span></div>
+      <div class="cheatsheet-item"><code>\d</code> <span>数字</span></div>
+      <div class="cheatsheet-item"><code>\w</code> <span>単語文字</span></div>
+      <div class="cheatsheet-item"><code>\s</code> <span>空白</span></div>
+      <div class="cheatsheet-item"><code>^</code> <span>行頭</span></div>
+      <div class="cheatsheet-item"><code>$</code> <span>行末</span></div>
+      <div class="cheatsheet-item"><code>*</code> <span>0回以上</span></div>
+      <div class="cheatsheet-item"><code>+</code> <span>1回以上</span></div>
+      <div class="cheatsheet-item"><code>?</code> <span>0か1回</span></div>
+      <div class="cheatsheet-item"><code>{n,m}</code> <span>n〜m回</span></div>
+      <div class="cheatsheet-item"><code>[abc]</code> <span>文字クラス</span></div>
+      <div class="cheatsheet-item"><code>(abc)</code> <span>キャプチャ</span></div>
+      <div class="cheatsheet-item"><code>(?:abc)</code> <span>非キャプチャ</span></div>
+      <div class="cheatsheet-item"><code>a|b</code> <span>OR</span></div>
+      <div class="cheatsheet-item"><code>\b</code> <span>単語境界</span></div>
+    </div>
+  </div>
 </div>
 
+<div class="toast" id="toast">コピーしました</div>
+
 <script>
-  const PRESETS = {
+  var PRESETS = {
     email: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}',
     phone_jp: '0[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{3,4}',
     url: 'https?://[\\w\\-]+(\\.[\\w\\-]+)+([\\w.,@?^=%&:/~+#\\-]*[\\w@?^=%&/~+#\\-])?',
     date: '\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])',
     ip: '(?:(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(?:25[0-5]|2[0-4]\\d|[01]?\\d\\d?)',
-    postal_jp: '\\d{3}-?\\d{4}'
+    postal_jp: '\\d{3}-?\\d{4}',
+    html_tag: '<\\/?[a-zA-Z][a-zA-Z0-9]*(?:\\s[^>]*)?\\/?>',
+    hex_color: '#(?:[0-9a-fA-F]{3}){1,2}'
   };
 
-  const patternEl = document.getElementById('pattern');
-  const testStringEl = document.getElementById('testString');
-  const replaceInputEl = document.getElementById('replaceInput');
-  const highlightedEl = document.getElementById('highlighted');
-  const matchCountEl = document.getElementById('matchCount');
-  const matchDetailsEl = document.getElementById('matchDetails');
-  const replaceResultEl = document.getElementById('replaceResult');
-  const patternErrorEl = document.getElementById('patternError');
-  const presetsEl = document.getElementById('presets');
+  var patternEl = document.getElementById('pattern');
+  var testStringEl = document.getElementById('testString');
+  var replaceInputEl = document.getElementById('replaceInput');
+  var highlightedEl = document.getElementById('highlighted');
+  var matchCountEl = document.getElementById('matchCount');
+  var execTimeEl = document.getElementById('execTime');
+  var matchDetailsEl = document.getElementById('matchDetails');
+  var replaceResultEl = document.getElementById('replaceResult');
+  var patternErrorEl = document.getElementById('patternError');
+  var presetsEl = document.getElementById('presets');
 
-  // フラグのチェックボックスを取得
+  // フラグボタンのトグル
+  document.querySelectorAll('.flag-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btn.classList.toggle('active');
+      runMatch();
+    });
+  });
+
   function getFlags() {
-    let flags = '';
-    if (document.getElementById('flag-g').checked) flags += 'g';
-    if (document.getElementById('flag-i').checked) flags += 'i';
-    if (document.getElementById('flag-m').checked) flags += 'm';
-    if (document.getElementById('flag-s').checked) flags += 's';
+    var flags = '';
+    document.querySelectorAll('.flag-btn.active').forEach(function(btn) {
+      flags += btn.dataset.flag;
+    });
     return flags;
   }
 
-  // HTMLエスケープ
   function escapeHtml(str) {
-    const div = document.createElement('div');
+    var div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
   }
 
   // メインの実行関数
   function runMatch() {
-    const patternStr = patternEl.value;
-    const testStr = testStringEl.value;
-    const replaceStr = replaceInputEl.value;
+    var patternStr = patternEl.value;
+    var testStr = testStringEl.value;
+    var replaceStr = replaceInputEl.value;
 
     patternErrorEl.textContent = '';
-    highlightedEl.innerHTML = escapeHtml(testStr);
+    highlightedEl.innerHTML = escapeHtml(testStr) || '<span style="color:#9ca3af;">テスト文字列を入力してください</span>';
     matchCountEl.textContent = '0';
+    execTimeEl.textContent = '-';
     matchDetailsEl.innerHTML = '';
     replaceResultEl.textContent = testStr;
 
     if (!patternStr || !testStr) return;
 
-    let regex;
+    var regex;
     try {
       regex = new RegExp(patternStr, getFlags());
     } catch (e) {
@@ -228,54 +353,65 @@
       return;
     }
 
+    // 実行時間計測
+    var startTime = performance.now();
+
     // マッチを収集
-    const matches = [];
+    var matches = [];
+    var safetyCounter = 0;
+    var MAX_MATCHES = 1000;
+
     if (regex.global) {
-      let m;
-      while ((m = regex.exec(testStr)) !== null) {
-        matches.push({ index: m.index, match: m[0], groups: [...m].slice(1) });
+      var m;
+      while ((m = regex.exec(testStr)) !== null && safetyCounter < MAX_MATCHES) {
+        matches.push({ index: m.index, match: m[0], groups: Array.prototype.slice.call(m, 1) });
         if (m[0].length === 0) { regex.lastIndex++; }
+        safetyCounter++;
       }
     } else {
-      const m = regex.exec(testStr);
+      var m = regex.exec(testStr);
       if (m) {
-        matches.push({ index: m.index, match: m[0], groups: [...m].slice(1) });
+        matches.push({ index: m.index, match: m[0], groups: Array.prototype.slice.call(m, 1) });
       }
     }
 
-    matchCountEl.textContent = matches.length;
+    var endTime = performance.now();
+    execTimeEl.textContent = (endTime - startTime).toFixed(2) + 'ms';
+    matchCountEl.textContent = String(matches.length);
 
-    // ハイライト表示を構築
+    // ハイライト表示を構築（交互色で隣接マッチを区別）
     if (matches.length > 0) {
-      let html = '';
-      let lastIndex = 0;
-      for (const m of matches) {
-        html += escapeHtml(testStr.slice(lastIndex, m.index));
-        html += '<span class="match-hl">' + escapeHtml(m.match) + '</span>';
-        lastIndex = m.index + m.match.length;
+      var html = '';
+      var lastIndex = 0;
+      for (var i = 0; i < matches.length; i++) {
+        var mi = matches[i];
+        html += escapeHtml(testStr.slice(lastIndex, mi.index));
+        var hlClass = (i % 2 === 0) ? 'match-hl' : 'match-hl-alt';
+        html += '<span class="' + hlClass + '">' + escapeHtml(mi.match) + '</span>';
+        lastIndex = mi.index + mi.match.length;
       }
       html += escapeHtml(testStr.slice(lastIndex));
       highlightedEl.innerHTML = html;
     }
 
     // マッチ詳細テーブル
-    let detailsHtml = '';
-    matches.forEach((m, i) => {
-      const groupsStr = m.groups.length > 0
-        ? m.groups.map((g, gi) => `$${gi + 1}: ${g !== undefined ? g : '(undefined)'}`).join(', ')
+    var detailsHtml = '';
+    matches.forEach(function(mi, idx) {
+      var groupsStr = mi.groups.length > 0
+        ? mi.groups.map(function(g, gi) { return '$' + (gi + 1) + ': ' + (g !== undefined ? g : '(undefined)'); }).join(', ')
         : '-';
-      detailsHtml += `<tr>
-        <td>${i + 1}</td>
-        <td>${m.index}</td>
-        <td class="match-text">${escapeHtml(m.match)}</td>
-        <td class="group-text">${escapeHtml(groupsStr)}</td>
-      </tr>`;
+      detailsHtml += '<tr>' +
+        '<td>' + (idx + 1) + '</td>' +
+        '<td>' + mi.index + '-' + (mi.index + mi.match.length) + '</td>' +
+        '<td class="match-text">' + escapeHtml(mi.match) + '</td>' +
+        '<td class="group-text">' + escapeHtml(groupsStr) + '</td>' +
+        '</tr>';
     });
     matchDetailsEl.innerHTML = detailsHtml;
 
     // 置換結果
     try {
-      const replaceRegex = new RegExp(patternStr, getFlags());
+      var replaceRegex = new RegExp(patternStr, getFlags());
       replaceResultEl.textContent = testStr.replace(replaceRegex, replaceStr);
     } catch (e) {
       replaceResultEl.textContent = '';
@@ -283,8 +419,8 @@
   }
 
   // プリセット選択
-  presetsEl.addEventListener('change', () => {
-    const val = presetsEl.value;
+  presetsEl.addEventListener('change', function() {
+    var val = presetsEl.value;
     if (val && PRESETS[val]) {
       patternEl.value = PRESETS[val];
       runMatch();
@@ -292,16 +428,30 @@
   });
 
   // コピー
-  function copyReplaceResult() {
-    const text = replaceResultEl.textContent;
-    navigator.clipboard.writeText(text);
+  document.getElementById('btnCopyReplace').addEventListener('click', function() {
+    var text = replaceResultEl.textContent;
+    navigator.clipboard.writeText(text).then(function() {
+      showToast('コピーしました');
+    });
+  });
+
+  function showToast(msg) {
+    var toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 1500);
   }
 
   // イベントリスナーを登録
   patternEl.addEventListener('input', runMatch);
   testStringEl.addEventListener('input', runMatch);
   replaceInputEl.addEventListener('input', runMatch);
-  document.querySelectorAll('.flags input').forEach(cb => cb.addEventListener('change', runMatch));
+
+  // サンプルデータで初期表示
+  patternEl.value = PRESETS.email;
+  testStringEl.value = 'お問い合わせ先:\ntanaka@example.com\n山田太郎 yamada.taro@company.co.jp\n電話: 03-1234-5678\n無効なアドレス: user@, @domain.com\n郵便番号: 100-0001\nhttps://example.com/path?q=test';
+  replaceInputEl.value = '[MAIL]';
+  runMatch();
 </script>
 </body>
 </html>

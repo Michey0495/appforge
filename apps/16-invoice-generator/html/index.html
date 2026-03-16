@@ -100,6 +100,20 @@
 
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 
+  /* 印鑑アップロード */
+  .seal-upload-area {
+    border: 2px dashed #e5e7eb; border-radius: 2px;
+    padding: 16px; text-align: center; cursor: pointer;
+    transition: border-color 0.15s;
+    min-height: 80px; display: flex; align-items: center; justify-content: center;
+  }
+  .seal-upload-area:hover { border-color: #1e3461; }
+  .seal-upload-area img {
+    max-width: 100px; max-height: 100px; object-fit: contain;
+  }
+  .seal-upload-text { color: #9ca3af; font-size: 11px; }
+  .seal-actions { margin-top: 6px; text-align: center; }
+
   /* ========== 印刷用レイアウト ========== */
   @media print {
     body { font-size: 10pt; color: #000; }
@@ -174,6 +188,9 @@
     }
     .print-invoice .invoice-notes-title {
       font-weight: 600; margin-bottom: 4pt;
+    }
+    .print-invoice .seal-img {
+      max-width: 80pt; max-height: 80pt; margin-top: 8pt;
     }
   }
 
@@ -258,6 +275,21 @@
         <input type="tel" id="companyFax" placeholder="03-1234-5679">
       </div>
     </div>
+    <!-- 印鑑画像アップロード -->
+    <div class="form-row cols-2" style="margin-top: 8px;">
+      <div class="form-group">
+        <label>印鑑 / 社印画像</label>
+        <div class="seal-upload-area" id="sealUploadArea" onclick="document.getElementById('sealInput').click()">
+          <span class="seal-upload-text" id="sealPlaceholder">画像をクリックして選択 (PNG/JPG)</span>
+          <img id="sealPreview" style="display:none;">
+          <input type="file" id="sealInput" accept="image/png,image/jpeg,image/gif" style="display:none;">
+        </div>
+        <div class="seal-actions" id="sealActions" style="display:none;">
+          <button class="btn btn-sm btn-secondary" onclick="removeSeal()">印鑑を削除</button>
+        </div>
+      </div>
+      <div></div>
+    </div>
   </div>
 
   <!-- 品目テーブル -->
@@ -290,19 +322,19 @@
       <div class="totals-table">
         <div class="totals-row">
           <span class="totals-label">小計</span>
-          <span class="totals-value" id="totalSubtotal">0</span>
+          <span class="totals-value" id="totalSubtotal">0 円</span>
         </div>
         <div class="totals-row">
           <span class="totals-label">消費税 (10%)</span>
-          <span class="totals-value" id="totalTax10">0</span>
+          <span class="totals-value" id="totalTax10">0 円</span>
         </div>
         <div class="totals-row">
           <span class="totals-label">消費税 (8%)</span>
-          <span class="totals-value" id="totalTax8">0</span>
+          <span class="totals-value" id="totalTax8">0 円</span>
         </div>
         <div class="totals-row total">
           <span class="totals-label">合計金額</span>
-          <span class="totals-value" id="grandTotal">0</span>
+          <span class="totals-value" id="grandTotal">0 円</span>
         </div>
       </div>
     </div>
@@ -316,11 +348,13 @@
 
   <!-- 印刷用レイアウト -->
   <div class="print-invoice" id="printArea">
-    <!-- JSで動的生成 -->
   </div>
 </div>
 
 <script>
+  // 印鑑画像データ (base64)
+  let sealImageData = null;
+
   // 見積番号を自動生成
   const generateInvoiceNumber = () => {
     const now = new Date();
@@ -328,12 +362,18 @@
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
     const seq = String(Math.floor(Math.random() * 900) + 100);
-    return `EST-${y}${m}${d}-${seq}`;
+    return 'EST-' + y + m + d + '-' + seq;
   };
 
-  // 金額フォーマット
   const formatCurrency = (num) =>
     num.toLocaleString('ja-JP') + ' 円';
+
+  // HTMLエスケープ
+  const escapeHtml = (str) => {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  };
 
   // 初期化
   const init = () => {
@@ -344,6 +384,33 @@
     document.getElementById('invoiceNumber').value = generateInvoiceNumber();
     loadCompanyInfo();
     addRow();
+  };
+
+  // 印鑑画像のハンドリング
+  document.getElementById('sealInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      sealImageData = ev.target.result;
+      const preview = document.getElementById('sealPreview');
+      preview.src = sealImageData;
+      preview.style.display = 'block';
+      document.getElementById('sealPlaceholder').style.display = 'none';
+      document.getElementById('sealActions').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  const removeSeal = () => {
+    sealImageData = null;
+    document.getElementById('sealPreview').style.display = 'none';
+    document.getElementById('sealPreview').src = '';
+    document.getElementById('sealPlaceholder').style.display = 'block';
+    document.getElementById('sealActions').style.display = 'none';
+    document.getElementById('sealInput').value = '';
   };
 
   // 発行元情報の保存・読み込み
@@ -394,27 +461,23 @@
     const tbody = document.getElementById('itemsBody');
     const tr = document.createElement('tr');
     tr.dataset.row = rowCounter;
-    tr.innerHTML = `
-      <td style="text-align:center; color:#9ca3af; font-size:11px;">${rowCounter}</td>
-      <td><input type="text" class="item-name" placeholder="品目名を入力"></td>
-      <td><input type="number" class="item-qty" value="1" min="0" step="1" onchange="recalc()" oninput="recalc()"></td>
-      <td><input type="text" class="item-unit" value="式" style="width:50px;"></td>
-      <td><input type="number" class="item-price" value="0" min="0" onchange="recalc()" oninput="recalc()"></td>
-      <td>
-        <select class="item-tax" onchange="recalc()">
-          <option value="10">10%</option>
-          <option value="8">8%</option>
-          <option value="0">0%</option>
-        </select>
-      </td>
-      <td class="text-right subtotal-cell item-subtotal">0</td>
-      <td><button class="btn btn-sm btn-danger" onclick="removeRow(this)">x</button></td>
-    `;
+    tr.innerHTML =
+      '<td style="text-align:center; color:#9ca3af; font-size:11px;">' + rowCounter + '</td>' +
+      '<td><input type="text" class="item-name" placeholder="品目名を入力"></td>' +
+      '<td><input type="number" class="item-qty" value="1" min="0" step="1" onchange="recalc()" oninput="recalc()"></td>' +
+      '<td><input type="text" class="item-unit" value="式" style="width:50px;"></td>' +
+      '<td><input type="number" class="item-price" value="0" min="0" onchange="recalc()" oninput="recalc()"></td>' +
+      '<td><select class="item-tax" onchange="recalc()">' +
+        '<option value="10">10%</option>' +
+        '<option value="8">8%</option>' +
+        '<option value="0">0%</option>' +
+      '</select></td>' +
+      '<td class="text-right subtotal-cell item-subtotal">0</td>' +
+      '<td><button class="btn btn-sm btn-danger" onclick="removeRow(this)">x</button></td>';
     tbody.appendChild(tr);
     recalc();
   };
 
-  // 行削除
   const removeRow = (btn) => {
     const tbody = document.getElementById('itemsBody');
     if (tbody.rows.length <= 1) return;
@@ -423,7 +486,6 @@
     recalc();
   };
 
-  // 行番号の振り直し
   const renumberRows = () => {
     const rows = document.querySelectorAll('#itemsBody tr');
     rows.forEach((tr, i) => {
@@ -432,7 +494,6 @@
     rowCounter = rows.length;
   };
 
-  // 再計算
   const recalc = () => {
     const rows = document.querySelectorAll('#itemsBody tr');
     let subtotalSum = 0;
@@ -458,7 +519,6 @@
     document.getElementById('grandTotal').textContent = formatCurrency(subtotalSum + tax10Sum + tax8Sum);
   };
 
-  // クリア
   const clearAll = () => {
     if (!confirm('入力内容をすべてクリアしますか?')) return;
     document.getElementById('clientName').value = '';
@@ -469,15 +529,14 @@
     tbody.innerHTML = '';
     rowCounter = 0;
     addRow();
+    removeSeal();
   };
 
-  // 印刷
   const printInvoice = () => {
     buildPrintLayout();
     window.print();
   };
 
-  // 印刷レイアウト組み立て
   const buildPrintLayout = () => {
     const clientName = document.getElementById('clientName').value || '（宛先未入力）';
     const subject = document.getElementById('subject').value || '';
@@ -492,7 +551,6 @@
     const companyTel = document.getElementById('companyTel').value;
     const companyFax = document.getElementById('companyFax').value;
 
-    // 品目データ収集
     const rows = document.querySelectorAll('#itemsBody tr');
     let items = [];
     let subtotalAll = 0;
@@ -508,7 +566,7 @@
       const sub = qty * price;
 
       if (name || price > 0) {
-        items.push({ no: i + 1, name, qty, unit, price, taxRate, sub });
+        items = [...items, { no: i + 1, name, qty, unit, price, taxRate, sub }];
       }
       subtotalAll += sub;
       if (taxRate === 10) tax10All += Math.floor(sub * 0.1);
@@ -516,90 +574,82 @@
     });
 
     const grandTotal = subtotalAll + tax10All + tax8All;
-    const formatDate = (d) => {
+    const formatDateJP = (d) => {
       if (!d) return '';
       const parts = d.split('-');
-      return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+      return parts[0] + '年' + parseInt(parts[1]) + '月' + parseInt(parts[2]) + '日';
     };
 
-    let itemRows = items.map(it => `
-      <tr>
-        <td style="text-align:center;">${it.no}</td>
-        <td>${escapeHtml(it.name)}</td>
-        <td style="text-align:center;">${it.qty}</td>
-        <td style="text-align:center;">${it.unit}</td>
-        <td style="text-align:right;">${it.price.toLocaleString('ja-JP')}</td>
-        <td style="text-align:center;">${it.taxRate}%</td>
-        <td style="text-align:right;">${it.sub.toLocaleString('ja-JP')}</td>
-      </tr>
-    `).join('');
+    let itemRows = items.map(it =>
+      '<tr>' +
+        '<td style="text-align:center;">' + it.no + '</td>' +
+        '<td>' + escapeHtml(it.name) + '</td>' +
+        '<td style="text-align:center;">' + it.qty + '</td>' +
+        '<td style="text-align:center;">' + escapeHtml(it.unit) + '</td>' +
+        '<td style="text-align:right;">' + it.price.toLocaleString('ja-JP') + '</td>' +
+        '<td style="text-align:center;">' + it.taxRate + '%</td>' +
+        '<td style="text-align:right;">' + it.sub.toLocaleString('ja-JP') + '</td>' +
+      '</tr>'
+    ).join('');
 
     const companyLines = [
       companyName,
       companyAddress,
-      companyTel ? `TEL: ${companyTel}` : '',
-      companyFax ? `FAX: ${companyFax}` : '',
-      companyEmail ? `Email: ${companyEmail}` : '',
-      companyPerson ? `担当: ${companyPerson}` : '',
+      companyTel ? 'TEL: ' + companyTel : '',
+      companyFax ? 'FAX: ' + companyFax : '',
+      companyEmail ? 'Email: ' + companyEmail : '',
+      companyPerson ? '担当: ' + companyPerson : '',
     ].filter(Boolean).join('<br>');
 
-    const notesHtml = notes
-      ? `<div class="invoice-notes"><div class="invoice-notes-title">備考</div>${escapeHtml(notes).replace(/\n/g, '<br>')}</div>`
+    const sealHtml = sealImageData
+      ? '<img class="seal-img" src="' + sealImageData + '" alt="印鑑">'
       : '';
 
-    document.getElementById('printArea').innerHTML = `
-      <div class="invoice-title">御 見 積 書</div>
-      <div class="invoice-meta">
-        <div>
-          <div class="invoice-to">${escapeHtml(clientName)}<span class="invoice-to-suffix">御中</span></div>
-          <div class="invoice-subject" style="margin-top:12pt;">
-            件名: ${escapeHtml(subject)}
-          </div>
-          <div class="total-highlight">
-            合計金額  ${grandTotal.toLocaleString('ja-JP')} 円（税込）
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div class="invoice-info">見積番号: ${invoiceNumber}</div>
-          <div class="invoice-info">発行日: ${formatDate(issueDate)}</div>
-          ${expiryDate ? `<div class="invoice-info">有効期限: ${formatDate(expiryDate)}</div>` : ''}
-          <div style="margin-top:12pt;" class="invoice-from">${companyLines}</div>
-        </div>
-      </div>
+    const notesHtml = notes
+      ? '<div class="invoice-notes"><div class="invoice-notes-title">備考</div>' + escapeHtml(notes).replace(/\n/g, '<br>') + '</div>'
+      : '';
 
-      <table>
-        <thead>
-          <tr>
-            <th style="width:30pt;">No.</th>
-            <th>品名</th>
-            <th style="width:40pt;">数量</th>
-            <th style="width:35pt;">単位</th>
-            <th style="width:70pt;">単価</th>
-            <th style="width:35pt;">税率</th>
-            <th style="width:70pt;">小計</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
+    const tax10Row = tax10All > 0
+      ? '<tr><td>消費税 (10%)</td><td>' + tax10All.toLocaleString('ja-JP') + ' 円</td></tr>'
+      : '';
+    const tax8Row = tax8All > 0
+      ? '<tr><td>消費税 (8%)</td><td>' + tax8All.toLocaleString('ja-JP') + ' 円</td></tr>'
+      : '';
+    const expiryRow = expiryDate
+      ? '<div class="invoice-info">有効期限: ' + formatDateJP(expiryDate) + '</div>'
+      : '';
 
-      <div class="print-totals">
-        <table>
-          <tr><td>小計</td><td>${subtotalAll.toLocaleString('ja-JP')} 円</td></tr>
-          ${tax10All > 0 ? `<tr><td>消費税 (10%)</td><td>${tax10All.toLocaleString('ja-JP')} 円</td></tr>` : ''}
-          ${tax8All > 0 ? `<tr><td>消費税 (8%)</td><td>${tax8All.toLocaleString('ja-JP')} 円</td></tr>` : ''}
-          <tr class="grand-total"><td>合計金額</td><td>${grandTotal.toLocaleString('ja-JP')} 円</td></tr>
-        </table>
-      </div>
-
-      ${notesHtml}
-    `;
-  };
-
-  // HTMLエスケープ
-  const escapeHtml = (str) => {
-    const div = document.createElement('div');
-    div.appendChild(document.createTextNode(str));
-    return div.innerHTML;
+    document.getElementById('printArea').innerHTML =
+      '<div class="invoice-title">御 見 積 書</div>' +
+      '<div class="invoice-meta">' +
+        '<div>' +
+          '<div class="invoice-to">' + escapeHtml(clientName) + '<span class="invoice-to-suffix">御中</span></div>' +
+          '<div class="invoice-subject" style="margin-top:12pt;">件名: ' + escapeHtml(subject) + '</div>' +
+          '<div class="total-highlight">合計金額  ' + grandTotal.toLocaleString('ja-JP') + ' 円（税込）</div>' +
+        '</div>' +
+        '<div style="text-align:right;">' +
+          '<div class="invoice-info">見積番号: ' + invoiceNumber + '</div>' +
+          '<div class="invoice-info">発行日: ' + formatDateJP(issueDate) + '</div>' +
+          expiryRow +
+          '<div style="margin-top:12pt;" class="invoice-from">' + companyLines + '</div>' +
+          sealHtml +
+        '</div>' +
+      '</div>' +
+      '<table><thead><tr>' +
+        '<th style="width:30pt;">No.</th>' +
+        '<th>品名</th>' +
+        '<th style="width:40pt;">数量</th>' +
+        '<th style="width:35pt;">単位</th>' +
+        '<th style="width:70pt;">単価</th>' +
+        '<th style="width:35pt;">税率</th>' +
+        '<th style="width:70pt;">小計</th>' +
+      '</tr></thead><tbody>' + itemRows + '</tbody></table>' +
+      '<div class="print-totals"><table>' +
+        '<tr><td>小計</td><td>' + subtotalAll.toLocaleString('ja-JP') + ' 円</td></tr>' +
+        tax10Row + tax8Row +
+        '<tr class="grand-total"><td>合計金額</td><td>' + grandTotal.toLocaleString('ja-JP') + ' 円</td></tr>' +
+      '</table></div>' +
+      notesHtml;
   };
 
   init();

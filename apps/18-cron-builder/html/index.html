@@ -69,6 +69,12 @@
     font-family: 'JetBrains Mono', monospace; font-size: 14px;
     max-width: 300px; text-align: center; letter-spacing: 0.05em;
   }
+  .manual-input .validation-msg {
+    font-size: 11px; color: #ef4444; white-space: nowrap;
+  }
+  .manual-input .validation-msg.valid {
+    color: #15803d;
+  }
 
   /* プリセット */
   .presets {
@@ -171,8 +177,9 @@
     </div>
     <div class="manual-input">
       <label style="margin-bottom:0; white-space:nowrap;">手動入力</label>
-      <input type="text" id="manualInput" placeholder="* * * * *" value="* * * * *" oninput="parseManualInput()">
+      <input type="text" id="manualInput" placeholder="* * * * *" value="* * * * *" oninput="validateManualInput()">
       <button class="btn btn-sm btn-secondary" onclick="applyManualInput()">適用</button>
+      <span class="validation-msg" id="validationMsg"></span>
     </div>
   </div>
 
@@ -186,6 +193,9 @@
       <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 9 * * 1')">毎週月曜9時</button>
       <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 0 1 * *')">毎月1日0時</button>
       <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 9 * * 1-5')">平日のみ9時</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('*/5 * * * *')">5分ごと</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('0 */2 * * *')">2時間ごと</button>
+      <button class="btn btn-sm btn-secondary" onclick="applyPreset('30 23 * * *')">毎日23:30</button>
     </div>
   </div>
 
@@ -308,11 +318,11 @@
   const initCheckboxes = () => {
     FIELD_ORDER.forEach(field => {
       const def = FIELDS[field];
-      const container = document.getElementById(`${field}_checks`);
+      const container = document.getElementById(field + '_checks');
       let html = '';
       for (let i = def.min; i <= def.max; i++) {
         const lbl = def.labels ? def.labels[i - def.min] : String(i);
-        html += `<label><input type="checkbox" data-field="${field}" value="${i}" onchange="updateField('${field}')"> ${lbl}</label>`;
+        html += '<label><input type="checkbox" data-field="' + field + '" value="' + i + '" onchange="updateField(\'' + field + '\')"> ' + lbl + '</label>';
       }
       container.innerHTML = html;
     });
@@ -320,20 +330,19 @@
 
   // フィールド値を取得
   const getFieldValue = (field) => {
-    const mode = document.querySelector(`input[name="${field}_mode"]:checked`).value;
+    const mode = document.querySelector('input[name="' + field + '_mode"]:checked').value;
     if (mode === 'all') return '*';
     if (mode === 'interval') {
-      const n = parseInt(document.getElementById(`${field}_interval`).value) || 1;
-      return `*/${n}`;
+      const n = parseInt(document.getElementById(field + '_interval').value) || 1;
+      return '*/' + n;
     }
-    // specific
-    const checks = document.querySelectorAll(`#${field}_checks input:checked`);
+    const checks = document.querySelectorAll('#' + field + '_checks input:checked');
     if (checks.length === 0) return '*';
     const vals = Array.from(checks).map(c => parseInt(c.value)).sort((a, b) => a - b);
     return compressValues(vals);
   };
 
-  // 連続値をレンジ表記に圧縮 (1,2,3,4 -> 1-4)
+  // 連続値をレンジ表記に圧縮
   const compressValues = (vals) => {
     if (vals.length === 0) return '*';
     const ranges = [];
@@ -343,23 +352,23 @@
       if (vals[i] === end + 1) {
         end = vals[i];
       } else {
-        ranges.push(start === end ? `${start}` : `${start}-${end}`);
+        ranges.push(start === end ? '' + start : start + '-' + end);
         start = vals[i];
         end = vals[i];
       }
     }
-    ranges.push(start === end ? `${start}` : `${start}-${end}`);
+    ranges.push(start === end ? '' + start : start + '-' + end);
     return ranges.join(',');
   };
 
   // フィールド更新時
   const updateField = (field) => {
-    const mode = document.querySelector(`input[name="${field}_mode"]:checked`).value;
-    const checksEl = document.getElementById(`${field}_checks`);
+    const mode = document.querySelector('input[name="' + field + '_mode"]:checked').value;
+    const checksEl = document.getElementById(field + '_checks');
     checksEl.style.display = mode === 'specific' ? 'grid' : 'none';
 
     const val = getFieldValue(field);
-    document.getElementById(`fieldVal_${field}`).textContent = val;
+    document.getElementById('fieldVal_' + field).textContent = val;
 
     updateCronExpression();
   };
@@ -371,18 +380,23 @@
     document.getElementById('cronExpression').textContent = expr;
     document.getElementById('manualInput').value = expr;
     document.getElementById('cronDescription').textContent = describeCron(parts);
+    document.getElementById('validationMsg').textContent = '';
     computeNextRuns(parts);
   };
 
   // 日本語説明生成
   const describeCron = (parts) => {
     const [min, hour, dom, month, dow] = parts;
+
+    // 全ワイルドカードの場合
+    if (parts.every(p => p === '*')) return '毎分実行';
+
     const segments = [];
 
     // 月
     if (month !== '*') {
       if (month.startsWith('*/')) {
-        segments.push(`${month.slice(2)}ヶ月ごと`);
+        segments.push(month.slice(2) + 'ヶ月ごと');
       } else {
         const months = expandField(month, 1, 12);
         segments.push(months.map(m => MONTH_NAMES[m - 1]).join(', '));
@@ -396,7 +410,7 @@
       } else if (dow === '0,6') {
         segments.push('土日');
       } else if (dow.startsWith('*/')) {
-        segments.push(`${dow.slice(2)}曜日おき`);
+        segments.push(dow.slice(2) + '曜日おき');
       } else {
         const days = expandField(dow, 0, 6);
         segments.push(days.map(d => DOW_NAMES[d]).join(', '));
@@ -406,10 +420,10 @@
     // 日
     if (dom !== '*') {
       if (dom.startsWith('*/')) {
-        segments.push(`${dom.slice(2)}日ごと`);
+        segments.push(dom.slice(2) + '日ごと');
       } else {
         const days = expandField(dom, 1, 31);
-        segments.push(days.map(d => `${d}日`).join(', '));
+        segments.push(days.map(d => d + '日').join(', '));
       }
     } else if (dow === '*' && month === '*') {
       segments.push('毎日');
@@ -418,10 +432,10 @@
     // 時
     if (hour !== '*') {
       if (hour.startsWith('*/')) {
-        segments.push(`${hour.slice(2)}時間ごと`);
+        segments.push(hour.slice(2) + '時間ごと');
       } else {
         const hours = expandField(hour, 0, 23);
-        segments.push(hours.map(h => `${h}時`).join(', '));
+        segments.push(hours.map(h => h + '時').join(', '));
       }
     } else {
       segments.push('毎時');
@@ -430,17 +444,14 @@
     // 分
     if (min !== '*') {
       if (min.startsWith('*/')) {
-        segments.push(`${min.slice(2)}分ごと`);
+        segments.push(min.slice(2) + '分ごと');
       } else {
         const mins = expandField(min, 0, 59);
-        segments.push(mins.map(m => `${m}分`).join(', '));
+        segments.push(mins.map(m => m + '分').join(', '));
       }
     } else {
       segments.push('毎分');
     }
-
-    // 全ワイルドカードの場合
-    if (parts.every(p => p === '*')) return '毎分実行';
 
     return segments.join(' ') + ' に実行';
   };
@@ -463,15 +474,7 @@
         for (let i = min; i <= max; i += step) result.add(i);
         return;
       }
-      // n-m パターン
-      const rangeMatch = part.match(/^(\d+)-(\d+)$/);
-      if (rangeMatch) {
-        const start = parseInt(rangeMatch[1]);
-        const end = parseInt(rangeMatch[2]);
-        for (let i = start; i <= end; i++) result.add(i);
-        return;
-      }
-      // n-m/step パターン
+      // n-m/step パターン (n-mより先に判定)
       const rangeStepMatch = part.match(/^(\d+)-(\d+)\/(\d+)$/);
       if (rangeStepMatch) {
         const start = parseInt(rangeStepMatch[1]);
@@ -480,11 +483,89 @@
         for (let i = start; i <= end; i += step) result.add(i);
         return;
       }
+      // n-m パターン
+      const rangeMatch = part.match(/^(\d+)-(\d+)$/);
+      if (rangeMatch) {
+        const start = parseInt(rangeMatch[1]);
+        const end = parseInt(rangeMatch[2]);
+        for (let i = start; i <= end; i++) result.add(i);
+        return;
+      }
       // 単一値
       const n = parseInt(part);
       if (!isNaN(n) && n >= min && n <= max) result.add(n);
     });
     return Array.from(result).sort((a, b) => a - b);
+  };
+
+  // Cron式のバリデーション
+  const validateCronExpression = (expr) => {
+    const parts = expr.trim().split(/\s+/);
+    if (parts.length !== 5) return '5つのフィールドが必要です (分 時 日 月 曜日)';
+
+    const fieldDefs = [
+      { name: '分', min: 0, max: 59 },
+      { name: '時', min: 0, max: 23 },
+      { name: '日', min: 1, max: 31 },
+      { name: '月', min: 1, max: 12 },
+      { name: '曜日', min: 0, max: 6 },
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      const part = parts[i];
+      const def = fieldDefs[i];
+
+      if (part === '*') continue;
+
+      // */n
+      if (/^\*\/\d+$/.test(part)) {
+        const n = parseInt(part.slice(2));
+        if (n < 1 || n > def.max) return def.name + 'の間隔値が範囲外です';
+        continue;
+      }
+
+      // カンマ区切りの各要素を検証
+      const subParts = part.split(',');
+      for (const sub of subParts) {
+        // n-m/step
+        if (/^\d+-\d+\/\d+$/.test(sub)) continue;
+        // n-m
+        if (/^\d+-\d+$/.test(sub)) {
+          const [a, b] = sub.split('-').map(Number);
+          if (a < def.min || b > def.max || a > b) return def.name + 'のレンジが範囲外です';
+          continue;
+        }
+        // 単一値
+        if (/^\d+$/.test(sub)) {
+          const n = parseInt(sub);
+          if (n < def.min || n > def.max) return def.name + 'の値 ' + n + ' が範囲外です (' + def.min + '-' + def.max + ')';
+          continue;
+        }
+        return def.name + 'フィールドの形式が不正です';
+      }
+    }
+    return null;
+  };
+
+  // 手動入力のリアルタイムバリデーション
+  const validateManualInput = () => {
+    const expr = document.getElementById('manualInput').value.trim();
+    const msgEl = document.getElementById('validationMsg');
+
+    if (!expr) {
+      msgEl.textContent = '';
+      msgEl.className = 'validation-msg';
+      return;
+    }
+
+    const error = validateCronExpression(expr);
+    if (error) {
+      msgEl.textContent = error;
+      msgEl.className = 'validation-msg';
+    } else {
+      msgEl.textContent = '有効な式です';
+      msgEl.className = 'validation-msg valid';
+    }
   };
 
   // 次回実行日時の計算
@@ -499,21 +580,19 @@
 
     const runs = [];
     const now = new Date();
-    // 次の分から開始
     let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1, 0, 0);
 
-    // 最大10回分を、最大2年先まで探索
     const limit = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate());
     let safety = 0;
-    const maxIterations = 525960; // 約1年分の分
+    const maxIterations = 525960;
 
     while (runs.length < 10 && cursor < limit && safety < maxIterations) {
       safety++;
-      const m = cursor.getMonth() + 1;    // 1-12
-      const d = cursor.getDate();          // 1-31
-      const w = cursor.getDay();           // 0-6
-      const h = cursor.getHours();         // 0-23
-      const mi = cursor.getMinutes();      // 0-59
+      const m = cursor.getMonth() + 1;
+      const d = cursor.getDate();
+      const w = cursor.getDay();
+      const h = cursor.getHours();
+      const mi = cursor.getMinutes();
 
       if (months.includes(m) && matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr) && hours.includes(h) && mins.includes(mi)) {
         runs.push(new Date(cursor));
@@ -523,17 +602,14 @@
 
       // 高速スキップ
       if (!months.includes(m)) {
-        // 次の対象月まで飛ばす
         cursor = advanceToNextMonth(cursor, months);
         continue;
       }
-      if (!hours.includes(h) || !matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr)) {
-        // 日が合わなければ翌日0:00に
-        if (!matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr)) {
-          cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1, 0, 0, 0);
-          continue;
-        }
-        // 時が合わなければ次の時の0分に
+      if (!matchDayOfMonthAndWeek(doms, dows, d, w, domExpr, dowExpr)) {
+        cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1, 0, 0, 0);
+        continue;
+      }
+      if (!hours.includes(h)) {
         cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), h + 1, 0, 0);
         continue;
       }
@@ -550,7 +626,6 @@
     if (domAll && dowAll) return true;
     if (domAll) return dows.includes(weekday);
     if (dowAll) return doms.includes(day);
-    // 両方指定: OR条件（cron標準仕様）
     return doms.includes(day) || dows.includes(weekday);
   };
 
@@ -564,10 +639,9 @@
         return new Date(y, m - 1, 1, 0, 0, 0);
       }
     }
-    return new Date(y + 2, 0, 1); // 安全弁
+    return new Date(y + 2, 0, 1);
   };
 
-  // 次回実行日時の描画
   const renderNextRuns = (runs) => {
     const container = document.getElementById('nextRuns');
     if (runs.length === 0) {
@@ -578,11 +652,11 @@
     container.innerHTML = runs.map((d, i) => {
       const dateStr = formatDateTime(d);
       const rel = formatRelative(d, now);
-      return `<div class="next-run-item">
-        <span class="next-run-num">${i + 1}.</span>
-        <span class="next-run-date">${dateStr}</span>
-        <span class="next-run-relative">${rel}</span>
-      </div>`;
+      return '<div class="next-run-item">' +
+        '<span class="next-run-num">' + (i + 1) + '.</span>' +
+        '<span class="next-run-date">' + dateStr + '</span>' +
+        '<span class="next-run-relative">' + rel + '</span>' +
+        '</div>';
     }).join('');
   };
 
@@ -593,19 +667,19 @@
     const h = String(d.getHours()).padStart(2, '0');
     const mi = String(d.getMinutes()).padStart(2, '0');
     const dow = ['日','月','火','水','木','金','土'][d.getDay()];
-    return `${y}-${m}-${day} (${dow}) ${h}:${mi}`;
+    return y + '-' + m + '-' + day + ' (' + dow + ') ' + h + ':' + mi;
   };
 
   const formatRelative = (future, now) => {
     const diff = future.getTime() - now.getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 60) return `${mins}分後`;
+    if (mins < 60) return mins + '分後';
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}時間${mins % 60}分後`;
+    if (hours < 24) return hours + '時間' + (mins % 60) + '分後';
     const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}日後`;
+    if (days < 30) return days + '日後';
     const months = Math.floor(days / 30);
-    return `約${months}ヶ月後`;
+    return '約' + months + 'ヶ月後';
   };
 
   // コピー
@@ -615,22 +689,38 @@
       const toast = document.getElementById('copiedToast');
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 1500);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = expr;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      const toast = document.getElementById('copiedToast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1500);
     });
   };
 
   // プリセット適用
   const applyPreset = (expr) => {
     document.getElementById('manualInput').value = expr;
+    document.getElementById('validationMsg').textContent = '';
     parseCronToUI(expr);
-  };
-
-  // 手動入力からUIに反映
-  const parseManualInput = () => {
-    // リアルタイムで説明だけ更新（UIは適用ボタンで）
   };
 
   const applyManualInput = () => {
     const expr = document.getElementById('manualInput').value.trim();
+    const error = validateCronExpression(expr);
+    if (error) {
+      const msgEl = document.getElementById('validationMsg');
+      msgEl.textContent = error;
+      msgEl.className = 'validation-msg';
+      return;
+    }
+    document.getElementById('validationMsg').textContent = '';
     parseCronToUI(expr);
   };
 
@@ -653,18 +743,18 @@
       const def = fieldDefs[i];
 
       // チェックボックスをすべてリセット
-      document.querySelectorAll(`#${field}_checks input`).forEach(cb => cb.checked = false);
+      document.querySelectorAll('#' + field + '_checks input').forEach(cb => { cb.checked = false; });
 
       if (part === '*') {
-        document.querySelector(`input[name="${field}_mode"][value="all"]`).checked = true;
-      } else if (part.match(/^\*\/\d+$/)) {
-        document.querySelector(`input[name="${field}_mode"][value="interval"]`).checked = true;
-        document.getElementById(`${field}_interval`).value = parseInt(part.slice(2));
+        document.querySelector('input[name="' + field + '_mode"][value="all"]').checked = true;
+      } else if (/^\*\/\d+$/.test(part)) {
+        document.querySelector('input[name="' + field + '_mode"][value="interval"]').checked = true;
+        document.getElementById(field + '_interval').value = parseInt(part.slice(2));
       } else {
-        document.querySelector(`input[name="${field}_mode"][value="specific"]`).checked = true;
+        document.querySelector('input[name="' + field + '_mode"][value="specific"]').checked = true;
         const values = expandField(part, def.min, def.max);
         values.forEach(v => {
-          const cb = document.querySelector(`#${field}_checks input[value="${v}"]`);
+          const cb = document.querySelector('#' + field + '_checks input[value="' + v + '"]');
           if (cb) cb.checked = true;
         });
       }

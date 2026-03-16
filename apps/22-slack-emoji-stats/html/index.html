@@ -127,6 +127,15 @@
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
+  /* 期間フィルタ */
+  .filter-row {
+    display: flex;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+  }
+  .filter-row .form-group { margin-bottom: 0; }
+
   /* バーチャート */
   .chart-section { margin-bottom: 32px; }
   .chart-title {
@@ -236,9 +245,20 @@
     display: none;
   }
 
+  .success-msg {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 8px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: #166534;
+    margin-bottom: 16px;
+    display: none;
+  }
+
   .summary-cards {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 24px;
   }
@@ -257,6 +277,17 @@
   .summary-card-value {
     font-size: 20px;
     font-weight: 600;
+  }
+
+  .sample-btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .summary-cards { grid-template-columns: repeat(2, 1fr); }
+    .filter-row { flex-direction: column; }
   }
 </style>
 </head>
@@ -279,11 +310,28 @@
     <div class="section">
       <div class="form-group">
         <label>Slack API レスポンス JSON</label>
-        <textarea id="jsonInput" placeholder='conversations.history APIのレスポンスJSONを貼り付けてください。&#10;&#10;{"ok":true,"messages":[{"type":"message","text":"...","reactions":[{"name":"thumbsup","users":["U123"],"count":1}]},...]}'>
+        <textarea id="jsonInput" placeholder='conversations.history APIのレスポンスJSONを貼り付けてください。
+
+{"ok":true,"messages":[{"type":"message","text":"...","ts":"1700000000.000000","reactions":[{"name":"thumbsup","users":["U123"],"count":1}]},...]}'>
 </textarea>
       </div>
+      <div class="sample-btn-row">
+        <button class="btn btn-outline btn-sm" onclick="loadSampleData()">サンプルデータを読み込む</button>
+      </div>
       <div class="error-msg" id="errorMsg"></div>
-      <button class="btn" onclick="analyzeJSON()">集計する</button>
+      <div class="success-msg" id="successMsg"></div>
+
+      <div class="filter-row" style="margin-top:16px;">
+        <div class="form-group">
+          <label>期間（開始日）</label>
+          <input type="date" id="filterFrom" />
+        </div>
+        <div class="form-group">
+          <label>期間（終了日）</label>
+          <input type="date" id="filterTo" />
+        </div>
+        <button class="btn" onclick="analyzeJSON()" style="align-self:end; margin-bottom:0;">集計する</button>
+      </div>
     </div>
   </div>
 
@@ -345,6 +393,119 @@
 </div>
 
 <script>
+// サンプルデータ
+const SAMPLE_DATA = {
+  ok: true,
+  messages: [
+    {
+      type: "message",
+      text: "新しいデザインのモックアップを共有します",
+      user: "U001_tanaka",
+      ts: "1709280000.000100",
+      reactions: [
+        { name: "thumbsup", users: ["U002_suzuki", "U003_sato", "U004_yamada", "U005_ito"], count: 4 },
+        { name: "eyes", users: ["U002_suzuki", "U003_sato"], count: 2 },
+        { name: "fire", users: ["U005_ito"], count: 1 }
+      ]
+    },
+    {
+      type: "message",
+      text: "本日のリリース完了しました",
+      user: "U002_suzuki",
+      ts: "1709283600.000200",
+      reactions: [
+        { name: "tada", users: ["U001_tanaka", "U003_sato", "U004_yamada", "U005_ito", "U006_watanabe"], count: 5 },
+        { name: "thumbsup", users: ["U001_tanaka", "U004_yamada", "U006_watanabe"], count: 3 },
+        { name: "heart", users: ["U003_sato"], count: 1 }
+      ]
+    },
+    {
+      type: "message",
+      text: "来週のスプリントプランニングの日程を調整しましょう",
+      user: "U003_sato",
+      ts: "1709370000.000300",
+      reactions: [
+        { name: "thumbsup", users: ["U001_tanaka", "U002_suzuki", "U005_ito"], count: 3 },
+        { name: "memo", users: ["U004_yamada"], count: 1 }
+      ]
+    },
+    {
+      type: "message",
+      text: "障害報告: ログインAPIで500エラーが発生中",
+      user: "U004_yamada",
+      ts: "1709373600.000400",
+      reactions: [
+        { name: "eyes", users: ["U001_tanaka", "U002_suzuki", "U003_sato", "U005_ito", "U006_watanabe"], count: 5 },
+        { name: "rotating_light", users: ["U002_suzuki", "U006_watanabe"], count: 2 }
+      ]
+    },
+    {
+      type: "message",
+      text: "障害対応完了、原因はDB接続プールの枯渇でした",
+      user: "U004_yamada",
+      ts: "1709377200.000500",
+      reactions: [
+        { name: "tada", users: ["U001_tanaka", "U002_suzuki", "U003_sato", "U005_ito", "U006_watanabe"], count: 5 },
+        { name: "thumbsup", users: ["U001_tanaka", "U002_suzuki", "U003_sato"], count: 3 },
+        { name: "muscle", users: ["U005_ito", "U006_watanabe"], count: 2 },
+        { name: "heart", users: ["U003_sato"], count: 1 }
+      ]
+    },
+    {
+      type: "message",
+      text: "ドキュメント更新しました: API仕様書v2.1",
+      user: "U005_ito",
+      ts: "1709456400.000600",
+      reactions: [
+        { name: "thumbsup", users: ["U001_tanaka", "U002_suzuki"], count: 2 },
+        { name: "memo", users: ["U003_sato", "U004_yamada"], count: 2 }
+      ]
+    },
+    {
+      type: "message",
+      text: "テスト環境のセットアップ手順をまとめました",
+      user: "U006_watanabe",
+      ts: "1709460000.000700",
+      reactions: [
+        { name: "thumbsup", users: ["U001_tanaka", "U004_yamada", "U005_ito"], count: 3 },
+        { name: "pray", users: ["U002_suzuki", "U003_sato"], count: 2 },
+        { name: "star", users: ["U005_ito"], count: 1 }
+      ]
+    },
+    {
+      type: "message",
+      text: "新メンバーの田村さんが来週からジョインします",
+      user: "U003_sato",
+      ts: "1709542800.000800",
+      reactions: [
+        { name: "wave", users: ["U001_tanaka", "U002_suzuki", "U004_yamada", "U005_ito", "U006_watanabe"], count: 5 },
+        { name: "tada", users: ["U001_tanaka", "U002_suzuki", "U004_yamada"], count: 3 },
+        { name: "heart", users: ["U005_ito", "U006_watanabe"], count: 2 }
+      ]
+    },
+    {
+      type: "message",
+      text: "コードレビューお願いします #PR-423",
+      user: "U001_tanaka",
+      ts: "1709546400.000900",
+      reactions: [
+        { name: "eyes", users: ["U002_suzuki", "U004_yamada"], count: 2 }
+      ]
+    },
+    {
+      type: "message",
+      text: "お疲れ様でした、今週もありがとうございます",
+      user: "U003_sato",
+      ts: "1709632800.001000",
+      reactions: [
+        { name: "pray", users: ["U001_tanaka", "U002_suzuki", "U004_yamada", "U005_ito", "U006_watanabe"], count: 5 },
+        { name: "heart", users: ["U001_tanaka", "U002_suzuki"], count: 2 },
+        { name: "thumbsup", users: ["U004_yamada", "U006_watanabe"], count: 2 }
+      ]
+    }
+  ]
+};
+
 // タブ切り替え
 document.querySelectorAll('.tab').forEach((tab) => {
   tab.addEventListener('click', () => {
@@ -369,9 +530,16 @@ function updateCommand() {
 
 let analysisResult = null;
 
+function loadSampleData() {
+  document.getElementById('jsonInput').value = JSON.stringify(SAMPLE_DATA, null, 2);
+  showSuccess('サンプルデータを読み込みました。「集計する」ボタンで集計できます。');
+}
+
 function analyzeJSON() {
   const errorEl = document.getElementById('errorMsg');
+  const successEl = document.getElementById('successMsg');
   errorEl.style.display = 'none';
+  successEl.style.display = 'none';
 
   const raw = document.getElementById('jsonInput').value.trim();
   if (!raw) {
@@ -398,11 +566,27 @@ function analyzeJSON() {
     return;
   }
 
+  // 期間フィルタの適用
+  const filterFrom = document.getElementById('filterFrom').value;
+  const filterTo = document.getElementById('filterTo').value;
+
+  if (filterFrom || filterTo) {
+    const fromTs = filterFrom ? new Date(filterFrom).getTime() / 1000 : 0;
+    const toTs = filterTo ? new Date(filterTo + 'T23:59:59').getTime() / 1000 : Infinity;
+
+    messages = messages.filter((msg) => {
+      if (!msg.ts) return true;
+      const msgTs = parseFloat(msg.ts);
+      return msgTs >= fromTs && msgTs <= toTs;
+    });
+  }
+
   // リアクション集計
   const emojiCounts = {};
   const userCounts = {};
   const userEmojiMatrix = {};
   let totalReactions = 0;
+  const uniqueEmojis = new Set();
 
   messages.forEach((msg) => {
     if (!msg.reactions) return;
@@ -412,6 +596,7 @@ function analyzeJSON() {
 
       emojiCounts[emoji] = (emojiCounts[emoji] || 0) + count;
       totalReactions += count;
+      uniqueEmojis.add(emoji);
 
       if (reaction.users) {
         reaction.users.forEach((userId) => {
@@ -425,18 +610,38 @@ function analyzeJSON() {
 
   const messagesWithReactions = messages.filter((m) => m.reactions && m.reactions.length > 0).length;
 
-  analysisResult = { emojiCounts, userCounts, userEmojiMatrix, totalReactions, messagesWithReactions, totalMessages: messages.length };
+  analysisResult = {
+    emojiCounts,
+    userCounts,
+    userEmojiMatrix,
+    totalReactions,
+    messagesWithReactions,
+    totalMessages: messages.length,
+    uniqueEmojiCount: uniqueEmojis.size
+  };
 
   renderResults(analysisResult);
+  showSuccess(`${messages.length} 件のメッセージを集計しました`);
 }
 
 function showError(msg) {
   const el = document.getElementById('errorMsg');
   el.textContent = msg;
   el.style.display = 'block';
+  const suc = document.getElementById('successMsg');
+  suc.style.display = 'none';
 }
 
-function renderResults({ emojiCounts, userCounts, userEmojiMatrix, totalReactions, messagesWithReactions, totalMessages }) {
+function showSuccess(msg) {
+  const el = document.getElementById('successMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  const err = document.getElementById('errorMsg');
+  err.style.display = 'none';
+  setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+function renderResults({ emojiCounts, userCounts, userEmojiMatrix, totalReactions, messagesWithReactions, totalMessages, uniqueEmojiCount }) {
   document.getElementById('results').style.display = '';
 
   // サマリーカード
@@ -446,12 +651,16 @@ function renderResults({ emojiCounts, userCounts, userEmojiMatrix, totalReaction
       <div class="summary-card-value">${totalMessages}</div>
     </div>
     <div class="summary-card">
-      <div class="summary-card-label">リアクション付きメッセージ</div>
+      <div class="summary-card-label">リアクション付き</div>
       <div class="summary-card-value">${messagesWithReactions}</div>
     </div>
     <div class="summary-card">
       <div class="summary-card-label">リアクション総数</div>
       <div class="summary-card-value">${totalReactions}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label">絵文字種類数</div>
+      <div class="summary-card-value">${uniqueEmojiCount}</div>
     </div>
   `;
 
@@ -511,7 +720,7 @@ function renderMatrix(userEmojiMatrix, emojiCounts) {
   html += '<th>合計</th></tr></thead><tbody>';
 
   users.forEach((userId) => {
-    html += `<tr><td>${userId}</td>`;
+    html += `<tr><td>${escapeHTML(userId)}</td>`;
     let userTotal = 0;
     topEmojis.forEach((e) => {
       const val = userEmojiMatrix[userId]?.[e] || 0;
@@ -523,6 +732,12 @@ function renderMatrix(userEmojiMatrix, emojiCounts) {
 
   html += '</tbody>';
   table.innerHTML = html;
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 function exportCSV() {
@@ -554,7 +769,8 @@ function exportJSON() {
     summary: {
       totalMessages: analysisResult.totalMessages,
       messagesWithReactions: analysisResult.messagesWithReactions,
-      totalReactions: analysisResult.totalReactions
+      totalReactions: analysisResult.totalReactions,
+      uniqueEmojiCount: analysisResult.uniqueEmojiCount
     },
     emojiCounts: analysisResult.emojiCounts,
     userCounts: analysisResult.userCounts,
@@ -572,7 +788,9 @@ function downloadBlob(blob, filename) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
 

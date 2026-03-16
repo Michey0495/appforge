@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PDF比較ツール</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs" type="module"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -61,6 +61,17 @@
   .canvas-wrap { border: 1px solid #f3f4f6; border-radius: 2px; overflow: hidden; background: #fafafa; }
   .canvas-wrap canvas { display: block; width: 100%; height: auto; }
 
+  .diff-stats {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #f3f4f6;
+    border-radius: 2px;
+    font-size: 13px;
+    color: #1a1a2e;
+    display: none;
+  }
+  .diff-stats.visible { display: block; }
+
   .ai-section { margin-top: 32px; }
   .api-key-row { display: flex; gap: 8px; margin-bottom: 12px; }
   .api-key-row input {
@@ -112,6 +123,8 @@
     </span>
   </div>
 
+  <div class="diff-stats" id="diffStats"></div>
+
   <div class="compare-view three-col" id="compareView" style="display:none;">
     <div>
       <div class="panel-title">PDF 1</div>
@@ -128,7 +141,7 @@
   </div>
 
   <div class="ai-section">
-    <div class="panel-title" style="margin-bottom:8px;">AI要約（Anthropic API）</div>
+    <div class="panel-title" style="margin-bottom:8px;">AI要約 (Anthropic API)</div>
     <div class="api-key-row">
       <input type="password" id="apiKey" placeholder="Anthropic API Key を入力">
       <button id="summarizeBtn" disabled>変更点を要約</button>
@@ -137,169 +150,261 @@
   </div>
 </div>
 
-<script type="module">
-  const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs'
+<script>
+  // pdf.js v3系 UMD版の初期化
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-  let pdf1 = null, pdf2 = null
-  let currentPage = 1
-  let totalPages = 0
-  let showDiff = true
+  let pdf1 = null;
+  let pdf2 = null;
+  let currentPage = 1;
+  let totalPages = 0;
+  let showDiff = true;
+  let lastDiffResult = null;
+  // 全ページのテキスト差分を蓄積
+  let allPageDiffs = [];
 
-  const $ = (id) => document.getElementById(id)
+  const $ = (id) => document.getElementById(id);
 
   // ファイルアップロード処理
   function setupFileInput(inputId, boxId, nameId, setter) {
-    const input = $(inputId)
-    const box = $(boxId)
+    const input = $(inputId);
+    const box = $(boxId);
 
     input.addEventListener('change', async (e) => {
-      const file = e.target.files[0]
-      if (!file) return
-      $(nameId).textContent = file.name
-      box.classList.add('loaded')
-      const arrayBuffer = await file.arrayBuffer()
-      const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-      setter(doc)
-      checkReady()
-    })
+      const file = e.target.files[0];
+      if (!file) return;
+      $(nameId).textContent = file.name;
+      box.classList.add('loaded');
+      const arrayBuffer = await file.arrayBuffer();
+      const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      setter(doc);
+      checkReady();
+    });
 
     // ドラッグ&ドロップ
-    box.addEventListener('dragover', (e) => { e.preventDefault(); box.style.borderColor = '#1e3461' })
-    box.addEventListener('dragleave', () => { box.style.borderColor = '' })
+    box.addEventListener('dragover', (e) => { e.preventDefault(); box.style.borderColor = '#1e3461'; });
+    box.addEventListener('dragleave', () => { box.style.borderColor = ''; });
     box.addEventListener('drop', (e) => {
-      e.preventDefault()
-      box.style.borderColor = ''
-      const file = e.dataTransfer.files[0]
+      e.preventDefault();
+      box.style.borderColor = '';
+      const file = e.dataTransfer.files[0];
       if (file && file.type === 'application/pdf') {
-        const dt = new DataTransfer()
-        dt.items.add(file)
-        input.files = dt.files
-        input.dispatchEvent(new Event('change'))
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        input.dispatchEvent(new Event('change'));
       }
-    })
+    });
   }
 
-  setupFileInput('file1', 'box1', 'name1', (doc) => { pdf1 = doc })
-  setupFileInput('file2', 'box2', 'name2', (doc) => { pdf2 = doc })
+  setupFileInput('file1', 'box1', 'name1', (doc) => { pdf1 = doc; });
+  setupFileInput('file2', 'box2', 'name2', (doc) => { pdf2 = doc; });
 
   function checkReady() {
-    $('compareBtn').disabled = !(pdf1 && pdf2)
+    $('compareBtn').disabled = !(pdf1 && pdf2);
+  }
+
+  // PDFページからテキストを抽出
+  async function extractPageText(pdfDoc, pageNum) {
+    if (pageNum > pdfDoc.numPages) return '';
+    const page = await pdfDoc.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    return textContent.items.map(item => item.str).join(' ');
   }
 
   // PDF をキャンバスに描画
   async function renderPage(pdfDoc, pageNum, canvas) {
-    const page = await pdfDoc.getPage(pageNum)
-    const viewport = page.getViewport({ scale: 1.5 })
-    canvas.width = viewport.width
-    canvas.height = viewport.height
-    const ctx = canvas.getContext('2d')
-    await page.render({ canvasContext: ctx, viewport }).promise
-    return ctx.getImageData(0, 0, canvas.width, canvas.height)
+    const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: 1.5 });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
   }
 
   // 差分計算
   function computeDiff(imgData1, imgData2, diffCanvas) {
-    const w = Math.min(imgData1.width, imgData2.width)
-    const h = Math.min(imgData1.height, imgData2.height)
-    diffCanvas.width = w
-    diffCanvas.height = h
-    const ctx = diffCanvas.getContext('2d')
-    const diffData = ctx.createImageData(w, h)
-    let diffCount = 0
-    const threshold = 30
+    const w = Math.min(imgData1.width, imgData2.width);
+    const h = Math.min(imgData1.height, imgData2.height);
+    diffCanvas.width = w;
+    diffCanvas.height = h;
+    const ctx = diffCanvas.getContext('2d');
+    const diffData = ctx.createImageData(w, h);
+    let diffCount = 0;
+    const threshold = 30;
 
     for (let i = 0; i < w * h * 4; i += 4) {
-      const dr = Math.abs(imgData1.data[i] - imgData2.data[i])
-      const dg = Math.abs(imgData1.data[i + 1] - imgData2.data[i + 1])
-      const db = Math.abs(imgData1.data[i + 2] - imgData2.data[i + 2])
+      const dr = Math.abs(imgData1.data[i] - imgData2.data[i]);
+      const dg = Math.abs(imgData1.data[i + 1] - imgData2.data[i + 1]);
+      const db = Math.abs(imgData1.data[i + 2] - imgData2.data[i + 2]);
 
       if (dr + dg + db > threshold) {
         // 差分あり: 赤でハイライト
-        diffData.data[i] = 220
-        diffData.data[i + 1] = 50
-        diffData.data[i + 2] = 50
-        diffData.data[i + 3] = 200
-        diffCount++
+        diffData.data[i] = 220;
+        diffData.data[i + 1] = 50;
+        diffData.data[i + 2] = 50;
+        diffData.data[i + 3] = 200;
+        diffCount++;
       } else {
         // 差分なし: 元画像を薄く
-        diffData.data[i] = imgData1.data[i]
-        diffData.data[i + 1] = imgData1.data[i + 1]
-        diffData.data[i + 2] = imgData1.data[i + 2]
-        diffData.data[i + 3] = 60
+        diffData.data[i] = imgData1.data[i];
+        diffData.data[i + 1] = imgData1.data[i + 1];
+        diffData.data[i + 2] = imgData1.data[i + 2];
+        diffData.data[i + 3] = 60;
       }
     }
-    ctx.putImageData(diffData, 0, 0)
-    return { diffCount, totalPixels: w * h }
+    ctx.putImageData(diffData, 0, 0);
+    return { diffCount, totalPixels: w * h };
   }
 
-  let lastDiffResult = null
-
   async function compare() {
-    if (!pdf1 || !pdf2) return
-    totalPages = Math.max(pdf1.numPages, pdf2.numPages)
-    currentPage = 1
-    $('compareView').style.display = ''
-    await renderCurrentPage()
-    updatePageNav()
+    if (!pdf1 || !pdf2) return;
+    totalPages = Math.max(pdf1.numPages, pdf2.numPages);
+    currentPage = 1;
+    allPageDiffs = [];
+    $('compareView').style.display = '';
+    $('compareBtn').disabled = true;
+    $('compareBtn').textContent = '比較中...';
+
+    // 全ページ分のテキスト差分を事前収集
+    for (let p = 1; p <= totalPages; p++) {
+      const text1 = p <= pdf1.numPages ? await extractPageText(pdf1, p) : '(ページなし)';
+      const text2 = p <= pdf2.numPages ? await extractPageText(pdf2, p) : '(ページなし)';
+      allPageDiffs.push({ page: p, text1, text2, identical: text1 === text2 });
+    }
+
+    await renderCurrentPage();
+    updatePageNav();
+    $('compareBtn').disabled = false;
+    $('compareBtn').textContent = '比較する';
   }
 
   async function renderCurrentPage() {
-    const canvas1 = $('canvas1')
-    const canvas2 = $('canvas2')
-    const canvasDiff = $('canvasDiff')
+    const canvas1 = $('canvas1');
+    const canvas2 = $('canvas2');
+    const canvasDiff = $('canvasDiff');
 
-    let img1 = null, img2 = null
+    let img1 = null;
+    let img2 = null;
 
     if (currentPage <= pdf1.numPages) {
-      img1 = await renderPage(pdf1, currentPage, canvas1)
+      img1 = await renderPage(pdf1, currentPage, canvas1);
+    } else {
+      // ページがない場合、キャンバスをクリア
+      const ctx1 = canvas1.getContext('2d');
+      canvas1.width = 400;
+      canvas1.height = 300;
+      ctx1.fillStyle = '#f3f4f6';
+      ctx1.fillRect(0, 0, 400, 300);
+      ctx1.fillStyle = '#9ca3af';
+      ctx1.font = '14px Inter, sans-serif';
+      ctx1.textAlign = 'center';
+      ctx1.fillText('ページなし', 200, 150);
     }
+
     if (currentPage <= pdf2.numPages) {
-      img2 = await renderPage(pdf2, currentPage, canvas2)
+      img2 = await renderPage(pdf2, currentPage, canvas2);
+    } else {
+      const ctx2 = canvas2.getContext('2d');
+      canvas2.width = 400;
+      canvas2.height = 300;
+      ctx2.fillStyle = '#f3f4f6';
+      ctx2.fillRect(0, 0, 400, 300);
+      ctx2.fillStyle = '#9ca3af';
+      ctx2.font = '14px Inter, sans-serif';
+      ctx2.textAlign = 'center';
+      ctx2.fillText('ページなし', 200, 150);
     }
 
     if (img1 && img2) {
-      lastDiffResult = computeDiff(img1, img2, canvasDiff)
-      canvasDiff.style.display = showDiff ? '' : 'none'
+      lastDiffResult = computeDiff(img1, img2, canvasDiff);
+      canvasDiff.style.display = showDiff ? '' : 'none';
+
+      // 差分統計を表示
+      const diffPercent = ((lastDiffResult.diffCount / lastDiffResult.totalPixels) * 100).toFixed(2);
+      const statsEl = $('diffStats');
+      statsEl.textContent = 'ページ ' + currentPage + ' : 差分ピクセル ' +
+        lastDiffResult.diffCount.toLocaleString('ja-JP') + ' / ' +
+        lastDiffResult.totalPixels.toLocaleString('ja-JP') + ' (' + diffPercent + '%)';
+      statsEl.classList.add('visible');
+    } else {
+      $('diffStats').classList.remove('visible');
+      // 片方しかない場合は差分キャンバスをクリア
+      const ctxDiff = canvasDiff.getContext('2d');
+      canvasDiff.width = 400;
+      canvasDiff.height = 300;
+      ctxDiff.fillStyle = '#f3f4f6';
+      ctxDiff.fillRect(0, 0, 400, 300);
+      ctxDiff.fillStyle = '#9ca3af';
+      ctxDiff.font = '14px Inter, sans-serif';
+      ctxDiff.textAlign = 'center';
+      ctxDiff.fillText('比較不可', 200, 150);
     }
 
-    $('diffToggle').disabled = false
-    $('summarizeBtn').disabled = false
+    $('diffToggle').disabled = false;
+    $('summarizeBtn').disabled = false;
   }
 
   function updatePageNav() {
-    $('pageInfo').textContent = `${currentPage} / ${totalPages}`
-    $('prevPage').disabled = currentPage <= 1
-    $('nextPage').disabled = currentPage >= totalPages
+    $('pageInfo').textContent = currentPage + ' / ' + totalPages;
+    $('prevPage').disabled = currentPage <= 1;
+    $('nextPage').disabled = currentPage >= totalPages;
   }
 
-  $('compareBtn').addEventListener('click', compare)
-  $('prevPage').addEventListener('click', async () => { if (currentPage > 1) { currentPage--; await renderCurrentPage(); updatePageNav() } })
-  $('nextPage').addEventListener('click', async () => { if (currentPage < totalPages) { currentPage++; await renderCurrentPage(); updatePageNav() } })
+  $('compareBtn').addEventListener('click', compare);
+  $('prevPage').addEventListener('click', async () => {
+    if (currentPage > 1) { currentPage--; await renderCurrentPage(); updatePageNav(); }
+  });
+  $('nextPage').addEventListener('click', async () => {
+    if (currentPage < totalPages) { currentPage++; await renderCurrentPage(); updatePageNav(); }
+  });
   $('diffToggle').addEventListener('click', () => {
-    showDiff = !showDiff
-    $('canvasDiff').style.display = showDiff ? '' : 'none'
-    $('diffToggle').textContent = showDiff ? '差分表示 ON/OFF' : '差分非表示中'
-  })
+    showDiff = !showDiff;
+    $('canvasDiff').style.display = showDiff ? '' : 'none';
+    $('diffToggle').textContent = showDiff ? '差分表示 ON/OFF' : '差分非表示中';
+  });
 
   // AI要約
   $('summarizeBtn').addEventListener('click', async () => {
-    const apiKey = $('apiKey').value.trim()
-    if (!apiKey) { alert('APIキーを入力してください'); return }
-    if (!lastDiffResult) { alert('先に比較を実行してください'); return }
+    const apiKey = $('apiKey').value.trim();
+    if (!apiKey) { alert('APIキーを入力してください'); return; }
+    if (allPageDiffs.length === 0) { alert('先に比較を実行してください'); return; }
 
-    const summaryBox = $('summaryBox')
-    summaryBox.textContent = '要約を生成中...'
-    summaryBox.classList.add('loading')
+    const summaryBox = $('summaryBox');
+    summaryBox.textContent = '要約を生成中...';
+    summaryBox.classList.add('loading');
+    $('summarizeBtn').disabled = true;
 
-    const diffPercent = ((lastDiffResult.diffCount / lastDiffResult.totalPixels) * 100).toFixed(2)
-    const prompt = `PDF比較の結果を分析してください。
-ページ ${currentPage} の比較結果:
-- 差分ピクセル数: ${lastDiffResult.diffCount}
-- 全体ピクセル数: ${lastDiffResult.totalPixels}
-- 差分率: ${diffPercent}%
+    // 全ページの差分情報を構築
+    let diffSummaryLines = [];
+    allPageDiffs.forEach((pd) => {
+      if (pd.identical) {
+        diffSummaryLines.push('ページ ' + pd.page + ': テキスト変更なし');
+      } else {
+        diffSummaryLines.push('ページ ' + pd.page + ': テキストに変更あり');
+        diffSummaryLines.push('  旧: ' + pd.text1.substring(0, 300));
+        diffSummaryLines.push('  新: ' + pd.text2.substring(0, 300));
+      }
+    });
 
-この差分率から推測される変更内容を、日本語で簡潔に説明してください。差分率が0%に近ければ「ほぼ変更なし」、数%であれば「軽微な修正」、大きければ「大幅な変更」として、具体的に何が変わった可能性があるかを推測してください。`
+    // 現在ページのピクセル差分情報も付加
+    let pixelInfo = '';
+    if (lastDiffResult) {
+      const diffPercent = ((lastDiffResult.diffCount / lastDiffResult.totalPixels) * 100).toFixed(2);
+      pixelInfo = '\n\n現在表示中のページ ' + currentPage + ' のピクセル差分率: ' + diffPercent + '%';
+    }
+
+    const prompt = 'PDF比較の結果を分析してください。\n' +
+      '総ページ数: ' + totalPages + '\n' +
+      'PDF 1 のページ数: ' + pdf1.numPages + '\n' +
+      'PDF 2 のページ数: ' + pdf2.numPages + '\n\n' +
+      '各ページのテキスト比較結果:\n' +
+      diffSummaryLines.join('\n') +
+      pixelInfo +
+      '\n\nこの比較結果から、どのような変更が行われたかを日本語で分かりやすく説明してください。' +
+      '具体的なテキストの変更箇所があれば指摘してください。';
 
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -312,19 +417,23 @@
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 500,
+          max_tokens: 1024,
           messages: [{ role: 'user', content: prompt }],
         }),
-      })
+      });
 
-      if (!response.ok) throw new Error(`API error: ${response.status}`)
-      const data = await response.json()
-      summaryBox.textContent = data.content[0].text
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || 'API error: ' + response.status);
+      }
+      const data = await response.json();
+      summaryBox.textContent = data.content[0].text;
     } catch (err) {
-      summaryBox.textContent = `エラー: ${err.message}`
+      summaryBox.textContent = 'エラー: ' + err.message;
     }
-    summaryBox.classList.remove('loading')
-  })
+    summaryBox.classList.remove('loading');
+    $('summarizeBtn').disabled = false;
+  });
 </script>
 </body>
 </html>
