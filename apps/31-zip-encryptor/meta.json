@@ -1,0 +1,9 @@
+{
+  "id": "31-zip-encryptor",
+  "name": "ZIP暗号化デスクトップ",
+  "category": "security",
+  "description": "フォルダをドロップするとパスワード付きZIPを作るWin/Macデスクトップアプリ。Tauri想定。",
+  "usesAI": false,
+  "libraries": ["Tauri", "7-Zip CLI"],
+  "author": "AI駆動開発デモ"
+}

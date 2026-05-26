@@ -1,0 +1,9 @@
+{
+  "id": "32-fullpage-screenshot",
+  "name": "フルページスクリーンショット拡張",
+  "category": "chrome-ext",
+  "description": "開いているページ全体を1枚の画像で保存するChrome拡張。スクロール領域・lazy画像・iframeも拾う。",
+  "usesAI": false,
+  "libraries": ["chrome.tabs.captureVisibleTab", "html2canvas", "jsPDF"],
+  "author": "AI駆動開発デモ"
+}

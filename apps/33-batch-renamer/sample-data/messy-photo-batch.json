@@ -1,0 +1,1355 @@
+{
+  "description": "混沌とした写真・書類・スクショ・動画 150ファイルのメタ情報",
+  "files": [
+    {
+      "current_name": "スクショ  (4).png",
+      "project_tag": "client_zenith",
+      "kind": "screenshot",
+      "created_at": "2024-10-01",
+      "exif_date": null,
+      "size_kb": 791,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "Screenshot 2024-09-07 at 01.05.png",
+      "project_tag": "",
+      "kind": "screenshot",
+      "created_at": "2024-02-05",
+      "exif_date": null,
+      "size_kb": 1991,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_6956.JPG",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-03-04",
+      "exif_date": "2024-03-02",
+      "size_kb": 5186,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image　9594.png",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-04-23",
+      "exif_date": "2024-04-20",
+      "size_kb": 4580,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "スキャン_003.pdf",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-10-19",
+      "exif_date": null,
+      "size_kb": 2547,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-4.txt",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-10-07",
+      "exif_date": null,
+      "size_kb": 5853,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_977.jpg",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-12-14",
+      "exif_date": "2024-12-15",
+      "size_kb": 3522,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 30.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-05-07",
+      "exif_date": null,
+      "size_kb": 6527,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-09-25",
+      "exif_date": null,
+      "size_kb": 4075,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (39).png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-03-01",
+      "exif_date": null,
+      "size_kb": 4213,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-78.mov",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-08-03",
+      "exif_date": null,
+      "size_kb": 341,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (9389).jpg",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-06-28",
+      "exif_date": "2024-06-29",
+      "size_kb": 4088,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0484.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-12-22",
+      "exif_date": null,
+      "size_kb": 5460,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_5073.jpg",
+      "project_tag": "client_acme",
+      "kind": "photo",
+      "created_at": "2024-08-16",
+      "exif_date": "2024-08-15",
+      "size_kb": 5890,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0482.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-03-27",
+      "exif_date": null,
+      "size_kb": 5024,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "DSC_00966.jpeg",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-03-07",
+      "exif_date": "2024-03-09",
+      "size_kb": 2048,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-42.mov",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2024-07-24",
+      "exif_date": null,
+      "size_kb": 4521,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (36).png",
+      "project_tag": "client_zenith",
+      "kind": "screenshot",
+      "created_at": "2024-07-31",
+      "exif_date": null,
+      "size_kb": 2959,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0043.mp4",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-04-28",
+      "exif_date": null,
+      "size_kb": 5414,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スキャン_003.pdf",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-01-03",
+      "exif_date": null,
+      "size_kb": 1213,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-313.mov",
+      "project_tag": "",
+      "kind": "video",
+      "created_at": "2024-03-05",
+      "exif_date": null,
+      "size_kb": 5676,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image-9164.png",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-07-20",
+      "exif_date": "2024-07-17",
+      "size_kb": 3964,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0035.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-08-13",
+      "exif_date": null,
+      "size_kb": 1349,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_9843.JPG",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-10-17",
+      "exif_date": "2024-10-15",
+      "size_kb": 4415,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_0418.JPG",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-11-10",
+      "exif_date": "2024-11-10",
+      "size_kb": 1236,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 24.png",
+      "project_tag": "client_polaris",
+      "kind": "screenshot",
+      "created_at": "2024-02-29",
+      "exif_date": null,
+      "size_kb": 6974,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-248.mov",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2024-03-14",
+      "exif_date": null,
+      "size_kb": 857,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (11).png",
+      "project_tag": "client_polaris",
+      "kind": "screenshot",
+      "created_at": "2024-04-15",
+      "exif_date": null,
+      "size_kb": 7810,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 35.png",
+      "project_tag": "client_zenith",
+      "kind": "screenshot",
+      "created_at": "2025-01-23",
+      "exif_date": null,
+      "size_kb": 4346,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 17.png",
+      "project_tag": "client_acme",
+      "kind": "screenshot",
+      "created_at": "2024-03-26",
+      "exif_date": null,
+      "size_kb": 2933,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-9.txt",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-04-24",
+      "exif_date": null,
+      "size_kb": 5043,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スキャン_004.pdf",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-09-09",
+      "exif_date": null,
+      "size_kb": 2932,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image-4578.png",
+      "project_tag": "client_acme",
+      "kind": "photo",
+      "created_at": "2024-12-20",
+      "exif_date": "2024-12-21",
+      "size_kb": 7855,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 23.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-07-05",
+      "exif_date": null,
+      "size_kb": 679,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "報告書 v8.docx",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-04-14",
+      "exif_date": null,
+      "size_kb": 3973,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_5637.JPG",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-03-02",
+      "exif_date": "2024-03-02",
+      "size_kb": 6428,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "報告書 v7.docx",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-06-19",
+      "exif_date": null,
+      "size_kb": 730,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-381.mov",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2025-01-06",
+      "exif_date": null,
+      "size_kb": 1321,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-08-26",
+      "exif_date": null,
+      "size_kb": 6626,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-8.txt",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-06-28",
+      "exif_date": null,
+      "size_kb": 1297,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2025-01-06",
+      "exif_date": null,
+      "size_kb": 5342,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image-2282.png",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-04-09",
+      "exif_date": "2024-04-12",
+      "size_kb": 7179,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料4.pdf",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-05-03",
+      "exif_date": null,
+      "size_kb": 6276,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 27.png",
+      "project_tag": "client_polaris",
+      "kind": "screenshot",
+      "created_at": "2024-02-01",
+      "exif_date": null,
+      "size_kb": 7474,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 38.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-09-21",
+      "exif_date": null,
+      "size_kb": 3465,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "報告書 v9.docx",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-08-13",
+      "exif_date": null,
+      "size_kb": 6381,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-03-17",
+      "exif_date": null,
+      "size_kb": 1431,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-2.txt",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-06-15",
+      "exif_date": null,
+      "size_kb": 5609,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_30.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-05-21",
+      "exif_date": null,
+      "size_kb": 365,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_7409.jpg",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-02-02",
+      "exif_date": "2024-02-02",
+      "size_kb": 2687,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スキャン_009.pdf",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-09-01",
+      "exif_date": null,
+      "size_kb": 4179,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料9.pdf",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-04-13",
+      "exif_date": null,
+      "size_kb": 6901,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-63.mov",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-06-10",
+      "exif_date": null,
+      "size_kb": 614,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-06-04",
+      "exif_date": null,
+      "size_kb": 6442,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "DSC_06000.jpeg",
+      "project_tag": "client_zenith",
+      "kind": "photo",
+      "created_at": "2024-03-11",
+      "exif_date": "2024-03-11",
+      "size_kb": 1818,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "DSC_07984.jpeg",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-04-24",
+      "exif_date": "2024-04-22",
+      "size_kb": 5806,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-174.mov",
+      "project_tag": "",
+      "kind": "video",
+      "created_at": "2024-07-01",
+      "exif_date": null,
+      "size_kb": 2629,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (320).jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-08-13",
+      "exif_date": "2024-08-15",
+      "size_kb": 168,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_320.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-02-02",
+      "exif_date": null,
+      "size_kb": 944,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-01-21",
+      "exif_date": null,
+      "size_kb": 7441,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "報告書 v7.docx",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-12-12",
+      "exif_date": null,
+      "size_kb": 6729,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-09-17 at 18.31.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-02-15",
+      "exif_date": null,
+      "size_kb": 2306,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_6969.JPG",
+      "project_tag": "client_zenith",
+      "kind": "photo",
+      "created_at": "2024-01-09",
+      "exif_date": "2024-01-11",
+      "size_kb": 745,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット  15.png",
+      "project_tag": "client_acme",
+      "kind": "screenshot",
+      "created_at": "2024-03-03",
+      "exif_date": null,
+      "size_kb": 3737,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "image-9062.png",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-05-17",
+      "exif_date": "2024-05-18",
+      "size_kb": 1078,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_3907.JPG",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-05-14",
+      "exif_date": "2024-05-11",
+      "size_kb": 1503,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料9.pdf",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-05-28",
+      "exif_date": null,
+      "size_kb": 3671,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料1.pdf",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-01-19",
+      "exif_date": null,
+      "size_kb": 145,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "DSC_09029.jpeg",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-05-05",
+      "exif_date": "2024-05-05",
+      "size_kb": 890,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_428.mp4",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2024-09-16",
+      "exif_date": null,
+      "size_kb": 2541,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料4.pdf",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-12-27",
+      "exif_date": null,
+      "size_kb": 5990,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料1.pdf",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-01-08",
+      "exif_date": null,
+      "size_kb": 599,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-01-03 at 21.53.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-09-16",
+      "exif_date": null,
+      "size_kb": 5513,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-12-10 at 01.29.png",
+      "project_tag": "",
+      "kind": "screenshot",
+      "created_at": "2024-05-17",
+      "exif_date": null,
+      "size_kb": 3672,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (5967).jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-10-07",
+      "exif_date": "2024-10-06",
+      "size_kb": 2022,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (3570).jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-06-20",
+      "exif_date": "2024-06-20",
+      "size_kb": 707,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_336.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-09-15",
+      "exif_date": null,
+      "size_kb": 6378,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_4329.JPG",
+      "project_tag": "client_acme",
+      "kind": "photo",
+      "created_at": "2024-10-27",
+      "exif_date": "2024-10-24",
+      "size_kb": 3247,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "DSC_04985.jpeg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-09-27",
+      "exif_date": "2024-09-30",
+      "size_kb": 6168,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スキャン_006.pdf",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-09-10",
+      "exif_date": null,
+      "size_kb": 1244,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット  10.png",
+      "project_tag": "",
+      "kind": "screenshot",
+      "created_at": "2025-01-01",
+      "exif_date": null,
+      "size_kb": 7326,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "MOV_0466.mp4",
+      "project_tag": "",
+      "kind": "video",
+      "created_at": "2024-09-15",
+      "exif_date": null,
+      "size_kb": 4676,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_3768.JPG",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-03-09",
+      "exif_date": "2024-03-11",
+      "size_kb": 2974,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_7396.jpg",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-01-10",
+      "exif_date": "2024-01-12",
+      "size_kb": 4373,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料1.pdf",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-02-05",
+      "exif_date": null,
+      "size_kb": 6149,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image-1083.png",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-02-08",
+      "exif_date": "2024-02-11",
+      "size_kb": 2195,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "報告書 v8.docx",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-07-14",
+      "exif_date": null,
+      "size_kb": 648,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0316.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-04-11",
+      "exif_date": null,
+      "size_kb": 654,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料5.pdf",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-03-09",
+      "exif_date": null,
+      "size_kb": 122,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-138.mov",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-02-20",
+      "exif_date": null,
+      "size_kb": 5690,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料9.pdf",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-08-26",
+      "exif_date": null,
+      "size_kb": 3840,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (3265).jpg",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-08-30",
+      "exif_date": "2024-08-27",
+      "size_kb": 2392,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_496.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-05-17",
+      "exif_date": null,
+      "size_kb": 3189,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-03-13",
+      "exif_date": null,
+      "size_kb": 6143,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-10-27 at 20.32.png",
+      "project_tag": "client_polaris",
+      "kind": "screenshot",
+      "created_at": "2024-02-27",
+      "exif_date": null,
+      "size_kb": 5781,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (32).png",
+      "project_tag": "client_zenith",
+      "kind": "screenshot",
+      "created_at": "2024-03-22",
+      "exif_date": null,
+      "size_kb": 49,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-155.mov",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2024-08-01",
+      "exif_date": null,
+      "size_kb": 2837,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0431.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-06-15",
+      "exif_date": null,
+      "size_kb": 6170,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-04-23 at 00.57.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-05-09",
+      "exif_date": null,
+      "size_kb": 3069,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_6393.jpg",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-08-07",
+      "exif_date": "2024-08-10",
+      "size_kb": 2274,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_1667.JPG",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-05-26",
+      "exif_date": "2024-05-28",
+      "size_kb": 7684,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料7.pdf",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-04-07",
+      "exif_date": null,
+      "size_kb": 6353,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-11-13 at 17.35.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-02-11",
+      "exif_date": null,
+      "size_kb": 425,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_386.mp4",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2024-05-26",
+      "exif_date": null,
+      "size_kb": 3997,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "DSC_02086.jpeg",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-06-24",
+      "exif_date": "2024-06-23",
+      "size_kb": 2459,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (16).png",
+      "project_tag": "client_polaris",
+      "kind": "screenshot",
+      "created_at": "2024-10-12",
+      "exif_date": null,
+      "size_kb": 5499,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0330.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-04-16",
+      "exif_date": null,
+      "size_kb": 4120,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0232.mp4",
+      "project_tag": "",
+      "kind": "video",
+      "created_at": "2025-01-23",
+      "exif_date": null,
+      "size_kb": 3706,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_99.mp4",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-03-30",
+      "exif_date": null,
+      "size_kb": 2821,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (3918).jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-10-18",
+      "exif_date": "2024-10-16",
+      "size_kb": 7288,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image-6273.png",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-04-17",
+      "exif_date": "2024-04-17",
+      "size_kb": 2233,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (18).png",
+      "project_tag": "client_acme",
+      "kind": "screenshot",
+      "created_at": "2024-07-03",
+      "exif_date": null,
+      "size_kb": 1051,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "資料4.pdf",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-11-26",
+      "exif_date": null,
+      "size_kb": 3672,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0066.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-12-29",
+      "exif_date": null,
+      "size_kb": 6276,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画　1.mov",
+      "project_tag": "",
+      "kind": "video",
+      "created_at": "2024-09-27",
+      "exif_date": null,
+      "size_kb": 7027,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "MOV_0401.mp4",
+      "project_tag": "internal",
+      "kind": "video",
+      "created_at": "2024-03-20",
+      "exif_date": null,
+      "size_kb": 1265,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_1393.jpg",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-01-01",
+      "exif_date": "2024-01-04",
+      "size_kb": 1049,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "無題のドキュメント.docx",
+      "project_tag": "",
+      "kind": "document",
+      "created_at": "2024-06-04",
+      "exif_date": null,
+      "size_kb": 7904,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-7.txt",
+      "project_tag": "client_polaris",
+      "kind": "document",
+      "created_at": "2024-02-27",
+      "exif_date": null,
+      "size_kb": 834,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_8593.jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-05-13",
+      "exif_date": "2024-05-11",
+      "size_kb": 6495,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (8807).jpg",
+      "project_tag": "client_acme",
+      "kind": "photo",
+      "created_at": "2024-05-22",
+      "exif_date": "2024-05-21",
+      "size_kb": 5300,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-4.txt",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-01-15",
+      "exif_date": null,
+      "size_kb": 7889,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0012.mp4",
+      "project_tag": "client_polaris",
+      "kind": "video",
+      "created_at": "2024-12-11",
+      "exif_date": null,
+      "size_kb": 5321,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-117.mov",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-07-08",
+      "exif_date": null,
+      "size_kb": 1877,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_174.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-07-04",
+      "exif_date": null,
+      "size_kb": 5611,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0409.mp4",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-09-15",
+      "exif_date": null,
+      "size_kb": 572,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "報告書 v5.docx",
+      "project_tag": "internal",
+      "kind": "document",
+      "created_at": "2024-04-09",
+      "exif_date": null,
+      "size_kb": 1910,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-390.mov",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-02-25",
+      "exif_date": null,
+      "size_kb": 7818,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0459.mp4",
+      "project_tag": "",
+      "kind": "video",
+      "created_at": "2024-08-01",
+      "exif_date": null,
+      "size_kb": 7477,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "image　2399.png",
+      "project_tag": "",
+      "kind": "photo",
+      "created_at": "2024-01-13",
+      "exif_date": "2024-01-14",
+      "size_kb": 1182,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "VID_31.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-08-18",
+      "exif_date": null,
+      "size_kb": 7377,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-03-11 at 06.11.png",
+      "project_tag": "client_acme",
+      "kind": "screenshot",
+      "created_at": "2024-09-25",
+      "exif_date": null,
+      "size_kb": 6133,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "録画-341.mov",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-07-10",
+      "exif_date": null,
+      "size_kb": 2737,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "MOV_0002.mp4",
+      "project_tag": "client_zenith",
+      "kind": "video",
+      "created_at": "2024-02-11",
+      "exif_date": null,
+      "size_kb": 2899,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "VID_494.mp4",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-07-13",
+      "exif_date": null,
+      "size_kb": 2941,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-01-23 at 15.12.png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-08-16",
+      "exif_date": null,
+      "size_kb": 1601,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット  31.png",
+      "project_tag": "client_polaris",
+      "kind": "screenshot",
+      "created_at": "2024-07-29",
+      "exif_date": null,
+      "size_kb": 2051,
+      "has_illegal_char": true
+    },
+    {
+      "current_name": "録画-18.mov",
+      "project_tag": "client_acme",
+      "kind": "video",
+      "created_at": "2024-02-01",
+      "exif_date": null,
+      "size_kb": 2125,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "メモ-6.txt",
+      "project_tag": "client_acme",
+      "kind": "document",
+      "created_at": "2024-06-20",
+      "exif_date": null,
+      "size_kb": 7865,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (5186).jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2025-01-04",
+      "exif_date": "2025-01-07",
+      "size_kb": 4898,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "IMG_3832.JPG",
+      "project_tag": "client_acme",
+      "kind": "photo",
+      "created_at": "2024-08-26",
+      "exif_date": "2024-08-29",
+      "size_kb": 3186,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (9).png",
+      "project_tag": "internal",
+      "kind": "screenshot",
+      "created_at": "2024-04-03",
+      "exif_date": null,
+      "size_kb": 91,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクリーンショット 16.png",
+      "project_tag": "client_zenith",
+      "kind": "screenshot",
+      "created_at": "2024-06-12",
+      "exif_date": null,
+      "size_kb": 3794,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-09-07 at 12.48.png",
+      "project_tag": "",
+      "kind": "screenshot",
+      "created_at": "2024-07-27",
+      "exif_date": null,
+      "size_kb": 550,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "PXL_9054.jpg",
+      "project_tag": "internal",
+      "kind": "photo",
+      "created_at": "2024-08-06",
+      "exif_date": "2024-08-03",
+      "size_kb": 611,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-04-04 at 13.31.png",
+      "project_tag": "",
+      "kind": "screenshot",
+      "created_at": "2024-08-16",
+      "exif_date": null,
+      "size_kb": 1438,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スキャン_008.pdf",
+      "project_tag": "client_zenith",
+      "kind": "document",
+      "created_at": "2024-12-11",
+      "exif_date": null,
+      "size_kb": 1944,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "写真 (4814).jpg",
+      "project_tag": "client_polaris",
+      "kind": "photo",
+      "created_at": "2024-07-09",
+      "exif_date": "2024-07-08",
+      "size_kb": 6066,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "スクショ (16).png",
+      "project_tag": "client_zenith",
+      "kind": "screenshot",
+      "created_at": "2024-04-30",
+      "exif_date": null,
+      "size_kb": 1276,
+      "has_illegal_char": false
+    },
+    {
+      "current_name": "Screenshot 2024-06-03 at 12.16.png",
+      "project_tag": "",
+      "kind": "screenshot",
+      "created_at": "2024-09-16",
+      "exif_date": null,
+      "size_kb": 4331,
+      "has_illegal_char": false
+    }
+  ]
+}

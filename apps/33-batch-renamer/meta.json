@@ -1,0 +1,9 @@
+{
+  "id": "33-batch-renamer",
+  "name": "ファイル一括リネーマー",
+  "category": "workflow",
+  "description": "フォルダ単位でファイル名を一括変更するWin/Macデスクトップアプリ。正規表現置換・連番・日付付与に対応。",
+  "usesAI": false,
+  "libraries": ["Tauri", "exifr"],
+  "author": "AI駆動開発デモ"
+}

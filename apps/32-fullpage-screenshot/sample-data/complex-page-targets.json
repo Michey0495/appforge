@@ -1,0 +1,25 @@
+{
+  "description": "フルページスクショ泣かせの構造を20件集めたターゲットリスト",
+  "targets": [
+    {"url": "https://www.amazon.co.jp/", "category": "EC", "infinite_scroll": false, "sticky_header": "二段", "lazy_images": 80, "iframe_depth": 1, "overlay_blocker": true},
+    {"url": "https://shopping.yahoo.co.jp/", "category": "EC", "infinite_scroll": true, "sticky_header": "通常", "lazy_images": 120, "iframe_depth": 1, "overlay_blocker": false},
+    {"url": "https://item.rakuten.co.jp/", "category": "EC", "infinite_scroll": false, "sticky_header": "通常", "lazy_images": 60, "iframe_depth": 2, "overlay_blocker": true},
+    {"url": "https://www.zozo.jp/", "category": "EC", "infinite_scroll": true, "sticky_header": "縮小型", "lazy_images": 150, "iframe_depth": 0, "overlay_blocker": true},
+    {"url": "https://twitter.com/", "category": "SNS", "infinite_scroll": true, "sticky_header": "通常", "lazy_images": 200, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://www.instagram.com/", "category": "SNS", "infinite_scroll": true, "sticky_header": "通常", "lazy_images": 180, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://www.facebook.com/", "category": "SNS", "infinite_scroll": true, "sticky_header": "二段", "lazy_images": 90, "iframe_depth": 2, "overlay_blocker": true},
+    {"url": "https://note.com/", "category": "SNS", "infinite_scroll": true, "sticky_header": "通常", "lazy_images": 70, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://developer.mozilla.org/ja/", "category": "Docs", "infinite_scroll": false, "sticky_header": "縮小型", "lazy_images": 5, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://docs.python.org/ja/3/", "category": "Docs", "infinite_scroll": false, "sticky_header": "なし", "lazy_images": 0, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://docs.aws.amazon.com/", "category": "Docs", "infinite_scroll": false, "sticky_header": "二段", "lazy_images": 10, "iframe_depth": 1, "overlay_blocker": true},
+    {"url": "https://tailwindcss.com/", "category": "Docs", "infinite_scroll": false, "sticky_header": "通常", "lazy_images": 8, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://app.datadoghq.com/", "category": "Dashboard", "infinite_scroll": false, "sticky_header": "二段", "lazy_images": 0, "iframe_depth": 3, "overlay_blocker": false},
+    {"url": "https://analytics.google.com/", "category": "Dashboard", "infinite_scroll": false, "sticky_header": "通常", "lazy_images": 0, "iframe_depth": 2, "overlay_blocker": false},
+    {"url": "https://app.notion.so/", "category": "Dashboard", "infinite_scroll": true, "sticky_header": "通常", "lazy_images": 30, "iframe_depth": 1, "overlay_blocker": false},
+    {"url": "https://linear.app/", "category": "Dashboard", "infinite_scroll": true, "sticky_header": "縮小型", "lazy_images": 20, "iframe_depth": 0, "overlay_blocker": false},
+    {"url": "https://www.nikkei.com/", "category": "News", "infinite_scroll": false, "sticky_header": "二段", "lazy_images": 60, "iframe_depth": 2, "overlay_blocker": true},
+    {"url": "https://news.yahoo.co.jp/", "category": "News", "infinite_scroll": false, "sticky_header": "通常", "lazy_images": 45, "iframe_depth": 3, "overlay_blocker": true},
+    {"url": "https://www.bbc.com/news", "category": "News", "infinite_scroll": false, "sticky_header": "通常", "lazy_images": 50, "iframe_depth": 1, "overlay_blocker": true},
+    {"url": "https://qiita.com/", "category": "News", "infinite_scroll": true, "sticky_header": "通常", "lazy_images": 40, "iframe_depth": 0, "overlay_blocker": false}
+  ]
+}

@@ -11,7 +11,9 @@ export type Category =
   | 'chrome-ext'
   | 'script'
 
-export type TechStack = 'nextjs' | 'html' | 'react-vite' | 'chrome-ext' | 'script'
+export type TechStack = 'nextjs' | 'html' | 'react-vite' | 'chrome-ext' | 'script' | 'desktop'
+
+export type DeliverableType = 'web-app' | 'desktop' | 'chrome-ext' | 'cli-script'
 
 export interface AppInfo {
   id: string
@@ -43,11 +45,11 @@ export interface ExtensionIdea {
 }
 
 export interface ChallengeSpec {
-  dataFile: string
+  dataFile?: string
   title: string
   overview: string
-  columns: { name: string; type: string; description: string }[]
-  visualizationIdeas: string[]
+  columns?: { name: string; type: string; description: string }[]
+  visualizationIdeas?: string[]
   goals: string[]
   hints: string[]
 }
@@ -72,6 +74,14 @@ export const STACK_LABELS: Record<TechStack, string> = {
   'react-vite': 'React + Vite',
   'chrome-ext': 'Chrome Extension',
   script: 'Script',
+  desktop: 'Desktop App',
+}
+
+export const DELIVERABLE_LABELS: Record<DeliverableType, string> = {
+  'web-app': 'Webアプリ',
+  desktop: 'デスクトップアプリ (Win/Mac)',
+  'chrome-ext': 'Chrome拡張機能',
+  'cli-script': 'CLIスクリプト',
 }
 
 export const apps: readonly AppInfo[] = [
@@ -799,4 +809,308 @@ export const apps: readonly AppInfo[] = [
     targetAudience: '勤怠データを毎月変換する人事・労務担当',
     timeSaved: '月次CSV手動変換 約1時間 → 1クリックに短縮',
   },
-] as const
+  {
+    id: '31-zip-encryptor',
+    number: 31,
+    name: 'ZIP暗号化デスクトップ',
+    category: 'security',
+    categoryLabel: 'Security',
+    description: 'フォルダをドロップしてパスワード付きZIPに固める Win/Mac デスクトップアプリ。クラウド経由せずローカル完結で機密ファイルを社外送付できる。',
+    features: [
+      'フォルダ・ファイルのドラッグ&ドロップ',
+      'AES-256でのZIP暗号化',
+      'パスワード強度メーター',
+      '出力先フォルダ指定',
+      'バッチ処理（複数ZIPを並列生成）',
+    ],
+    usesAI: false,
+    techLibraries: ['Tauri', '7-Zip CLI', 'archiver'],
+    stacks: ['desktop'],
+    folderName: '31-zip-encryptor',
+    targetAudience: '取引先に機密資料を送付する管理部門・士業・経理担当',
+    timeSaved: 'パスワード付きZIPを毎回設定する手間 約5分/件 → ドロップ即時化',
+    relatedThemes: [
+      {
+        title: 'クリップボード経由でのファイル暗号化',
+        description: 'クリップボードにコピーしたファイルをホットキーで即暗号化し、結果のパスを書き戻す常駐型ツール。',
+      },
+      {
+        title: '社外送付ファイル自動命名・ログ化',
+        description: '送付ファイル名を「日付_案件番号_先方名.zip」で強制し、送付履歴をCSVで残すコンプライアンスツール。',
+      },
+      {
+        title: 'パスワード自動生成+別チャネル通知',
+        description: 'ZIP作成と同時に強パスワードを生成、Slack DMやSMSで先方にパスワードのみ別送する仕組み。',
+      },
+      {
+        title: 'シークレット保管Vaultデスクトップ',
+        description: '社内の秘密情報を1Password的にローカル保管し、マスターパスワード+OS生体認証で開く小規模Vault。',
+      },
+      {
+        title: 'PDF個別パスワード設定',
+        description: '請求書PDFを取引先ごとに別パスワードで暗号化する一括処理ツール。pdf-lib + qpdfで実装。',
+      },
+    ],
+    extensions: [
+      {
+        title: '右クリックコンテキスト統合',
+        description: 'Finder/エクスプローラの右クリックメニューに「暗号化ZIPで送る」を追加してアプリ起動を不要にする。',
+      },
+      {
+        title: 'パスワードを別チャネルで送信',
+        description: 'ZIP本体はメール、パスワードはSlack/SMS/Signalで自動送付し、PPAP代替の送信フロー全体を完結させる。',
+      },
+      {
+        title: '送付期限つき自己破壊リンク',
+        description: '一時的なクラウドストレージにアップロードし、3日後にリンクが失効する仕組みを足す。',
+      },
+      {
+        title: 'メタデータ除去',
+        description: 'Office・PDF・画像のEXIF/作成者/コメント等を自動でストリップしてからZIP化する。',
+      },
+      {
+        title: '監査ログCSV出力',
+        description: 'いつ・誰が・どのファイルを・どのパスワード長で暗号化したかをローカルログに残して年次提出に使う。',
+      },
+      {
+        title: 'パスワード辞書ブラックリスト',
+        description: 'よく使われる弱パスワードや過去流出パスワードを禁止リストで弾く。',
+      },
+      {
+        title: 'CLI版の同梱',
+        description: 'GUIだけでなくCLIサブコマンドを同梱し、Bat/Shellスクリプトから呼べるようにする。',
+      },
+      {
+        title: '通知センター連携',
+        description: 'ZIP完成・失敗をmacOSの通知センター/Windowsトーストで知らせ、コピー用のパスワードボタンを出す。',
+      },
+    ],
+    challenge: {
+      dataFile: 'sample-confidential-folder.txt',
+      title: '機密ファイル30種混在の送付シミュレーション',
+      overview: '取引先A・B・C向けに混在した30ファイル（PDF 8件、Excel 6件、Word 4件、PNG/JPG 7件、CSV 3件、txt 2件、合計約45MB）を、宛先ごとに別パスワードのZIPに分けて固める設定のサンプル。ファイル名に「__社外秘__」「__先方A__」「__内部資料__」などのタグが埋め込まれており、タグから宛先と機密区分を読んで自動振り分けする必要がある。',
+      goals: [
+        'ファイル名タグから宛先別の3つのZIPに自動振り分けする',
+        '宛先ごとに長さ16文字以上の別パスワードを自動生成し、コピー可能な一覧として出す',
+        '社外秘ファイルがどれか1つでも「先方タグなし」のZIPに混ざったらエラーで止める',
+        'ZIP生成中に進捗バーを出し、5秒以上応答が止まらない作りにする',
+        'Win/Mac両方でビルドし、署名なしでも警告を最小化するパッケージング設定を整える',
+      ],
+      hints: [
+        'TauriならRust側でzip暗号化、UIはReact/Svelteで簡素に作る。Electronなら全部Node.js側で完結する',
+        '暗号化はAES-256推奨。ZIPの伝統的なZipCryptoは強度不足なので避ける',
+        '7-ZipのCLIをサブプロセス起動するのが一番手堅い。配布時はバイナリをアプリ内に同梱する',
+        'パスワードはCSPRNG（crypto.randomUUID不可、crypto.randomBytes利用）で生成し、紛らわしい文字（0Oi1l）を除外する',
+      ],
+    },
+  },
+  {
+    id: '32-fullpage-screenshot',
+    number: 32,
+    name: 'フルページスクリーンショット拡張',
+    category: 'chrome-ext',
+    categoryLabel: 'Chrome Ext',
+    description: '開いているページ全体を1枚のPNGに保存するChrome拡張。スクロール領域・iframe・遅延読み込み画像も拾い、競合調査やデザインレビューの記録に使える。',
+    features: [
+      'ワンクリックでページ全体キャプチャ',
+      '遅延読み込み画像のプリロード待機',
+      '固定ヘッダー・footerの自動検出と1枚化',
+      'PNG / JPG / PDF 出力',
+      'キャプチャ後に注釈描画モード',
+    ],
+    usesAI: false,
+    techLibraries: ['chrome.tabs.captureVisibleTab', 'html2canvas', 'jsPDF'],
+    stacks: ['chrome-ext'],
+    folderName: '32-fullpage-screenshot',
+    targetAudience: '競合調査・UIレビュー・エビデンス記録を行うデザイナー・PM・QA',
+    timeSaved: '部分スクショ複数枚を手で繋ぐ 約10分/ページ → ワンクリック数秒',
+    relatedThemes: [
+      {
+        title: '要素単位スクショ拡張',
+        description: 'クリックで選んだDOM要素だけをトリミングして保存する拡張。デザインレビュー用のパーツ収集に。',
+      },
+      {
+        title: 'ページのHTML/CSS丸ごとアーカイブ',
+        description: 'SingleFile相当で、サイトを1個のHTMLとして保存する拡張。スクショと並んで証跡向き。',
+      },
+      {
+        title: 'スクロール録画拡張',
+        description: 'ページの全体スクロールを動画として記録する拡張。動的UIの挙動を残せる。',
+      },
+      {
+        title: 'デザインスペック自動抽出',
+        description: '要素クリックでフォント・色・余白を抜き出してJSON化する拡張。デザインのトレース用。',
+      },
+      {
+        title: 'スクショ自動Slack共有',
+        description: 'スクショ後に特定のSlackチャンネル/Notionページへ自動アップロードまでつなぐワークフロー型拡張。',
+      },
+    ],
+    extensions: [
+      {
+        title: 'スクロール時の固定要素除去',
+        description: 'sticky/fixedヘッダーが繰り返し写るのを検出し、最初の1回だけ残す処理を入れる。',
+      },
+      {
+        title: 'iframe・shadow DOM対応',
+        description: '通常captureVisibleTabでは取れないクロスオリジンiframeをchrome.scripting経由で個別キャプチャして合成する。',
+      },
+      {
+        title: '注釈モード',
+        description: 'キャプチャ後にブラウザ内で矢印・四角・テキストを書き込めるエディタを開き、編集済PNGを出力する。',
+      },
+      {
+        title: 'PDF出力',
+        description: '長いページをA4縦の複数ページPDFに分割出力する。改ページ位置をできるだけセクション境界に合わせる。',
+      },
+      {
+        title: 'OCRテキスト抽出',
+        description: 'スクショ後にTesseract.jsをかけて、画像と一緒にテキスト版も保存する。文字検索可能なエビデンスに。',
+      },
+      {
+        title: 'ショートカット起動',
+        description: 'Alt+Shift+S 等のキーボードショートカットでキャプチャ実行し、マウス操作なしで即座に取れるようにする。',
+      },
+      {
+        title: '自動ファイル名',
+        description: '保存名を「{日付}_{ホスト名}_{ページタイトル}.png」で自動生成。コピペで揃える運用を不要にする。',
+      },
+      {
+        title: 'バッチキャプチャ',
+        description: 'URLリストを貼り付けると、タブを順次開いて全部キャプチャして1個のZIPにまとめる機能。',
+      },
+    ],
+    challenge: {
+      dataFile: 'complex-page-targets.json',
+      title: '無限スクロール+固定ヘッダー+遅延読み込みを含む20ターゲット',
+      overview: 'ECサイト、SNSタイムライン、ドキュメントサイト、ダッシュボードなど、フルページスクショ泣かせの構造を20件集めたターゲットリスト。それぞれに「無限スクロール終端の検出可否」「固定ヘッダーの種類」「lazy-load画像の有無」「iframeネスト」「modal/popoverの遮り」のメタ情報がついており、すべてに対応した1枚画像を生成しきれるかを試す。',
+      columns: [
+        { name: 'url', type: 'URL', description: '対象ページ' },
+        { name: 'category', type: 'カテゴリ', description: 'EC/SNS/Docs/Dashboard/Newsの5区分' },
+        { name: 'infinite_scroll', type: '真偽', description: '無限スクロール有無' },
+        { name: 'sticky_header', type: 'カテゴリ', description: 'なし/通常/縮小型/二段の4種' },
+        { name: 'lazy_images', type: '数値', description: 'lazy-load画像の概数' },
+        { name: 'iframe_depth', type: '数値', description: 'iframeネスト深度（0〜3）' },
+        { name: 'overlay_blocker', type: '真偽', description: 'Cookieバナー等の遮り要素の有無' },
+      ],
+      goals: [
+        '無限スクロール終端の検出ロジックを実装し、無限ループに入らない',
+        'sticky要素の重複描画を防ぐスクロール合成アルゴリズムを書く',
+        'lazy画像が読み込まれるまでIntersectionObserverで待つ',
+        '20ターゲット全てで「視覚的に1ページに見える」PNGを生成し、自動比較スクリプトで欠落セクションを検知する',
+        'Manifest V3の制約下で動作させ、background page非依存（service workerのみ）に作る',
+      ],
+      hints: [
+        'chrome.tabs.captureVisibleTabは可視領域のみ。スクロール+逐次キャプチャ+合成が基本戦略',
+        '無限スクロールの終端判定は「直近NスクロールでscrollHeightが増えなくなった」で十分実用的',
+        'sticky要素は2スクロール目以降で同じCSSセレクタ位置に存在する画素塊として検出すると消しやすい',
+        'Cookieバナーは事前に共通セレクタ辞書でdisplay:none化してから撮影する',
+      ],
+    },
+  },
+  {
+    id: '33-batch-renamer',
+    number: 33,
+    name: 'ファイル一括リネーマー',
+    category: 'workflow',
+    categoryLabel: 'Workflow',
+    description: 'フォルダ単位でファイル名を一括変更するWin/Macデスクトップアプリ。正規表現置換・連番・日付付与・拡張子変換をプレビューしながら適用できる。',
+    features: [
+      'フォルダドロップで対象ファイル一覧',
+      'プレビュー（変更前→変更後の対比表示）',
+      '正規表現での検索・置換',
+      '連番採番（zero-padding桁数指定）',
+      '日付・撮影日Exif付与',
+      'Undoでロールバック',
+    ],
+    usesAI: false,
+    techLibraries: ['Tauri', 'Node fs', 'exifr'],
+    stacks: ['desktop'],
+    folderName: '33-batch-renamer',
+    targetAudience: '写真整理・案件納品ファイル管理を毎回手作業でやる人',
+    timeSaved: '100ファイルの手動リネーム 約30分 → 即時化',
+    relatedThemes: [
+      {
+        title: '画像EXIF整理ツール',
+        description: '撮影日・カメラ機種でフォルダを自動振り分けし、ファイル名にもメタ情報を埋め込むデスクトップツール。',
+      },
+      {
+        title: '重複ファイル検出デスクトップ',
+        description: 'ハッシュベースで同一ファイルを横断検出し、安全な統合候補を提示するアプリ。',
+      },
+      {
+        title: '案件フォルダ雛形ジェネレータ',
+        description: '案件番号と日付からフォルダツリーを自動生成し、ファイル命名規約をテンプレ化する。',
+      },
+      {
+        title: '監視フォルダ自動仕分け',
+        description: 'Downloads配下の新規ファイルを拡張子と命名規則で自動的に正しいフォルダへ移すバックグラウンドアプリ。',
+      },
+      {
+        title: 'ファイル名コンプライアンスチェッカー',
+        description: '社内命名規約に違反するファイル名を検出してレポートする監査ツール。',
+      },
+    ],
+    extensions: [
+      {
+        title: '正規表現キャプチャの再構成',
+        description: 'キャプチャグループ$1$2の並び替えやケース変換を含む高度な置換ルールを書けるようにする。',
+      },
+      {
+        title: '日付プレースホルダ',
+        description: '{yyyy}-{mm}-{dd}・{exif:DateTimeOriginal}・{mtime}などのプレースホルダで動的な命名を可能にする。',
+      },
+      {
+        title: 'ドライラン+差分プレビュー',
+        description: '適用前にリネーム差分を全件プレビューし、衝突するファイル名をハイライトする。',
+      },
+      {
+        title: 'Undo履歴の永続化',
+        description: '直前操作のロールバックだけでなく、過去10回の履歴をLocalStorageに残してアプリ再起動後も戻せる。',
+      },
+      {
+        title: '画像Exif回転自動補正',
+        description: '撮影時の向きに合わせてファイル自体を回転書き換えする付加機能。',
+      },
+      {
+        title: 'CLI同梱',
+        description: 'GUIと同じルールをコマンドラインから適用できるCLIを同梱し、batファイルから定期実行できるようにする。',
+      },
+      {
+        title: 'ルールセットの保存・共有',
+        description: '案件ごとのリネーム規約をJSONで保存・読み込みし、チームで共有可能にする。',
+      },
+      {
+        title: 'ファイル属性プレビュー',
+        description: 'サイズ・更新日・解像度・撮影日・ハッシュをテーブルで一覧表示し、フィルタしてから対象を絞れるようにする。',
+      },
+    ],
+    challenge: {
+      dataFile: 'messy-photo-batch.json',
+      title: '混沌とした写真・書類フォルダ150ファイルの整理',
+      overview: '取材・現場記録・社内書類が混在した150ファイルのメタ情報リスト。「IMG_0001.JPG」「写真 (3).jpeg」「Screenshot 2024-05-12 at 10.32.png」「無題のドキュメント.docx」「scan_001.pdf」などバラバラな命名規則、撮影日と作成日の不一致、容量ばらつき、ファイル名に全角空白や記号、拡張子の大文字小文字混在を含む。これを「{案件}_{yyyymmdd}_{種別}_{連番3桁}.{ext}」の統一フォーマットに変換する課題。',
+      columns: [
+        { name: 'current_name', type: '文字列', description: '現在のファイル名' },
+        { name: 'project_tag', type: 'カテゴリ', description: '案件タグ（無印は推定対象）' },
+        { name: 'kind', type: 'カテゴリ', description: '写真/書類/スクショ/動画の4種' },
+        { name: 'created_at', type: '日付', description: 'ファイル作成日（OS）' },
+        { name: 'exif_date', type: '日付', description: 'EXIF撮影日（画像のみ）' },
+        { name: 'size_kb', type: '数値', description: 'ファイルサイズ' },
+        { name: 'has_illegal_char', type: '真偽', description: '全角空白・OS禁則文字の有無' },
+      ],
+      goals: [
+        '全150ファイルを統一命名「{案件}_{yyyymmdd}_{種別}_{連番}.{ext}」にリネーム',
+        '画像はEXIF撮影日を優先、それ以外はOS作成日を使う日付選択ロジックを書く',
+        'リネーム後にファイル名衝突が発生しないことを保証する（衝突時は連番をインクリメント）',
+        '禁則文字・全角空白を半角アンダースコアに正規化する',
+        'プレビュー → 適用 → Undo の往復を10秒以内で完了させる速度を出す',
+      ],
+      hints: [
+        'Tauri+Reactで作るとUIが楽。Rust側のwalkdirとregex crateで高速にメタ収集できる',
+        '日付優先順位は「exif_date > created_at > mtime」の三段フォールバックで実装するのが定石',
+        'Undoは「リネーム前の旧名→新名」のペアをJSONで保存しておけば実装1日',
+        '案件タグの推定は親フォルダ名 → ファイル名先頭の英数字 → AIに推定させる、の順で段階フォールバック',
+      ],
+    },
+  },
+]

@@ -420,6 +420,8 @@ function getStackDescription(stack: TechStack): string {
       return 'manifest.json + popup/content script で構成するChrome拡張機能。chrome://extensions で読み込んで使う。'
     case 'script':
       return 'Node.js のシングルファイルスクリプト。ターミナルから実行する自動化ツール。'
+    case 'desktop':
+      return 'Tauri または Electron でビルドする Win/Mac デスクトップアプリ。OS統合・ファイルシステム直アクセス・常駐動作に向く。'
   }
 }
 
@@ -742,6 +744,39 @@ function getPromptConfig(app: AppInfo): PromptConfig {
         { id: 'preview', label: 'プレビュー', text: '変換前後のプレビューを並べて表示する' },
       ],
     },
+    '31-zip-encryptor': {
+      base: 'フォルダをドロップするとパスワード付きZIPに固めてくれる Win/Mac デスクトップアプリを作ってください。Tauri を使う想定。',
+      options: [
+        { id: 'aes', label: 'AES-256暗号化', text: '暗号方式はAES-256とし、伝統的ZipCryptoは使わない' },
+        { id: 'pwgen', label: 'パスワード自動生成', text: 'CSPRNGで強パスワードを自動生成するボタンをつける。紛らわしい文字は除外' },
+        { id: 'strength', label: '強度メーター', text: 'パスワードの強度をリアルタイムでバー表示する' },
+        { id: 'batch', label: 'バッチ処理', text: '複数フォルダをドロップして並列で個別ZIPに固める' },
+        { id: 'log', label: '監査ログ', text: '作成日時・元フォルダ・パスワード長をローカルCSVに残す' },
+        { id: 'context', label: '右クリック統合', text: 'Finder/エクスプローラの右クリックメニューから呼べるようにする' },
+      ],
+    },
+    '32-fullpage-screenshot': {
+      base: '開いているページ全体を1枚のPNGとして保存するChrome拡張を作ってください。スクロールしないと見えない部分も含めて1枚化する。',
+      options: [
+        { id: 'lazy', label: '遅延画像対応', text: 'lazy-load画像が読み込まれるまで待ってからキャプチャする' },
+        { id: 'sticky', label: '固定ヘッダー除去', text: 'sticky/fixed要素の繰り返し描画を検出して1回だけ残す' },
+        { id: 'pdf', label: 'PDF出力', text: 'PNGに加えてA4縦の複数ページPDFでも出力できるようにする' },
+        { id: 'annotate', label: '注釈モード', text: 'キャプチャ後に矢印・四角・テキストを書き込める編集モードをつける' },
+        { id: 'shortcut', label: 'ショートカット', text: 'Alt+Shift+Sで起動するキーボードショートカットを設定する' },
+        { id: 'autoname', label: '自動命名', text: '保存名を{日付}_{ホスト名}_{タイトル}.pngで自動生成する' },
+      ],
+    },
+    '33-batch-renamer': {
+      base: 'フォルダ内のファイルを一括リネームする Win/Mac デスクトップアプリを作ってください。正規表現置換・連番・日付付与をプレビューしながら適用できるもの。',
+      options: [
+        { id: 'regex', label: '正規表現置換', text: 'キャプチャグループ$1$2を使った高度な置換を可能にする' },
+        { id: 'number', label: '連番採番', text: 'zero-padding桁数を指定できる連番をファイル名に挿入する' },
+        { id: 'date', label: '日付プレースホルダ', text: '{yyyy}-{mm}-{dd}や{exif:DateTimeOriginal}を動的展開する' },
+        { id: 'preview', label: 'プレビュー', text: '適用前に全ファイルの変更前→変更後を一覧で確認できる' },
+        { id: 'undo', label: 'Undo', text: '直前のリネーム操作をワンクリックでロールバックできる' },
+        { id: 'collision', label: '衝突検出', text: 'リネーム結果が同名衝突する場合に自動で連番を回避するか警告を出す' },
+      ],
+    },
   }
   return configs[app.folderName] ?? { base: '', options: [] }
 }
@@ -864,6 +899,15 @@ function getSampleFiles(app: AppInfo): SampleFile[] {
     '30-kintai-formatter': [
       { name: 'kintai-format-a.csv', description: '勤怠データA社形式（1ヶ月分）' },
       { name: 'kintai-format-b.csv', description: '勤怠データB社形式（変換先）のサンプル' },
+    ],
+    '31-zip-encryptor': [
+      { name: 'sample-confidential-folder.txt', description: '宛先別タグ付き30ファイル構成のフォルダ仕様（暗号化テスト用）' },
+    ],
+    '32-fullpage-screenshot': [
+      { name: 'complex-page-targets.json', description: '無限スクロール・遅延画像・iframeを含む20ターゲットURL' },
+    ],
+    '33-batch-renamer': [
+      { name: 'messy-photo-batch.json', description: '混沌とした写真・書類150ファイルのメタ情報' },
     ],
   }
   return files[app.folderName] ?? []
