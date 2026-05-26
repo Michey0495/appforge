@@ -27,6 +27,29 @@ export interface AppInfo {
   folderName: string
   targetAudience: string
   timeSaved: string
+  relatedThemes?: RelatedTheme[]
+  extensions?: ExtensionIdea[]
+  challenge?: ChallengeSpec
+}
+
+export interface RelatedTheme {
+  title: string
+  description: string
+}
+
+export interface ExtensionIdea {
+  title: string
+  description: string
+}
+
+export interface ChallengeSpec {
+  dataFile: string
+  title: string
+  overview: string
+  columns: { name: string; type: string; description: string }[]
+  visualizationIdeas: string[]
+  goals: string[]
+  hints: string[]
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {
@@ -92,6 +115,123 @@ export const apps: readonly AppInfo[] = [
     folderName: '02-csv-visualizer',
     targetAudience: '売上・在庫データを扱う営業企画・経営管理',
     timeSaved: 'Excel手作業グラフ 約1時間 → 5分に短縮',
+    relatedThemes: [
+      {
+        title: 'KPIモニタリングダッシュボード',
+        description: '売上・粗利・在庫回転率などの指標をリアルタイム更新で並べる経営ダッシュボード。日次バッチでCSVを差し替える運用にも対応する。',
+      },
+      {
+        title: 'アンケート集計レポーター',
+        description: 'Googleフォームや社内サーベイのCSVから自由記述以外を自動集計し、設問ごとに棒グラフと回答数を出す。',
+      },
+      {
+        title: 'ログ分析ビューア',
+        description: 'アクセスログやアプリケーションログのCSVを時系列・ステータスコード別・ユーザー別で切り口を変えて見るツール。',
+      },
+      {
+        title: 'ピボットテーブル風データ探索ツール',
+        description: '行・列・値・フィルタをUI上でドラッグして組み替えるExcelピボット相当の探索インターフェース。',
+      },
+      {
+        title: '在庫・需要予測ビジュアライザ',
+        description: '過去販売実績のCSVから移動平均と単純な回帰線を引き、欠品リスクのあるSKUを色付けする。',
+      },
+      {
+        title: 'A/Bテスト結果ビューア',
+        description: 'バリアントごとのコンバージョン率・p値を読み込み、差が統計的に意味あるかを判定する画面。',
+      },
+    ],
+    extensions: [
+      {
+        title: '複数CSVの結合とJOIN',
+        description: '注文CSVと顧客CSVを共通キーで結合し、結合済みデータに対して可視化を走らせる。LEFT/INNERの切替UIを持たせる。',
+      },
+      {
+        title: 'ピボット集計とドリルダウン',
+        description: '行・列・集計関数（SUM/AVG/COUNT/中央値）を選んで集計し、セルクリックで元データに絞り込めるようにする。',
+      },
+      {
+        title: 'フィルタとブラッシング',
+        description: '期間スライダーや地域チェックボックスで絞り込み、複数グラフが連動して更新される。1グラフでの範囲選択が他に伝わる挙動。',
+      },
+      {
+        title: '時系列特化ビュー',
+        description: '日次・週次・月次の粒度切替、前年同期比、移動平均、累積ライン、シーズナリティ分解を追加する。',
+      },
+      {
+        title: '異常値ハイライト',
+        description: 'IQRやZ-scoreで外れ値を自動検出し、テーブルとグラフ上で色付け。閾値はUIから調整可能にする。',
+      },
+      {
+        title: 'AI要約コメント生成',
+        description: '集計結果をプロンプトに渡し、上昇・下降のトレンドや要因仮説を日本語のコメントとして自動生成する。',
+      },
+      {
+        title: '地図ビジュアライズ',
+        description: '都道府県・市区町村カラムを地図上にコロプレス表示する。Leaflet等の地図ライブラリを後付け統合。',
+      },
+      {
+        title: '保存とダッシュボード化',
+        description: '作成したグラフ構成をLocalStorageやURLハッシュに保存し、レイアウト付きダッシュボードとして再現する。',
+      },
+      {
+        title: 'スキーマ自動推論',
+        description: 'カラムの型（数値/日付/カテゴリ/真偽値）を自動判別し、向いているグラフ種別を推薦する。',
+      },
+      {
+        title: '大規模CSV対応',
+        description: 'PapaParseのstreamingモードとWeb Workerで100MB級でもUIが固まらない読み込みを実装する。',
+      },
+      {
+        title: 'PNG/PDFエクスポート',
+        description: 'グラフとサマリを1枚のレポートとして書き出し、社内共有や月次資料にそのまま貼れる体裁にする。',
+      },
+    ],
+    challenge: {
+      dataFile: 'retail-multistore-2025q1q2.csv',
+      title: '小売チェーン マルチストア販売データ（20週×14店舗）',
+      overview: '全国7地域×各2店舗、計14店舗の2025年上半期20週分の販売実績。1,284行・17列の中規模CSVで、店舗属性・商品カテゴリ・販売チャネル・顧客セグメント・季節性・割引・利益率・返品・NPSを同時に含む。1カラムを軸に絵を描いて終わる単純な可視化では使い切れず、結合・フィルタ・複数軸の切り替えが必要になる構造。',
+      columns: [
+        { name: 'date', type: '日付', description: '販売週の起点日（ISO形式）' },
+        { name: 'store_id', type: 'カテゴリ', description: '店舗識別子（14店舗）' },
+        { name: 'region', type: 'カテゴリ', description: '地域（北海道〜九州の7区分）' },
+        { name: 'city', type: 'カテゴリ', description: '主要都市名' },
+        { name: 'store_type', type: 'カテゴリ', description: '店舗規模（旗艦/標準/小型）' },
+        { name: 'category', type: 'カテゴリ', description: '商品カテゴリ（家電/日用品/食品/衣料）' },
+        { name: 'product', type: 'カテゴリ', description: '商品名（9SKU）' },
+        { name: 'channel', type: 'カテゴリ', description: '販売チャネル（店頭/EC/電話）' },
+        { name: 'customer_segment', type: 'カテゴリ', description: '顧客区分（一般/会員/プレミアム会員/法人）' },
+        { name: 'units_sold', type: '数値', description: '販売数量' },
+        { name: 'unit_price', type: '数値', description: '商品単価（円）' },
+        { name: 'discount_rate', type: '数値', description: '割引率（0〜0.2）' },
+        { name: 'revenue', type: '数値', description: '売上額（円）= 数量 × 単価 × (1-割引率)' },
+        { name: 'cost', type: '数値', description: '原価（円）' },
+        { name: 'profit', type: '数値', description: '粗利（円）= revenue - cost' },
+        { name: 'returns', type: '数値', description: '返品数' },
+        { name: 'nps_score', type: '数値', description: '顧客満足度スコア（-100〜100想定、実データは0前後〜70台）' },
+      ],
+      visualizationIdeas: [
+        '地域×カテゴリのヒートマップで粗利の偏りを一目で把握する',
+        '週次の売上推移を折れ線で描き、家電は夏・衣料は冬という季節性を1枚で見せる',
+        '店舗タイプ別の売上構成比を積み上げ棒グラフで比較する',
+        'チャネル別×顧客セグメント別の散布図（横軸：割引率、縦軸：粗利率）でEC×プレミアム会員の塊を浮かび上がらせる',
+        '返品率（returns / units_sold）を商品ごとに棒グラフ化し、品質課題のあるSKUを特定する',
+        'NPSと再購入率の相関を顧客セグメント単位で並べる',
+      ],
+      goals: [
+        '17列のうちどれを軸・指標・色・フィルタに当てるかを受講者自身が選択する設計にする',
+        '集計関数（合計/平均/中央値）を切り替えても画面が壊れない構造にする',
+        '1グラフで終わらせず、フィルタ変更が複数グラフに連動する「ダッシュボード化」を最低1パターン実装する',
+        '欠品週やマイナス利益が出ているセルを自動で色付けし、見つけにいかなくても気づける状態にする',
+        '初回CSV読み込みは2秒以内、フィルタ操作は100ms以内の反応速度を目安にする',
+      ],
+      hints: [
+        'まず生CSVをテーブルでプレビューし、各列のユニーク値数・型・欠損を出すサマリ画面を1枚作る',
+        '集計はクライアント側でMap/Reduceで十分。バックエンド不要',
+        '日付は週起点なので、月次に丸めるかどうかをUIで切り替えると分析の幅が広がる',
+        'AIに「このCSVの構造に対して何を可視化するべきか」と聞いて出てきた候補を、そのまま選択肢としてダッシュボードに並べると速い',
+      ],
+    },
   },
   {
     id: '03-image-batch',

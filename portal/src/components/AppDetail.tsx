@@ -183,6 +183,121 @@ export function AppDetail({ app }: AppDetailProps) {
         </div>
       )}
 
+      {/* 関連テーマ */}
+      {app.relatedThemes && app.relatedThemes.length > 0 && (
+        <div className="mb-10">
+          <SectionLabel>Related Themes</SectionLabel>
+          <p className="text-[12px] text-gray-400 mb-4">
+            このツールを作りたい人に同じ筋でおすすめできる、別の開発テーマ。
+          </p>
+          <div className="border border-gray-100 rounded-sm divide-y divide-gray-50">
+            {app.relatedThemes.map((t) => (
+              <div key={t.title} className="px-5 py-3">
+                <p className="text-[13px] font-medium text-gray-700 mb-1">{t.title}</p>
+                <p className="text-[12px] text-gray-500 leading-relaxed">{t.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 発展 */}
+      {app.extensions && app.extensions.length > 0 && (
+        <div className="mb-10">
+          <SectionLabel>Extensions</SectionLabel>
+          <p className="text-[12px] text-gray-400 mb-4">
+            完成後に積み増していける機能の選択肢。1個ずつAIに投げて差分実装するのに向く粒度。
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {app.extensions.map((e) => (
+              <div key={e.title} className="border border-gray-100 rounded-sm p-4">
+                <p className="text-[13px] font-medium text-gray-700 mb-1">{e.title}</p>
+                <p className="text-[12px] text-gray-500 leading-relaxed">{e.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 発展課題 */}
+      {app.challenge && (
+        <div className="mb-10">
+          <SectionLabel>Challenge</SectionLabel>
+          <div className="border border-gray-200 rounded-sm p-5 bg-gray-50">
+            <div className="flex items-start justify-between mb-3 gap-3">
+              <p className="text-[14px] font-semibold text-gray-800">{app.challenge.title}</p>
+              <a
+                href={`/apps/${app.folderName}/sample-data/${app.challenge.dataFile}`}
+                download={app.challenge.dataFile}
+                className="flex-shrink-0 px-3 py-1.5 text-[11px] font-medium text-gray-600 border border-gray-300 rounded-sm hover:bg-white transition-colors"
+              >
+                DL
+              </a>
+            </div>
+            <p className="text-[12px] text-gray-600 leading-relaxed mb-5">
+              {app.challenge.overview}
+            </p>
+
+            <div className="mb-5">
+              <p className="text-[11px] font-medium text-gray-500 tracking-wider uppercase mb-2">Columns</p>
+              <div className="bg-white border border-gray-100 rounded-sm overflow-x-auto">
+                <table className="w-full text-[12px]">
+                  <thead className="bg-gray-50">
+                    <tr className="text-left text-gray-500">
+                      <th className="px-3 py-2 font-medium">カラム</th>
+                      <th className="px-3 py-2 font-medium">型</th>
+                      <th className="px-3 py-2 font-medium">説明</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {app.challenge.columns.map((c) => (
+                      <tr key={c.name}>
+                        <td className="px-3 py-2 font-mono text-gray-700 whitespace-nowrap">{c.name}</td>
+                        <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{c.type}</td>
+                        <td className="px-3 py-2 text-gray-600">{c.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <p className="text-[11px] font-medium text-gray-500 tracking-wider uppercase mb-2">可視化アイデア</p>
+              <ul className="space-y-1.5">
+                {app.challenge.visualizationIdeas.map((v) => (
+                  <li key={v} className="text-[12px] text-gray-600 flex items-start gap-2 leading-relaxed">
+                    <span className="text-gray-400 mt-px">-</span>{v}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mb-5">
+              <p className="text-[11px] font-medium text-gray-500 tracking-wider uppercase mb-2">到達目標</p>
+              <ul className="space-y-1.5">
+                {app.challenge.goals.map((g) => (
+                  <li key={g} className="text-[12px] text-gray-600 flex items-start gap-2 leading-relaxed">
+                    <span className="text-gray-400 mt-px">-</span>{g}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-[11px] font-medium text-gray-500 tracking-wider uppercase mb-2">取り組み方のヒント</p>
+              <ul className="space-y-1.5">
+                {app.challenge.hints.map((h) => (
+                  <li key={h} className="text-[12px] text-gray-600 flex items-start gap-2 leading-relaxed">
+                    <span className="text-gray-400 mt-px">-</span>{h}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 開発フローガイド */}
       <div className="mb-10">
         <SectionLabel>How to Build</SectionLabel>
